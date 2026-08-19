@@ -143,3 +143,42 @@ This was built and then actually run end-to-end, not just written:
   (`./setup.sh` / `setup.bat`) — the PHP/MariaDB installs above were a this-machine-only
   workaround, not a replacement for the Docker setup.
 - **Payment gateways** (PayFast/Ozow/Yoco): still unverified — need real sandbox credentials.
+
+## Storefront v2 — search, hero slider, admin sourcing, import transparency
+
+- **Search**: `/search?q=` matches title, short description, SKU, and spec key/value (real
+  `LIKE` queries — `app/Http/Controllers/Storefront/SearchController.php`), wired to the header
+  search bar on every page.
+- **Featured-spot hero slider**: auto-advancing carousel of the latest approved products at the
+  top of the homepage (Alpine.js, pauses on hover, dot/arrow controls). Falls back to a static
+  hero when there are no approved products yet.
+- **Import/duty/VAT transparency panel**: every product page shows the actual duty rate, VAT
+  rate, and HS code, plus a delivery-stage visual — grounded in real research on what cross-border
+  shoppers actually want disclosed (see chat), not invented trust copy. Deliberately does *not*
+  show the rand amount of duty or the underlying freight/clearing-fee/margin inputs, since
+  combined those would let a customer reverse-engineer supplier cost.
+- **"What We Checked Before Listing This"**: real compliance-audit facts (frequency, ICASA
+  status, battery cert, supplier trust) shown on the product page — each line is conditional on
+  that fact actually being present for that product, never a fixed template with blanks filled
+  in in.
+- **Admin → Source New Listing** (`/admin/source`): a form that shells out to the real
+  `worker/src/pipeline.js` (`App\Http\Controllers\Admin\SourceController`) with the worker
+  directory as its cwd, then redirects straight to the review page for whatever it produced. This
+  is the "log in and hit edit or post" loop — no terminal needed for day-to-day sourcing.
+- **AI hero-image cleanup** (`worker/src/lib/imageEnhance.js`): background/lighting/crop cleanup
+  of the real first supplier photo via Gemini image editing — deliberately an edit of the actual
+  photo, not a generated fictional image, so the hero slide still depicts the exact item shipped.
+  Requires an image-capable model on a billing-enabled Gemini project; falls back to the
+  unedited original photo on any failure (including simply having zero quota for image models,
+  which is what this project's key currently has).
+
+### Windows gotcha: shelling out to Node from `php artisan serve`
+
+If you hit `Assertion failed: ncrypto::CSPRNG(nullptr, 0)` when Laravel spawns the worker
+process on Windows: PHP's built-in dev server handles each request in a way that doesn't
+reliably propagate `SystemRoot`/`windir` to child processes, and Node's crypto init on Windows
+needs `SystemRoot` to locate `bcrypt.dll`. `SourceController::childProcessEnv()` explicitly
+whitelists the Windows vars Node needs and re-parses `worker/.env` itself (rather than trusting
+inherited environment) so Laravel's own root `.env` — which deliberately sets
+`WORKER_DB_HOST=mysql` for the Docker path — can't shadow `worker/.env`'s real local value. Not
+an issue under Docker/Linux.

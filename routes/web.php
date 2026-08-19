@@ -3,11 +3,13 @@
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\SourceController as AdminSourceController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\PaymentWebhookController;
 use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\SearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
@@ -49,6 +52,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::redirect('/', '/admin/products');
+
+        Route::get('/source', [AdminSourceController::class, 'create'])->name('source.create');
+        Route::post('/source', [AdminSourceController::class, 'store'])->name('source.store');
 
         Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
         Route::get('/products/{product}', [AdminProductController::class, 'show'])->name('products.show');

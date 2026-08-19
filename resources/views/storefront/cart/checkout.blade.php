@@ -3,7 +3,8 @@
 @section('title', 'Checkout — Farmtech')
 
 @section('content')
-    <h1 class="text-2xl font-bold mb-6">Checkout</h1>
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    <h1 class="font-display font-bold text-2xl sm:text-3xl text-field-950 mb-8">Checkout</h1>
 
     <div class="grid md:grid-cols-3 gap-10">
         <form action="{{ route('checkout.store') }}" method="POST" class="md:col-span-2 space-y-6">
@@ -69,27 +70,33 @@
                 <label class="flex items-center gap-3 border rounded-md px-4 py-3 cursor-pointer">
                     <input type="radio" name="payment_gateway" value="yoco"> Yoco (Card)
                 </label>
+                <p class="text-xs text-steel-600 flex items-center gap-1.5 pt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+                    Card and bank details are handled directly by your chosen provider — Farmtech never sees or stores them.
+                </p>
             </fieldset>
 
-            <button type="submit" class="w-full bg-farmtech-green text-white font-semibold px-8 py-3 rounded-md hover:bg-farmtech-green-dark">
+            <button type="submit" class="w-full bg-tag hover:bg-tag-dark text-white font-semibold px-8 py-3 rounded-full transition">
                 Place Order — R{{ number_format($subtotal, 2) }}
             </button>
         </form>
 
-        <div class="bg-white border rounded-xl p-6 h-fit">
-            <h2 class="font-semibold mb-4">Order Summary</h2>
+        <div class="bg-white border border-steel-300 rounded-xl p-6 h-fit shadow-sm">
+            <h2 class="font-display font-semibold mb-4">Order Summary</h2>
             <ul class="space-y-2 text-sm">
                 @foreach ($items as $item)
-                    <li class="flex justify-between">
-                        <span>{{ $item['product']->title }} &times; {{ $item['quantity'] }}</span>
-                        <span>R{{ number_format($item['line_total'], 2) }}</span>
+                    <li class="flex justify-between gap-3">
+                        <span class="line-clamp-1">{{ $item['product']->title }} &times; {{ $item['quantity'] }}</span>
+                        <span class="font-mono flex-shrink-0">R{{ number_format($item['line_total'], 2) }}</span>
                     </li>
                 @endforeach
             </ul>
-            <div class="border-t mt-4 pt-4 flex justify-between font-bold">
-                <span>Total (incl. VAT)</span>
-                <span>R{{ number_format($subtotal, 2) }}</span>
+            <div class="border-t border-steel-200 mt-4 pt-4 flex justify-between font-bold">
+                <span>Total</span>
+                <span class="font-mono">R{{ number_format($subtotal, 2) }}</span>
             </div>
+            <p class="text-xs text-steel-600 mt-2">Includes SA import duty &amp; 15% VAT. Nothing extra on delivery.</p>
         </div>
     </div>
+  </div>
 @endsection

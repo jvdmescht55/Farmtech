@@ -11,14 +11,14 @@ class HomeController extends Controller
     {
         $categories = ['scales', 'ultrasound', 'rfid', 'accessories'];
 
-        $featured = Product::storefrontVisible()
-            ->with('thumbnail')
-            ->latest()
-            ->limit(8)
-            ->get();
+        $base = Product::storefrontVisible()->with(['thumbnail', 'complianceAudit'])->latest();
+
+        $heroProducts = (clone $base)->limit(5)->get();
+        $featured = (clone $base)->limit(8)->get();
 
         return view('storefront.home', [
             'categories' => $categories,
+            'heroProducts' => $heroProducts,
             'featured' => $featured,
         ]);
     }

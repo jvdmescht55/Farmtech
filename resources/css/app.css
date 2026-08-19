@@ -2,9 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: theme('fontFamily.body');
+    }
+
+    ::selection {
+        background-color: theme('colors.tag.DEFAULT');
+        color: white;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
 @layer components {
-    .badge-green { @apply bg-green-100 text-green-800 border border-green-300; }
-    .badge-yellow { @apply bg-yellow-100 text-yellow-800 border border-yellow-300; }
-    .badge-red { @apply bg-red-100 text-red-800 border border-red-300; }
-    .badge-gray { @apply bg-gray-100 text-gray-600 border border-gray-300; }
+    .badge-green { @apply bg-emerald-100 text-emerald-900 border border-emerald-300; }
+    .badge-yellow { @apply bg-amber-100 text-amber-900 border border-amber-300; }
+    .badge-red { @apply bg-red-100 text-red-900 border border-red-300; }
+    .badge-gray { @apply bg-steel-100 text-steel-700 border border-steel-300; }
+
+    /* Rotated compliance-stamp badge — the site's signature element. Only
+       ever rendered for approved products, so it always reflects a real
+       audit_verdict, never decoration. */
+    .verified-stamp {
+        @apply relative inline-flex flex-col items-center justify-center;
+        @apply w-20 h-20 rounded-full border-2 border-dashed border-tag text-tag;
+        @apply -rotate-[8deg] font-display font-bold uppercase tracking-wide text-[10px] leading-tight;
+        background: radial-gradient(circle, rgba(198,86,14,0.06) 0%, transparent 70%);
+    }
+
+    .font-tabular {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .scan-divider {
+        @apply relative h-px w-full overflow-hidden bg-steel-300;
+    }
+
+    .scan-divider::after {
+        content: '';
+        @apply absolute inset-0;
+        background: repeating-linear-gradient(90deg, theme('colors.tag.DEFAULT') 0 8px, transparent 8px 16px);
+        animation: scanline 1.2s linear infinite;
+        opacity: 0.5;
+    }
+}
+
+@layer utilities {
+    .reveal {
+        opacity: 0;
+    }
+
+    .reveal.is-visible {
+        @apply animate-reveal-up;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .reveal {
+            opacity: 1 !important;
+            animation: none !important;
+            transform: none !important;
+        }
+
+        html {
+            scroll-behavior: auto;
+        }
+
+        * {
+            animation-duration: 0.001ms !important;
+            transition-duration: 0.001ms !important;
+        }
+    }
 }

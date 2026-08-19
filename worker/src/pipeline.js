@@ -139,6 +139,8 @@ async function processListing(listing, args, results) {
         images = await downloadAndOptimizeImages(listing.image_urls, {
             uploadDir: process.env.WORKER_UPLOAD_DIR || '../public/uploads/products',
             sku: listing.sku,
+            geminiApiKey: process.env.GEMINI_API_KEY,
+            geminiImageModel: process.env.GEMINI_IMAGE_MODEL,
         });
         console.log(`  Images: ${images.length}/${listing.image_urls.length} downloaded and converted to webp`);
     }

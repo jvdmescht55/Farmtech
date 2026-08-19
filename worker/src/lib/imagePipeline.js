@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { enhanceHeroImage } from './imageEnhance.js';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024; // 15MB guard against runaway/hostile responses
@@ -9,11 +10,13 @@ const MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024; // 15MB guard against runaway/hosti
  * Downloads each source image URL, validates its MIME type from the actual
  * response bytes (not just the URL extension — supplier CDNs frequently
  * hotlink-break or redirect to garbage), re-encodes to .webp, and writes it
- * into the shared uploads directory.
+ * into the shared uploads directory. The first (hero/thumbnail) image also
+ * gets an AI background/lighting cleanup pass — see imageEnhance.js — with
+ * the original photo used as-is if that fails for any reason.
  *
  * @returns {Promise<Array<{ original_url: string, local_path: string }>>}
  */
-export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fetchImpl = fetch }) {
+export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fetchImpl = fetch, geminiApiKey, geminiImageModel }) {
     const destDir = path.resolve(uploadDir);
     await mkdir(destDir, { recursive: true });
 
@@ -21,9 +24,20 @@ export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fet
 
     for (const [index, url] of imageUrls.entries()) {
         try {
-            const optimized = await fetchAndConvert(url, fetchImpl);
+            const { webpBuffer, rawBuffer, mime } = await fetchAndConvert(url, fetchImpl);
+
+            let finalBuffer = webpBuffer;
+
+            if (index === 0 && geminiApiKey) {
+                const enhanced = await enhanceHeroImage(rawBuffer, mime, { apiKey: geminiApiKey, model: geminiImageModel });
+                if (enhanced) {
+                    finalBuffer = enhanced;
+                    console.log('  [image-enhance] hero image cleaned up (background/lighting)');
+                }
+            }
+
             const filename = `${sku}-${index + 1}.webp`;
-            await writeFile(path.join(destDir, filename), optimized);
+            await writeFile(path.join(destDir, filename), finalBuffer);
             results.push({ original_url: url, local_path: filename });
         } catch (err) {
             console.warn(`  [image] skipped ${url}: ${err.message}`);
@@ -58,8 +72,10 @@ async function fetchAndConvert(url, fetchImpl) {
         throw new Error(`unsupported image format detected: ${meta.format}`);
     }
 
-    return sharp(buffer)
+    const webpBuffer = await sharp(buffer)
         .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 82 })
         .toBuffer();
+
+    return { webpBuffer, rawBuffer: buffer, mime: detectedMime };
 }

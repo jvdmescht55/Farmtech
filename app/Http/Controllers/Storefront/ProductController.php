@@ -13,7 +13,7 @@ class ProductController extends Controller
 
         $products = Product::storefrontVisible()
             ->category($category)
-            ->with('thumbnail')
+            ->with(['thumbnail', 'complianceAudit'])
             ->paginate(12);
 
         return view('storefront.products.category', [
@@ -26,12 +26,12 @@ class ProductController extends Controller
     {
         abort_unless($product->status === 'approved' && $product->is_active, 404);
 
-        $product->load(['images', 'specs']);
+        $product->load(['images', 'specs', 'complianceAudit']);
 
         $related = Product::storefrontVisible()
             ->category($product->category)
             ->where('id', '!=', $product->id)
-            ->with('thumbnail')
+            ->with(['thumbnail', 'complianceAudit'])
             ->limit(4)
             ->get();
 

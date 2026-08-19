@@ -13,6 +13,11 @@
             <div class="px-4 py-4 text-lg font-bold border-b border-white/10">
                 Farm<span class="text-farmtech-gold">tech</span> Admin
             </div>
+            <div class="px-3 pt-4">
+                <a href="{{ route('admin.source.create') }}" class="flex items-center justify-center gap-2 w-full bg-farmtech-gold hover:brightness-110 text-white text-sm font-semibold px-3 py-2.5 rounded-md transition">
+                    + Source New Listing
+                </a>
+            </div>
             <nav class="px-2 py-4 text-sm space-y-1">
                 <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.*') ? 'bg-white/10 font-semibold' : '' }}">Staging Queue</a>
                 <a href="{{ route('admin.settings.edit') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.settings.*') ? 'bg-white/10 font-semibold' : '' }}">Settings</a>
