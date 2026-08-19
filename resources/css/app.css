@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .badge-green { @apply bg-green-100 text-green-800 border border-green-300; }
+    .badge-yellow { @apply bg-yellow-100 text-yellow-800 border border-yellow-300; }
+    .badge-red { @apply bg-red-100 text-red-800 border border-red-300; }
+    .badge-gray { @apply bg-gray-100 text-gray-600 border border-gray-300; }
+}

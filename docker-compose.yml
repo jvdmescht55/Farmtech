@@ -1,0 +1,66 @@
+name: farmtech
+
+services:
+    laravel.test:
+        build:
+            context: ./docker/php
+            dockerfile: Dockerfile
+        image: farmtech-laravel
+        ports:
+            - '${APP_PORT:-8000}:80'
+        environment:
+            WWWUSER: '${WWWUSER:-1000}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - './:/var/www/html'
+        networks:
+            - farmtech
+        depends_on:
+            - mysql
+
+    worker:
+        build:
+            context: ./worker
+            dockerfile: Dockerfile
+        image: farmtech-worker
+        working_dir: /worker
+        env_file:
+            - .env
+        environment:
+            WORKER_DB_HOST: mysql
+            WORKER_UPLOAD_DIR: /worker/uploads
+        volumes:
+            - './worker:/worker'
+            - './public/uploads/products:/worker/uploads'
+        networks:
+            - farmtech
+        depends_on:
+            - mysql
+        # Kept alive so you can `docker compose exec worker node src/pipeline.js ...` on demand.
+        command: tail -f /dev/null
+
+    mysql:
+        image: 'mariadb:11'
+        ports:
+            - '${FORWARD_DB_PORT:-3306}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-secret}'
+            MYSQL_DATABASE: '${DB_DATABASE:-farmtech}'
+            MYSQL_USER: '${DB_USERNAME:-farmtech}'
+            MYSQL_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - 'farmtech-mysql:/var/lib/mysql'
+        networks:
+            - farmtech
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+            retries: 5
+            timeout: 5s
+
+networks:
+    farmtech:
+        driver: bridge
+
+volumes:
+    farmtech-mysql:
+        driver: local

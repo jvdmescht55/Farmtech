@@ -1,0 +1,21 @@
+{
+    "name": "farmtech-worker",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Farmtech sourcing, forex/landed-cost, AI compliance vetting, and image pipeline worker.",
+    "main": "src/pipeline.js",
+    "scripts": {
+        "pipeline": "node src/pipeline.js",
+        "test": "node --test"
+    },
+    "dependencies": {
+        "@google/genai": "^2.17.1",
+        "dotenv": "^16.4.5",
+        "mysql2": "^3.11.4",
+        "sharp": "^0.35.3"
+    },
+    "engines": {
+        "node": ">=20"
+    }
+}

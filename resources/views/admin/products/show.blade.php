@@ -1,0 +1,197 @@
+@extends('layouts.admin')
+
+@section('heading', 'Review: '.$product->title)
+
+@section('content')
+    <div class="grid lg:grid-cols-3 gap-6">
+        {{-- Specs & Compliance Sidebar --}}
+        <div class="bg-white border rounded-xl p-6 h-fit space-y-4">
+            <h2 class="font-semibold">Compliance Sidebar</h2>
+
+            @if ($audit = $product->complianceAudit)
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Frequency Match</span>
+                        <x-badge :color="$audit->frequencyBadge()">{{ $audit->frequency_checked ?? 'Not applicable' }}</x-badge>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">ICASA Status</span>
+                        <x-badge :color="$audit->icasaBadge()">{{ $audit->icasa_status ? ucfirst(str_replace('_', ' ', $audit->icasa_status)) : 'N/A' }}</x-badge>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">220V/50Hz Plug</span>
+                        <x-badge :color="$audit->plugBadge()">{{ $audit->plug_type_checked ? 'Confirmed' : 'Unconfirmed' }}</x-badge>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Battery Transport Cert</span>
+                        <x-badge :color="$audit->battery_transport_cert ? 'green' : 'gray'">{{ $audit->battery_transport_cert ?? 'None' }}</x-badge>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Supplier Trust</span>
+                        <x-badge :color="$audit->supplierTrustBadge()">{{ $audit->supplier_name }} ({{ $audit->supplier_years ?? '?' }}y)</x-badge>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Risk Score</span>
+                        <span class="font-semibold">{{ $audit->risk_score }}/100</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Verdict</span>
+                        <x-badge :color="$audit->audit_verdict === 'PASS' ? 'green' : ($audit->audit_verdict === 'WARN' ? 'yellow' : 'red')">{{ $audit->audit_verdict }}</x-badge>
+                    </div>
+
+                    @if (!empty($audit->rejection_reasons))
+                        <div class="mt-3">
+                            <p class="text-gray-500 mb-1">Flags</p>
+                            <ul class="list-disc list-inside text-red-700 space-y-1">
+                                @foreach ($audit->rejection_reasons as $reason)
+                                    <li>{{ $reason }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <details class="mt-3">
+                        <summary class="cursor-pointer text-gray-500">Raw AI analysis</summary>
+                        <pre class="mt-2 whitespace-pre-wrap text-xs bg-gray-50 border rounded-md p-3">{{ $audit->raw_ai_analysis }}</pre>
+                    </details>
+                </div>
+            @else
+                <p class="text-gray-400 text-sm">No compliance audit recorded for this product.</p>
+            @endif
+        </div>
+
+        <div class="lg:col-span-2 space-y-6">
+            {{-- Financial Breakdown Matrix --}}
+            <div class="bg-white border rounded-xl p-6">
+                <h2 class="font-semibold mb-4">Financial Breakdown</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                    <div>
+                        <p class="text-gray-500">Base USD</p>
+                        <p class="font-semibold">${{ number_format($product->original_price_usd, 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">USD → ZAR Rate</p>
+                        <p class="font-semibold">{{ number_format($usdZarRate, 4) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Duty Rate</p>
+                        <p class="font-semibold">{{ number_format($product->customs_duty_rate * 100, 1) }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Weight</p>
+                        <p class="font-semibold">{{ $product->est_weight_kg }} kg</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 text-center py-4 border-y">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Base ZAR</p>
+                        <p id="breakdown-base" class="text-lg font-bold">R{{ number_format($breakdown['base_zar'], 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Landed Cost</p>
+                        <p id="breakdown-landed" class="text-lg font-bold">R{{ number_format($breakdown['landed_cost_zar'], 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Retail Price</p>
+                        <p id="breakdown-retail" class="text-lg font-bold text-farmtech-green-dark">R{{ number_format($breakdown['retail_price_zar'], 2) }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="flex items-center justify-between text-sm font-medium mb-1">
+                        <span>Target Margin</span>
+                        <span id="margin-value">{{ $product->profit_margin_pct ?? 35 }}%</span>
+                    </label>
+                    <input type="range" id="margin-slider" min="0" max="80" step="1"
+                           value="{{ $product->profit_margin_pct ?? 35 }}"
+                           data-recalculate-url="{{ route('admin.products.recalculate', $product) }}"
+                           class="w-full">
+                </div>
+            </div>
+
+            {{-- Quick Edit --}}
+            <form action="{{ route('admin.products.update', $product) }}" method="POST" class="bg-white border rounded-xl p-6 space-y-4">
+                @csrf
+                @method('PATCH')
+                <h2 class="font-semibold">Quick Edit</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Title</label>
+                    <input type="text" name="title" value="{{ $product->title }}" class="w-full border rounded-md px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Short Description</label>
+                    <textarea name="short_description" rows="2" class="w-full border rounded-md px-3 py-2">{{ $product->short_description }}</textarea>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Retail Price (ZAR)</label>
+                        <input type="number" step="0.01" name="retail_price_zar" id="retail_price_zar_input" value="{{ $product->retail_price_zar ?? $breakdown['retail_price_zar'] }}" class="w-full border rounded-md px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Margin %</label>
+                        <input type="number" step="0.1" name="profit_margin_pct" id="profit_margin_pct_input" value="{{ $product->profit_margin_pct ?? 35 }}" class="w-full border rounded-md px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Stock Status</label>
+                        <select name="stock_status" class="w-full border rounded-md px-3 py-2">
+                            <option value="in_stock" @selected($product->stock_status === 'in_stock')>In Stock</option>
+                            <option value="pre_order" @selected($product->stock_status === 'pre_order')>Pre-Order</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Lead Time</label>
+                    <input type="text" name="lead_time_days" value="{{ $product->lead_time_days }}" class="w-full border rounded-md px-3 py-2">
+                </div>
+                <button type="submit" class="bg-gray-800 text-white font-semibold px-5 py-2 rounded-md hover:bg-gray-900">Save Changes</button>
+            </form>
+
+            {{-- Single-Click Actions --}}
+            <div class="flex gap-3">
+                <form action="{{ route('admin.products.approve', $product) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="bg-green-600 text-white font-semibold px-5 py-2 rounded-md hover:bg-green-700">Approve &amp; Publish</button>
+                </form>
+
+                <form action="{{ route('admin.products.reject', $product) }}" method="POST" onsubmit="return confirm('Reject this product?');" class="flex items-center gap-2">
+                    @csrf
+                    <label class="flex items-center gap-1 text-sm text-gray-500">
+                        <input type="checkbox" name="blacklist_supplier" value="1"> Blacklist supplier
+                    </label>
+                    <button type="submit" class="bg-red-600 text-white font-semibold px-5 py-2 rounded-md hover:bg-red-700">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.getElementById('margin-slider');
+        const marginValue = document.getElementById('margin-value');
+        const marginInput = document.getElementById('profit_margin_pct_input');
+        const retailInput = document.getElementById('retail_price_zar_input');
+
+        slider.addEventListener('input', async () => {
+            marginValue.textContent = slider.value + '%';
+            marginInput.value = slider.value;
+
+            const response = await fetch(slider.dataset.recalculateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ margin_pct: slider.value }),
+            });
+
+            if (!response.ok) return;
+            const data = await response.json();
+
+            document.getElementById('breakdown-base').textContent = 'R' + Number(data.base_zar).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('breakdown-landed').textContent = 'R' + Number(data.landed_cost_zar).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('breakdown-retail').textContent = 'R' + Number(data.retail_price_zar).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            retailInput.value = data.retail_price_zar;
+        });
+    </script>
+@endsection

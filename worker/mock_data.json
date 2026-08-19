@@ -1,0 +1,98 @@
+[
+  {
+    "sku": "FT-RFID-STICK-134K",
+    "raw_title": "Animal Ear Tag Handheld RFID Reader ISO11784/11785 FDX-B Livestock Stick Scanner",
+    "category_hint": "rfid",
+    "supplier_name": "Hangzhou Xinyuan Animal ID Technology Co., Ltd.",
+    "supplier_years": 6,
+    "is_verified_supplier": true,
+    "has_trade_assurance": true,
+    "supplier_price_usd": 68.00,
+    "weight_kg": 0.35,
+    "duty_rate": 0.10,
+    "stock_status": "in_stock",
+    "lead_time_days": "7-12 business days",
+    "category_price_hint": 75,
+    "raw_specs_text": "Frequency: 134.2KHz. Protocol: ISO11784/11785 FDX-B/HDX auto compatible. Reading distance: 25-45cm (ear tag), up to 60cm (bolus). Display: OLED, stores 30000 records. Battery: built-in 3.7V 2200mAh Li-ion rechargeable, charged via USB, transport documentation MSDS + UN38.3 test report available on request. Housing: IP65 waterproof ABS. Power: USB-C 5V/1A charging, no mains adapter required. Bluetooth 4.0 for data export to app (short-range, low-power). Includes datasheet PDF and CE/FCC/RoHS certificates.",
+    "image_urls": [
+      "https://picsum.photos/seed/farmtech-rfid-stick/1200/1200",
+      "https://picsum.photos/seed/farmtech-rfid-stick-2/1200/1200"
+    ]
+  },
+  {
+    "sku": "FT-USND-CATTLE-REC",
+    "raw_title": "Handheld Veterinary Ultrasound Scanner for Cattle Sheep Pregnancy Testing with Rectal Linear Probe",
+    "category_hint": "ultrasound",
+    "supplier_name": "Shenzhen Well.D Medical Electronics Co., Ltd.",
+    "supplier_years": 9,
+    "is_verified_supplier": true,
+    "has_trade_assurance": true,
+    "supplier_price_usd": 410.00,
+    "weight_kg": 1.1,
+    "duty_rate": 0.00,
+    "stock_status": "pre_order",
+    "lead_time_days": "10-15 business days",
+    "category_price_hint": 480,
+    "raw_specs_text": "Probe: 7.5MHz rectal linear array probe, purpose-built for bovine/ovine/porcine pregnancy diagnosis, waterproof probe head. Display: 5.6 inch sunlight-readable LCD. Depth: 3-16cm adjustable. Image modes: B mode, B/B. Battery: rechargeable lithium battery pack, 4+ hours continuous use, charger included in box; supplier did not provide a UN38.3 or MSDS document in the listing, only 'battery safety compliant' stated with no reference number. Power adapter: 100-240V AC input auto-switching wall charger included (both flat and round pin included). Carry case, gel, and shoulder strap included. 12 month warranty, factory service manual available.",
+    "image_urls": [
+      "https://picsum.photos/seed/farmtech-ultrasound-cattle/1200/1200"
+    ]
+  },
+  {
+    "sku": "FT-RFID-125K-INVALID",
+    "raw_title": "Cheap Pet Dog Cat ID Microchip Reader Scanner 125khz EM4100 Handheld",
+    "category_hint": "rfid",
+    "supplier_name": "Yiwu Cheerlink Pet Supplies Co., Ltd.",
+    "supplier_years": 1,
+    "is_verified_supplier": false,
+    "has_trade_assurance": false,
+    "supplier_price_usd": 9.50,
+    "weight_kg": 0.12,
+    "duty_rate": 0.10,
+    "stock_status": "in_stock",
+    "lead_time_days": "7-12 business days",
+    "category_price_hint": 75,
+    "raw_specs_text": "Frequency: 125KHz. Chip compatibility: EM4100/EM4102. Marketed for pet cats and dogs, small companion animal microchips. Reading range: 3-8cm. LCD display shows 10/15 digit ID. Battery: 2x AAA (user supplied, not included). No datasheet PDF provided, no certification documents attached to listing. Description copied directly from three other unrelated listings on the same storefront.",
+    "image_urls": [
+      "https://picsum.photos/seed/farmtech-rfid-125k/1200/1200"
+    ]
+  },
+  {
+    "sku": "FT-SCALE-T7E-IND",
+    "raw_title": "Micro T7E Style Digital Weighing Scale Indicator for Livestock Platform Scales",
+    "category_hint": "scales",
+    "supplier_name": "Zhejiang Toran Weighing Instrument Co., Ltd.",
+    "supplier_years": 8,
+    "is_verified_supplier": true,
+    "has_trade_assurance": true,
+    "supplier_price_usd": 95.00,
+    "weight_kg": 0.9,
+    "duty_rate": 0.15,
+    "stock_status": "in_stock",
+    "lead_time_days": "7-12 business days",
+    "category_price_hint": 110,
+    "raw_specs_text": "Model: T7E-style digital indicator. Load cell input sensitivity: 2mV/V, compatible with standard 4-wire analog load cells. Display: 6-digit LED, IP65 splashproof front panel. Power: 220V/50Hz AC adapter included (SA 3-pin adapter available on request) plus internal 4V/4Ah rechargeable battery for 60+ hours cordless use. Functions: hold, tare, zero-tracking, RS232 output for printer/PC. Housing: ABS with stainless mounting bracket. Calibration certificate and manual included. No wireless/RF module.",
+    "image_urls": [
+      "https://picsum.photos/seed/farmtech-scale-t7e/1200/1200"
+    ]
+  },
+  {
+    "sku": "FT-USND-RISK-UNVERIFIED",
+    "raw_title": "New Mini Ultrasound Scanner Machine Veterinary Animal Use Portable",
+    "category_hint": "ultrasound",
+    "supplier_name": "Anonymous Trading Co (unbranded storefront)",
+    "supplier_years": 0,
+    "is_verified_supplier": false,
+    "has_trade_assurance": false,
+    "supplier_price_usd": 145.00,
+    "weight_kg": 0.8,
+    "duty_rate": 0.00,
+    "stock_status": "pre_order",
+    "lead_time_days": "15-20 business days",
+    "category_price_hint": 480,
+    "raw_specs_text": "Portable ultrasound scanner for animals. Probe type not specified in listing (photo shows a generic wand, unclear if convex/linear/sector or rectal-suitable). Battery included, no capacity, no chemistry, no transport certification, no MSDS. No power adapter voltage stated. No datasheet. No CE/FCC marks visible in photos. Listing text appears machine-translated and inconsistent with the product photos (photos show a different model number to the title). Price is roughly 70% below comparable listed veterinary scanners in this category.",
+    "image_urls": [
+      "https://picsum.photos/seed/farmtech-risk-scanner/1200/1200"
+    ]
+  }
+]
