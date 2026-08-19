@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProductCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,7 @@ class Product extends Model
             'retail_price_zar' => 'decimal:2',
             'profit_margin_pct' => 'decimal:2',
             'is_active' => 'boolean',
+            'category' => ProductCategory::class,
         ];
     }
 
@@ -101,12 +103,6 @@ class Product extends Model
 
     public function getCategoryLabelAttribute(): string
     {
-        return match ($this->category) {
-            'scales' => 'Livestock Scales & Load Cells',
-            'ultrasound' => 'Veterinary Ultrasound Scanners',
-            'rfid' => 'RFID Readers & Ear Tagging Systems',
-            'accessories' => 'Replacement Probes & Accessories',
-            default => Str::title($this->category),
-        };
+        return $this->category->label();
     }
 }

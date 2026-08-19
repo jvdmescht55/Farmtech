@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Farmtech — South African AgriTech')</title>
-    <meta name="description" content="@yield('meta_description', 'AI-vetted livestock scales, veterinary ultrasound scanners, and ISO 11784/11785 RFID equipment, imported and priced for South Africa — all-in pricing, no surprise customs bill.')">
+    <meta name="description" content="@yield('meta_description', 'AI-vetted agricultural technology, imported and priced for South African farms — all-in pricing, no surprise customs bill.')">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
         <span x-text="msgs[i]" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"></span>
     </div>
 
-    <header class="bg-paper/95 backdrop-blur border-b border-steel-300 sticky top-0 z-40">
+    <header class="bg-paper/95 backdrop-blur border-b border-steel-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center gap-4 py-3">
                 <a href="{{ route('home') }}" class="font-display font-bold text-xl tracking-tight text-field-900 flex-shrink-0">
@@ -33,8 +33,8 @@
 
                 <form action="{{ route('search.index') }}" method="GET" class="flex-1 max-w-xl hidden sm:flex">
                     <div class="relative w-full">
-                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Search scales, scanners, RFID readers…"
-                               class="w-full border border-steel-300 bg-white rounded-full pl-4 pr-11 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tag/40 focus:border-tag transition">
+                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Search products, categories, specs…"
+                               class="w-full border border-steel-200 bg-white rounded-full pl-4 pr-11 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tag/40 focus:border-tag transition">
                         <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-steel-700 hover:text-tag hover:bg-tag/10 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         </button>
@@ -52,14 +52,13 @@
 
             <form action="{{ route('search.index') }}" method="GET" class="pb-3 sm:hidden">
                 <input type="search" name="q" value="{{ request('q') }}" placeholder="Search products…"
-                       class="w-full border border-steel-300 bg-white rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tag/40">
+                       class="w-full border border-steel-200 bg-white rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tag/40">
             </form>
 
-            <nav class="hidden md:flex gap-6 text-sm font-semibold pb-3 -mt-1">
-                <a href="{{ route('category.show', 'scales') }}" class="text-field-700 hover:text-tag transition">Livestock Scales</a>
-                <a href="{{ route('category.show', 'ultrasound') }}" class="text-field-700 hover:text-tag transition">Ultrasound Scanners</a>
-                <a href="{{ route('category.show', 'rfid') }}" class="text-field-700 hover:text-tag transition">RFID &amp; Ear Tagging</a>
-                <a href="{{ route('category.show', 'accessories') }}" class="text-field-700 hover:text-tag transition">Probes &amp; Accessories</a>
+            <nav class="hidden md:flex gap-5 text-sm font-semibold pb-3 -mt-1 overflow-x-auto">
+                @foreach (\App\Enums\ProductCategory::cases() as $navCategory)
+                    <a href="{{ route('category.show', $navCategory) }}" class="text-field-700 hover:text-tag transition whitespace-nowrap">{{ $navCategory->shortLabel() }}</a>
+                @endforeach
             </nav>
         </div>
     </header>
@@ -121,6 +120,17 @@
             <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between gap-2 text-xs text-steel-500">
                 <p>&copy; {{ date('Y') }} Farmtech. All prices in ZAR, inclusive of 15% VAT and import duty.</p>
                 <p>Every product page shows exactly what was checked before it was listed.</p>
+            </div>
+            <div class="max-w-7xl mx-auto px-4 pb-5">
+                <details class="text-xs text-steel-500">
+                    <summary class="cursor-pointer hover:text-steel-300 transition">Photo credits</summary>
+                    <ul class="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-1">
+                        @foreach (\App\Enums\ProductCategory::cases() as $creditCategory)
+                            @php($img = $creditCategory->image())
+                            <li>{{ $creditCategory->shortLabel() }}: <a href="{{ $img['source_url'] }}" target="_blank" rel="noopener" class="hover:text-tag-light transition">{{ $img['credit'] }}</a>, {{ $img['license'] }}</li>
+                        @endforeach
+                    </ul>
+                </details>
             </div>
         </div>
     </footer>

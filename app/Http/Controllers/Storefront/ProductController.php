@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\ProductCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 
 class ProductController extends Controller
 {
-    public function category(string $category)
+    public function category(ProductCategory $category)
     {
-        abort_unless(in_array($category, ['scales', 'ultrasound', 'rfid', 'accessories'], true), 404);
-
         $products = Product::storefrontVisible()
-            ->category($category)
+            ->category($category->value)
             ->with(['thumbnail', 'complianceAudit'])
             ->paginate(12);
 
@@ -29,7 +28,7 @@ class ProductController extends Controller
         $product->load(['images', 'specs', 'complianceAudit']);
 
         $related = Product::storefrontVisible()
-            ->category($product->category)
+            ->category($product->category->value)
             ->where('id', '!=', $product->id)
             ->with(['thumbnail', 'complianceAudit'])
             ->limit(4)

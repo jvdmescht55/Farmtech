@@ -16,7 +16,7 @@
         @if ($query === '')
             <p class="text-steel-700">Type a keyword above — try "134.2 kHz", "rectal probe", "load cell", or a category like "ultrasound".</p>
         @elseif ($products->isEmpty())
-            <div class="border border-dashed border-steel-300 rounded-xl p-10 text-center">
+            <div class="border border-dashed border-steel-200 rounded-xl p-10 text-center">
                 <p class="text-field-900 font-semibold mb-1">No matches for "{{ $query }}"</p>
                 <p class="text-steel-700 text-sm">Try a shorter or more general term — e.g. "scale" instead of "digital scale indicator".</p>
             </div>

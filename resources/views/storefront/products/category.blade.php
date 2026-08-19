@@ -1,24 +1,21 @@
 @extends('layouts.storefront')
 
 @php
-    $meta = match($category) {
-        'scales' => ['label' => 'Livestock Scales & Load Cells', 'desc' => 'Digital weighing indicators and platform scales built for the crush, race, or loading ramp — 220V/50Hz or battery powered, with load-cell sensitivity confirmed before listing.'],
-        'ultrasound' => ['label' => 'Veterinary Ultrasound Scanners', 'desc' => 'Handheld pregnancy-diagnosis scanners with probe type confirmed for cattle, sheep, or swine — rectal linear, convex, or mechanical sector.'],
-        'rfid' => ['label' => 'RFID Readers & Ear Tagging Systems', 'desc' => 'Handheld and stick readers checked against the 134.2 kHz ISO 11784/11785 livestock standard — the only frequency that reads standard SA ear tags.'],
-        'accessories' => ['label' => 'Replacement Probes & Accessories', 'desc' => 'Replacement parts and accessories for the scanners and readers above.'],
-    };
+    $image = $category->image();
 @endphp
 
-@section('title', $meta['label'].' — Farmtech')
+@section('title', $category->label().' — Farmtech')
 
 @section('content')
-    <div class="bg-field-900 text-paper">
-        <div class="max-w-7xl mx-auto px-4 py-14">
+    <div class="relative bg-field-900 text-paper overflow-hidden">
+        <img src="{{ $image['url'] }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-30">
+        <div class="absolute inset-0 bg-gradient-to-t from-field-900 via-field-900/85 to-field-900/60"></div>
+        <div class="relative max-w-7xl mx-auto px-4 py-14">
             <p class="text-xs font-mono uppercase tracking-widest text-tag-light mb-2">
-                <a href="{{ route('home') }}" class="hover:text-white transition">Farmtech</a> / Category
+                <a href="{{ route('home') }}" class="hover:text-white transition">Farmtech</a> / {{ $category->shortLabel() }}
             </p>
-            <h1 class="font-display font-bold text-3xl sm:text-4xl mb-3">{{ $meta['label'] }}</h1>
-            <p class="text-steel-300 max-w-2xl leading-relaxed">{{ $meta['desc'] }}</p>
+            <h1 class="font-display font-bold text-3xl sm:text-4xl mb-3">{{ $category->label() }}</h1>
+            <p class="text-steel-300 max-w-2xl leading-relaxed">{{ $category->description() }}</p>
         </div>
     </div>
 
@@ -29,9 +26,12 @@
             @forelse ($products as $i => $product)
                 @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
             @empty
-                <div class="col-span-full border border-dashed border-steel-300 rounded-xl p-10 text-center">
-                    <p class="text-field-900 font-semibold">No products in this category yet.</p>
-                    <p class="text-steel-700 text-sm mt-1">Check back soon, or browse another category.</p>
+                <div class="col-span-full border border-dashed border-steel-200 rounded-xl overflow-hidden text-center">
+                    <img src="{{ $image['url'] }}" alt="" class="w-full h-40 object-cover opacity-60">
+                    <div class="p-8">
+                        <p class="text-field-900 font-semibold">No {{ $category->shortLabel() }} products listed yet.</p>
+                        <p class="text-steel-700 text-sm mt-1">Check back soon, or browse another category.</p>
+                    </div>
                 </div>
             @endforelse
         </div>

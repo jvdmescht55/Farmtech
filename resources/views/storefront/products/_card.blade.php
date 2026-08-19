@@ -9,7 +9,7 @@
 
 <a href="{{ route('products.show', $product) }}"
    @if(isset($delay)) x-reveal.{{ $delay }} @endif
-   class="group bg-white border border-steel-300 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 hover:border-tag/40 transition-all duration-300">
+   class="group bg-white border border-steel-200 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 hover:border-tag/40 transition-all duration-300">
     <div class="relative aspect-square bg-steel-100 flex items-center justify-center overflow-hidden">
         @if ($product->thumbnail)
             <img src="{{ $product->thumbnail->url }}" alt="{{ $product->title }}" loading="lazy"

@@ -81,7 +81,7 @@
             </button>
         </form>
 
-        <div class="bg-white border border-steel-300 rounded-xl p-6 h-fit shadow-sm">
+        <div class="bg-white border border-steel-200 rounded-xl p-6 h-fit shadow-sm">
             <h2 class="font-display font-semibold mb-4">Order Summary</h2>
             <ul class="space-y-2 text-sm">
                 @foreach ($items as $item)

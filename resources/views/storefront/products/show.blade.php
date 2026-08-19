@@ -7,6 +7,12 @@
     $audit = $product->complianceAudit;
     $dutyPct = number_format($product->customs_duty_rate * 100, 1);
     $vatPct = number_format($product->vat_rate * 100, 0);
+    $checks = collect([
+        $audit?->frequency_checked,
+        $audit?->icasa_status ? 'ICASA: '.ucfirst(str_replace('_', ' ', $audit->icasa_status)) : null,
+        $audit?->battery_transport_cert ? 'Battery transport cert: '.$audit->battery_transport_cert : null,
+        $audit ? 'Supplier: '.$audit->supplier_name.($audit->supplier_years ? " ({$audit->supplier_years}+ years trading)" : '') : null,
+    ])->filter();
 @endphp
 
 @section('content')
@@ -19,10 +25,10 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 pb-16">
-        <div class="grid lg:grid-cols-2 gap-10">
+        <div class="grid lg:grid-cols-2 gap-12">
             {{-- Gallery --}}
             <div x-data="{ active: 0 }">
-                <div class="relative aspect-square bg-white border border-steel-300 rounded-2xl overflow-hidden flex items-center justify-center mb-3 shadow-sm">
+                <div class="relative aspect-square bg-white border border-steel-200 rounded-2xl overflow-hidden flex items-center justify-center mb-3">
                     @if ($product->images->isNotEmpty())
                         @foreach ($product->images as $i => $image)
                             <img x-show="active === {{ $i }}" x-transition.opacity.duration.300ms
@@ -41,7 +47,7 @@
                     <div class="grid grid-cols-5 gap-2">
                         @foreach ($product->images as $i => $image)
                             <button type="button" @click="active = {{ $i }}"
-                                    :class="active === {{ $i }} ? 'border-tag' : 'border-steel-300'"
+                                    :class="active === {{ $i }} ? 'border-tag' : 'border-steel-200'"
                                     class="border-2 rounded-lg overflow-hidden aspect-square hover:border-tag/60 transition">
                                 <img src="{{ $image->url }}" alt="" class="object-cover w-full h-full">
                             </button>
@@ -71,97 +77,75 @@
                     <span class="text-steel-700">Lead time: {{ $product->lead_time_days }}</span>
                 </div>
 
-                <form action="{{ route('cart.add', $product) }}" method="POST" x-data="{ added: false }" @submit="added = true" class="mt-6 flex gap-3">
+                <form action="{{ route('cart.add', $product) }}" method="POST" class="mt-6 flex gap-3">
                     @csrf
-                    <input type="number" name="quantity" value="1" min="1" class="w-20 border border-steel-300 rounded-full px-4 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-tag/30">
+                    <input type="number" name="quantity" value="1" min="1" class="w-20 border border-steel-200 rounded-full px-4 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-tag/30">
                     <button type="submit" class="flex-1 bg-tag hover:bg-tag-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
                         Add to Cart
                     </button>
                 </form>
 
-                {{-- Import & delivery transparency --}}
-                <div class="mt-8 bg-white border border-steel-300 rounded-2xl p-5">
-                    <p class="font-display font-semibold text-sm text-field-950 mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="7" width="15" height="10"/><path d="M16 10h4l3 3v4h-7z"/><circle cx="5.5" cy="19.5" r="1.5"/><circle cx="18.5" cy="19.5" r="1.5"/></svg>
-                        Imported &amp; Duty-Cleared for You
-                    </p>
-                    <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm mb-4">
-                        <div>
-                            <dt class="text-steel-600 text-xs uppercase tracking-wide">Import duty</dt>
-                            <dd class="font-mono font-semibold text-field-950">{{ $dutyPct }}%</dd>
+                {{-- One unified transparency card: cost, delivery, and what was checked — no color-switching between sections --}}
+                <div class="mt-8 bg-steel-100/50 rounded-2xl p-5 divide-y divide-steel-200">
+                    <div class="pb-4">
+                        <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                            <span><span class="text-steel-600">Import duty</span> <span class="font-mono font-semibold text-field-950">{{ $dutyPct }}%</span></span>
+                            <span><span class="text-steel-600">SARS VAT</span> <span class="font-mono font-semibold text-field-950">{{ $vatPct }}%</span></span>
+                            <span><span class="text-steel-600">HS Code</span> <span class="font-mono font-semibold text-field-950">{{ $product->hs_code ?? '—' }}</span></span>
                         </div>
-                        <div>
-                            <dt class="text-steel-600 text-xs uppercase tracking-wide">SARS VAT</dt>
-                            <dd class="font-mono font-semibold text-field-950">{{ $vatPct }}%</dd>
-                        </div>
-                        <div class="col-span-2">
-                            <dt class="text-steel-600 text-xs uppercase tracking-wide">HS Code</dt>
-                            <dd class="font-mono font-semibold text-field-950">{{ $product->hs_code ?? '—' }}</dd>
-                        </div>
-                    </dl>
-                    <p class="text-xs text-steel-600 border-t border-steel-100 pt-3">
-                        Both are already included in the price above — customs clearance is handled on your behalf,
-                        so there's nothing extra to pay when it arrives.
-                    </p>
-
-                    {{-- Delivery timeline --}}
-                    <div class="mt-5 flex items-center text-[11px] text-steel-600">
-                        @foreach (['Order Placed', 'Customs Clearance', 'Delivered'] as $i => $step)
-                            <div class="flex-1 flex flex-col items-center text-center">
-                                <span class="w-2.5 h-2.5 rounded-full {{ $i === 0 ? 'bg-tag' : 'bg-steel-300' }}"></span>
-                                <span class="mt-1.5">{{ $step }}</span>
-                            </div>
-                            @if (!$loop->last)
-                                <div class="flex-1 h-px bg-steel-300 -mt-4"></div>
-                            @endif
-                        @endforeach
+                        <p class="text-xs text-steel-600 mt-2">Already included above — customs is handled for you, nothing extra on delivery.</p>
                     </div>
-                    <p class="text-center text-xs text-steel-500 mt-2">Typically {{ $product->lead_time_days }} door to door via tracked Direct Express air freight.</p>
+
+                    <div class="py-4">
+                        <div class="flex items-center text-[11px] text-steel-600">
+                            @foreach (['Order Placed', 'Customs Clearance', 'Delivered'] as $i => $step)
+                                <div class="flex-1 flex flex-col items-center text-center">
+                                    <span class="w-2.5 h-2.5 rounded-full {{ $i === 0 ? 'bg-tag' : 'bg-steel-300' }}"></span>
+                                    <span class="mt-1.5">{{ $step }}</span>
+                                </div>
+                                @if (!$loop->last)
+                                    <div class="flex-1 h-px bg-steel-300 -mt-4"></div>
+                                @endif
+                            @endforeach
+                        </div>
+                        <p class="text-center text-xs text-steel-500 mt-2">Typically {{ $product->lead_time_days }} via tracked Direct Express air freight.</p>
+                    </div>
+
+                    @if ($checks->isNotEmpty())
+                        <div class="pt-4">
+                            <p class="text-xs font-semibold text-field-900 uppercase tracking-wide mb-2">What we checked before listing this</p>
+                            <ul class="space-y-1.5 text-sm text-steel-700">
+                                @foreach ($checks as $check)
+                                    <li class="flex gap-2"><span class="text-emerald-600 flex-shrink-0">✓</span> {{ $check }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                 </div>
-
-                {{-- Compliance summary — real audit facts only --}}
-                @if ($audit)
-                    <div class="mt-4 bg-field-950 text-paper rounded-2xl p-5">
-                        <p class="font-display font-semibold text-sm mb-3 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-tag-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
-                            What We Checked Before Listing This
-                        </p>
-                        <ul class="space-y-2 text-sm text-steel-300">
-                            @if ($audit->frequency_checked)
-                                <li class="flex gap-2"><span class="text-emerald-400">✓</span> {{ $audit->frequency_checked }}</li>
-                            @endif
-                            @if ($audit->icasa_status)
-                                <li class="flex gap-2"><span class="text-emerald-400">✓</span> ICASA: {{ ucfirst(str_replace('_', ' ', $audit->icasa_status)) }}</li>
-                            @endif
-                            @if ($audit->battery_transport_cert)
-                                <li class="flex gap-2"><span class="text-emerald-400">✓</span> Battery transport cert: {{ $audit->battery_transport_cert }}</li>
-                            @endif
-                            <li class="flex gap-2"><span class="text-emerald-400">✓</span> Supplier: {{ $audit->supplier_name }}@if($audit->supplier_years) ({{ $audit->supplier_years }}+ years trading)@endif</li>
-                        </ul>
-                    </div>
-                @endif
             </div>
         </div>
 
-        {{-- Specs --}}
+        {{-- Specs — one card, group headers as internal dividers rather than N separate boxes --}}
         @if ($product->specs->isNotEmpty())
             <div x-reveal class="mt-16 max-w-3xl">
                 <h2 class="font-display font-bold text-xl text-field-950 mb-5">Technical Specifications</h2>
-                @foreach ($product->specs->groupBy('spec_group') as $group => $specs)
-                    <div class="mb-5">
-                        <h3 class="text-xs font-semibold text-tag uppercase tracking-widest mb-2">{{ $group }}</h3>
-                        <table class="w-full text-sm border border-steel-300 rounded-lg overflow-hidden bg-white">
-                            <tbody>
-                                @foreach ($specs as $spec)
-                                    <tr class="border-t border-steel-100 first:border-t-0 {{ $spec->is_highlight ? 'bg-tag/5' : '' }}">
-                                        <td class="px-4 py-2.5 font-medium text-steel-700 w-1/2">{{ $spec->spec_key }}</td>
-                                        <td class="px-4 py-2.5 font-mono text-field-950">{{ $spec->spec_value }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endforeach
+                <div class="border border-steel-200 rounded-xl overflow-hidden bg-white divide-y divide-steel-200">
+                    @foreach ($product->specs->groupBy('spec_group') as $group => $specs)
+                        <div>
+                            <p class="text-xs font-semibold text-tag uppercase tracking-widest px-4 pt-3 pb-1">{{ $group }}</p>
+                            <table class="w-full text-sm">
+                                <tbody>
+                                    @foreach ($specs as $spec)
+                                        <tr class="{{ $spec->is_highlight ? 'bg-tag/5' : '' }}">
+                                            <td class="px-4 py-2 font-medium text-steel-700 w-1/2">{{ $spec->spec_key }}</td>
+                                            <td class="px-4 py-2 font-mono text-field-950">{{ $spec->spec_value }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         @endif
 
@@ -173,7 +157,7 @@
     </div>
 
     @if ($related->isNotEmpty())
-        <section class="bg-steel-100/60 border-t border-steel-300 mt-8 py-14">
+        <section class="bg-steel-100/60 border-t border-steel-200 mt-8 py-14">
             <div class="max-w-7xl mx-auto px-4">
                 <h2 class="font-display font-bold text-xl text-field-950 mb-6">You Might Also Need</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">

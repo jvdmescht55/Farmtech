@@ -10,7 +10,7 @@ const REQUIRED_LISTING_FIELDS = [
     'sku', 'raw_title', 'category_hint', 'supplier_name',
     'supplier_price_usd', 'weight_kg', 'duty_rate', 'raw_specs_text',
 ];
-const VALID_CATEGORIES = ['scales', 'ultrasound', 'rfid', 'accessories'];
+const VALID_CATEGORIES = ['scales', 'ultrasound', 'rfid', 'accessories', 'fencing', 'solar_pumps'];
 
 test('mock_data.json has exactly the 5 spec-required test cases with all required fields', async () => {
     const raw = await readFile(path.join(__dirname, '..', 'mock_data.json'), 'utf-8');

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ProductCategory;
 use App\Http\Controllers\Controller;
 use Dotenv\Dotenv;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -21,14 +23,16 @@ class SourceController extends Controller
 {
     public function create()
     {
-        return view('admin.source.create');
+        return view('admin.source.create', [
+            'categories' => ProductCategory::cases(),
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'raw_title' => ['required', 'string', 'max:255'],
-            'category_hint' => ['required', 'in:scales,ultrasound,rfid,accessories'],
+            'category_hint' => ['required', Rule::enum(ProductCategory::class)],
             'supplier_name' => ['required', 'string', 'max:255'],
             'supplier_years' => ['nullable', 'integer', 'min:0'],
             'is_verified_supplier' => ['sometimes', 'boolean'],

@@ -12,8 +12,8 @@
 
         <select name="category" onchange="this.form.submit()" class="border rounded-md px-3 py-2 text-sm">
             <option value="">All Categories</option>
-            @foreach (['scales', 'ultrasound', 'rfid', 'accessories'] as $category)
-                <option value="{{ $category }}" @selected(($filters['category'] ?? '') === $category)>{{ ucfirst($category) }}</option>
+            @foreach (\App\Enums\ProductCategory::cases() as $category)
+                <option value="{{ $category->value }}" @selected(($filters['category'] ?? '') === $category->value)>{{ $category->shortLabel() }}</option>
             @endforeach
         </select>
 
@@ -49,7 +49,7 @@
                             </div>
                             <span class="font-medium">{{ $product->title }}</span>
                         </td>
-                        <td class="px-4 py-3 capitalize">{{ $product->category }}</td>
+                        <td class="px-4 py-3">{{ $product->category->shortLabel() }}</td>
                         <td class="px-4 py-3">{{ $product->complianceAudit?->supplier_name ?? '—' }}</td>
                         <td class="px-4 py-3">
                             @if ($verdict = $product->complianceAudit?->audit_verdict)

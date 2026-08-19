@@ -29,8 +29,8 @@
                     <label class="block text-sm font-medium mb-1">Category</label>
                     <select name="category_hint" required class="w-full border rounded-md px-3 py-2">
                         <option value="">Select…</option>
-                        @foreach (['scales' => 'Scales', 'ultrasound' => 'Ultrasound', 'rfid' => 'RFID', 'accessories' => 'Accessories'] as $value => $label)
-                            <option value="{{ $value }}" @selected(old('category_hint') === $value)>{{ $label }}</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->value }}" @selected(old('category_hint') === $category->value)>{{ $category->shortLabel() }}</option>
                         @endforeach
                     </select>
                 </div>

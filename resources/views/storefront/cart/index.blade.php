@@ -7,12 +7,12 @@
         <h1 class="font-display font-bold text-2xl sm:text-3xl text-field-950 mb-8">Your Cart</h1>
 
         @if (empty($items))
-            <div class="border border-dashed border-steel-300 rounded-xl p-12 text-center">
+            <div class="border border-dashed border-steel-200 rounded-xl p-12 text-center">
                 <p class="text-field-900 font-semibold mb-2">Your cart is empty.</p>
                 <a href="{{ route('home') }}" class="text-tag font-semibold hover:underline">Browse products →</a>
             </div>
         @else
-            <div class="bg-white border border-steel-300 rounded-2xl divide-y divide-steel-100 shadow-sm">
+            <div class="bg-white border border-steel-200 rounded-2xl divide-y divide-steel-100 shadow-sm">
                 @foreach ($items as $item)
                     <div class="flex items-center gap-4 p-4">
                         <div class="w-16 h-16 bg-steel-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -27,7 +27,7 @@
                         <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="flex items-center gap-2">
                             @csrf
                             @method('PATCH')
-                            <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="w-16 border border-steel-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-tag/30">
+                            <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="w-16 border border-steel-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-tag/30">
                             <button type="submit" class="text-xs font-semibold text-tag hover:underline">Update</button>
                         </form>
                         <p class="font-mono font-semibold w-28 text-right">R{{ number_format($item['line_total'], 2) }}</p>
