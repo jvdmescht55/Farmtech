@@ -157,52 +157,6 @@
         @yield('content')
     </main>
 
-    <footer class="bg-brand-950 text-slate-300 mt-20">
-        <div class="max-w-7xl mx-auto px-4 py-14 grid gap-10 md:grid-cols-4">
-            <div>
-                <p class="font-display font-bold text-lg text-white mb-3">Farm<span class="text-mint">tech</span></p>
-                <p class="text-sm leading-relaxed">AI-vetted agricultural technology, sourced from verified overseas suppliers and cleared for South African farms.</p>
-            </div>
-            <div>
-                <p class="font-display font-semibold text-white text-sm uppercase tracking-wide mb-3">Shipping &amp; Import</p>
-                <ul class="text-sm space-y-2 leading-relaxed">
-                    <li>Direct Express air freight, 7–12 business days</li>
-                    <li>SA import duty &amp; 15% VAT already included in price</li>
-                    <li>Customs clearance handled for you — no paperwork, no surprise bill</li>
-                </ul>
-            </div>
-            <div>
-                <p class="font-display font-semibold text-white text-sm uppercase tracking-wide mb-3">Payments</p>
-                <ul class="text-sm space-y-2 leading-relaxed">
-                    <li>PayFast, Ozow (Instant EFT) &amp; Yoco accepted</li>
-                    <li>Card details are handled by the payment provider — Farmtech never stores them</li>
-                </ul>
-            </div>
-            <div>
-                <p class="font-display font-semibold text-white text-sm uppercase tracking-wide mb-3">Get in Touch</p>
-                <ul class="text-sm space-y-2 leading-relaxed">
-                    <li><a href="mailto:support@farmtech.co.za" class="hover:text-mint-light transition">support@farmtech.co.za</a></li>
-                    <li>Order queries answered within 1 business day</li>
-                </ul>
-            </div>
-        </div>
-        <div class="border-t border-white/10">
-            <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between gap-2 text-xs text-slate-500">
-                <p>&copy; {{ date('Y') }} Farmtech. All prices in ZAR, inclusive of 15% VAT and import duty.</p>
-                <p>Every product page shows exactly what was checked before it was listed.</p>
-            </div>
-            <div class="max-w-7xl mx-auto px-4 pb-5">
-                <details class="text-xs text-slate-500">
-                    <summary class="cursor-pointer hover:text-slate-300 transition">Photo credits</summary>
-                    <ul class="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-1">
-                        @foreach (\App\Enums\ProductCategory::cases() as $creditCategory)
-                            @php($img = $creditCategory->image())
-                            <li>{{ $creditCategory->shortLabel() }}: <a href="{{ $img['source_url'] }}" target="_blank" rel="noopener" class="hover:text-mint-light transition">{{ $img['credit'] }}</a>, {{ $img['license'] }}</li>
-                        @endforeach
-                    </ul>
-                </details>
-            </div>
-        </div>
-    </footer>
+    <x-footer />
 </body>
 </html>

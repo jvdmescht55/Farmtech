@@ -53,13 +53,21 @@
         opacity: 0.5;
     }
 
-    /* Glassmorphism surface per the design-system spec. */
+    /*
+     * Industrial surface (rev. 8) — replaces the earlier glassmorphism
+     * treatment (blurred, translucent) with a solid surface and a crisp
+     * hairline border, per the "tactile, high-trust industrial" direction.
+     * Kept as the same two class names deliberately: every view that
+     * already uses .glass-card/.glass-header (header, trending strip,
+     * product cards, PDP price card, hero showcase) picks up the new look
+     * automatically, without a per-view rewrite.
+     */
     .glass-card {
-        @apply backdrop-blur-md bg-white/80 border border-slate-200/80;
+        @apply bg-white border border-slate-200 shadow-none;
     }
 
     .glass-header {
-        @apply backdrop-blur-md border-b transition-colors duration-300;
+        @apply bg-white/95 border-b border-slate-200 transition-colors duration-300;
     }
 }
 

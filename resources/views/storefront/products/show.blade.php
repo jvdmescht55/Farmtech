@@ -13,6 +13,8 @@
         $audit?->battery_transport_cert ? 'Battery transport cert: '.$audit->battery_transport_cert : null,
         $audit ? 'Supplier: '.$audit->supplier_name.($audit->supplier_years ? " ({$audit->supplier_years}+ years trading)" : '') : null,
     ])->filter();
+    $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
+    $whatsappUrl = $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp).'?text='.rawurlencode("Hi Farmtech, I have a technical question about {$product->title} ({$product->sku}).") : null;
 @endphp
 
 @section('content')
@@ -41,7 +43,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                         </button>
                     @else
-                        <span class="text-slate-400">No image available</span>
+                        <x-product-image-fallback :category="$product->category" icon-class="w-16 h-16" />
                     @endif
 
                     @if ($audit?->audit_verdict === 'PASS')
@@ -124,6 +126,21 @@
                         </form>
                     @endif
                 </div>
+
+                <x-compliance-badges :product="$product" />
+
+                @if ($whatsappUrl)
+                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener"
+                       class="mt-4 flex items-center gap-3 border border-slate-200 bg-white rounded-xl px-4 py-3 hover:border-emerald-300 hover:bg-emerald-50/50 transition group">
+                        <span class="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block text-sm font-semibold text-brand-900 group-hover:text-emerald-700 transition">Need custom technical specifications?</span>
+                            <span class="block text-xs text-slate-500">Chat with an equipment specialist on WhatsApp</span>
+                        </span>
+                    </a>
+                @endif
 
                 {{-- Tabbed spec matrix --}}
                 <div x-data="{ tab: 'specs' }" class="mt-8">
@@ -225,6 +242,19 @@
                 </div>
             </div>
         </section>
+    @endif
+
+    {{-- Floating WhatsApp specialist CTA --}}
+    @if ($whatsappUrl)
+        <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="Chat with an equipment specialist on WhatsApp"
+           class="hidden lg:flex fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-lg items-center justify-center transition hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+        </a>
+        {{-- Mobile: above the sticky add-to-cart bar rather than overlapping it --}}
+        <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="Chat with an equipment specialist on WhatsApp"
+           class="lg:hidden fixed {{ $product->isOutOfStock() ? 'bottom-6' : 'bottom-20' }} right-4 z-40 w-12 h-12 rounded-full bg-emerald-500 shadow-lg flex items-center justify-center transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+        </a>
     @endif
 
     {{-- Mobile sticky add-to-cart bar --}}

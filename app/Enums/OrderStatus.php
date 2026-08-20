@@ -50,6 +50,35 @@ enum OrderStatus: string
         return in_array($this, [self::Dispatched, self::InCustoms], true);
     }
 
+    /**
+     * 0-based index into trackingStageLabels() for the /track portal's 5-stage
+     * stepper. Null for Cancelled — there's no meaningful position on a linear
+     * progress stepper for an order that stopped, so the track page shows a
+     * dedicated cancelled banner instead of a partially-lit stepper.
+     */
+    public function trackingStageIndex(): ?int
+    {
+        return match ($this) {
+            self::PendingPayment => 0,
+            self::Paid => 1,
+            self::ProcessingImport, self::InCustoms => 2,
+            self::Dispatched => 3,
+            self::Completed => 4,
+            self::Cancelled => null,
+        };
+    }
+
+    public static function trackingStageLabels(): array
+    {
+        return [
+            'Order Confirmed',
+            'Payment Verified',
+            'Import & Customs Processing',
+            'Dispatched with Courier',
+            'Delivered at Farm / Site Gate',
+        ];
+    }
+
     public static function values(): array
     {
         return array_column(self::cases(), 'value');

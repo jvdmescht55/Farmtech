@@ -77,5 +77,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('search', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
 
         RateLimiter::for('cart', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
+
+        // Order lookup is a two-field guess surface (order_number + email) —
+        // same bucket size as cart/checkout, keyed by IP same as the others.
+        RateLimiter::for('track', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
     }
 }

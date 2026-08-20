@@ -15,7 +15,7 @@
             <img src="{{ $product->thumbnail->url }}" alt="{{ $product->title }}" loading="lazy"
                  class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500">
         @else
-            <span class="text-slate-500 text-sm">No image</span>
+            <x-product-image-fallback :category="$product->category" />
         @endif
 
         @if ($stampLabel)

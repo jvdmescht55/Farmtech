@@ -4,29 +4,28 @@
 
 @section('content')
 
-    {{-- Split hero --}}
+    {{-- Split hero — light industrial canvas --}}
     @if ($heroProducts->isNotEmpty())
         @php($hero = $heroProducts->first())
-        <section class="relative bg-brand-950 overflow-hidden">
-            <div class="absolute inset-0 bg-grain"></div>
-            <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-24 grid lg:grid-cols-2 gap-10 items-center">
+        <section class="relative bg-slate-50 border-b border-slate-200 overflow-hidden">
+            <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
                 <div>
-                    <span class="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-mint-light text-xs font-semibold uppercase tracking-[0.15em] px-3.5 py-1.5 rounded-full mb-6 animate-reveal-up">
+                    <span class="inline-flex items-center gap-2 bg-white border border-slate-200 text-mint-dark text-xs font-semibold uppercase tracking-[0.15em] px-3.5 py-1.5 rounded-full mb-6 animate-reveal-up">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
                         AI-Vetted Before It's Listed
                     </span>
-                    <h1 class="font-display font-extrabold text-4xl sm:text-5xl text-white leading-[1.08] mb-5 animate-reveal-up" style="animation-delay:80ms">
+                    <h1 class="font-display font-extrabold text-4xl sm:text-5xl text-brand-900 leading-[1.08] mb-5 animate-reveal-up" style="animation-delay:80ms">
                         Agricultural technology, sourced and cleared for South African farms.
                     </h1>
-                    <p class="text-slate-300 text-base sm:text-lg max-w-lg mb-8 leading-relaxed animate-reveal-up" style="animation-delay:140ms">
+                    <p class="text-slate-600 text-base sm:text-lg max-w-lg mb-8 leading-relaxed animate-reveal-up" style="animation-delay:140ms">
                         Every listing is checked against ISO 11784/11785, ICASA or NRCS requirements before it goes live — with all-in ZAR pricing, so what you see is what you pay.
                     </p>
                     <div class="flex flex-wrap items-center gap-4 animate-reveal-up" style="animation-delay:200ms">
-                        <a href="{{ route('products.show', $hero) }}" class="relative inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-6 py-3.5 rounded-full transition-all hover:gap-3 animate-glow-pulse">
+                        <a href="{{ route('products.show', $hero) }}" class="relative inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-6 py-3.5 rounded-full transition-all hover:gap-3">
                             Shop the {{ $hero->category_label }}
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </a>
-                        <a href="{{ route('search.index') }}" class="text-sm font-semibold text-white/80 hover:text-white transition">Browse all products</a>
+                        <a href="{{ route('search.index') }}" class="text-sm font-semibold text-slate-600 hover:text-brand-900 transition">Browse all products</a>
                     </div>
                 </div>
 
@@ -41,7 +40,7 @@
                     }"
                     x-init="start()" @mouseenter="stop()" @mouseleave="start()"
                     class="relative animate-reveal-up" style="animation-delay:260ms">
-                    <div class="relative aspect-[4/3] rounded-2xl overflow-hidden glass-card bg-white/10 shadow-2xl">
+                    <div class="relative aspect-[4/3] rounded-2xl overflow-hidden glass-card">
                         @foreach ($heroProducts as $i => $product)
                             <a href="{{ route('products.show', $product) }}"
                                x-show="slide === {{ $i }}" @if ($i > 0) x-cloak @endif
@@ -52,7 +51,7 @@
                                 @if ($product->thumbnail)
                                     <img src="{{ $product->thumbnail->url }}" alt="{{ $product->title }}" class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-[3000ms] ease-out">
                                 @endif
-                                <div class="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/10 to-transparent"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-brand-950/85 via-brand-950/5 to-transparent"></div>
                                 <div class="absolute bottom-0 left-0 right-0 p-5">
                                     <p class="text-white font-display font-semibold text-lg leading-tight mb-1">{{ $product->title }}</p>
                                     <p class="font-mono text-mint-light text-xl font-semibold">R{{ number_format($product->retail_price_zar, 2) }}</p>
@@ -61,15 +60,15 @@
                         @endforeach
                     </div>
                     @if ($heroProducts->count() > 1)
-                        <button @click="prev()" aria-label="Previous" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 hover:scale-110 text-white flex items-center justify-center backdrop-blur transition">
+                        <button @click="prev()" aria-label="Previous" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-slate-300 hover:scale-110 text-brand-900 flex items-center justify-center transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                         </button>
-                        <button @click="next()" aria-label="Next" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 hover:scale-110 text-white flex items-center justify-center backdrop-blur transition">
+                        <button @click="next()" aria-label="Next" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-slate-300 hover:scale-110 text-brand-900 flex items-center justify-center transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </button>
-                        <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                        <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
                             @foreach ($heroProducts as $i => $product)
-                                <button @click="slide = {{ $i }}" :class="slide === {{ $i }} ? 'w-8 bg-mint' : 'w-2 bg-brand-900/20 hover:bg-brand-900/40'" class="h-2 rounded-full transition-all duration-300"></button>
+                                <button @click="slide = {{ $i }}" :class="slide === {{ $i }} ? 'w-8 bg-mint' : 'w-2 bg-white border border-slate-300'" class="h-2 rounded-full transition-all duration-300"></button>
                             @endforeach
                         </div>
                     @endif
@@ -77,12 +76,10 @@
             </div>
         </section>
     @else
-        <section class="relative bg-brand-950 text-white overflow-hidden">
-            <img src="{{ \App\Enums\ProductCategory::heroFallbackImage()['url'] }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25">
-            <div class="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/85 to-brand-950/60"></div>
+        <section class="relative bg-slate-50 border-b border-slate-200 text-brand-900 overflow-hidden">
             <div class="relative px-4 py-24 text-center">
                 <h1 class="font-display font-extrabold text-3xl sm:text-4xl mb-3 max-w-2xl mx-auto">Agricultural technology, sourced and checked for South African farms.</h1>
-                <p class="text-slate-300 max-w-xl mx-auto">Products will appear here once the admin team approves the first listings.</p>
+                <p class="text-slate-600 max-w-xl mx-auto">Products will appear here once the admin team approves the first listings.</p>
             </div>
         </section>
     @endif
@@ -92,7 +89,7 @@
     <div class="max-w-7xl mx-auto px-4">
 
         {{-- Trust bar --}}
-        <section class="grid sm:grid-cols-4 gap-4 {{ $heroProducts->isNotEmpty() ? '-mt-10' : 'mt-10' }} relative z-10 mb-20">
+        <section class="grid sm:grid-cols-4 gap-4 mt-10 relative z-10 mb-20">
             @foreach ([
                 ['icon' => 'shield', 'title' => 'AI Compliance Checked', 'body' => 'Every listing is checked against the relevant SA standard — ISO 11784/11785, ICASA, or NRCS — before it goes live.'],
                 ['icon' => 'receipt', 'title' => 'All-In Pricing', 'body' => 'Import duty & 15% VAT are already in the price. Nothing extra to pay on delivery.'],

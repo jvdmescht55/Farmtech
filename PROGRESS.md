@@ -1,18 +1,107 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 7 — multi-industry expansion, Value-Density Feasibility Engine,
-Top-5 Trending strip).
-What changed since rev. 6: Farmtech expanded from a livestock-only catalog to four sectors —
-Agriculture, Construction, Industrial & Logistics, Solar Power — via a new `Industry` enum grouping
-10 new `ProductCategory` cases alongside the original 5; the flat "$50 minimum base value, 40%
-margin" arbitrage rule was replaced by a Value-Density Feasibility Engine (freight-to-base ratio
-check + R500 minimum net profit floor, mirrored identically in Node and PHP, plus an AI-judged
-`local_price_delta_pct` replacing the old binary competitive/uncompetitive call); and a "Top 5
-Trending" strip (ranked by real units sold, falling back to newest-first) now appears on the
-homepage and sticky on category/search pages. Rev. 6 added the arbitrage engine, profit
-transparency, and image quality gate; rev. 5 added the scraper webhook; rev. 4 covered RBAC, rate
-limiting, S3 storage, CI, and the storefront redesign. See [README.md](README.md) for
-architecture/setup.
+Last updated: 2026-08-20 (rev. 8 — order tracking portal, PDP compliance badges, WhatsApp CTA,
+industrial reskin, category grid controls, legal pages).
+What changed since rev. 7: a full guest order-tracking portal at `/track` (5-stage stepper, masked
+address, courier links); a data-driven compliance badge strip on the product page (never a fixed
+set — only shows what the pipeline actually verified for that item); an admin-configurable WhatsApp
+CTA; the storefront's visual identity moved from glassmorphism (blurred, translucent) to a solid,
+hairline-bordered "industrial" surface, and the homepage/category hero blocks moved from full-bleed
+dark green-black to a light canvas; category pages gained a working sort/filter control bar and an
+industry-grouped sibling-category switcher; a proper `<x-footer>` component with real navigation
+(catalogs, tracking, legal); and three CPA-compliant legal pages (returns, terms, ICASA compliance)
+with real operational facts and clearly-bracketed placeholders for the entity details that don't
+exist yet (see caveats below — there is no registered company behind this site yet). Rev. 7 added
+the multi-industry expansion, Value-Density Feasibility Engine, and Top-5 Trending strip; rev. 6
+added the arbitrage engine, profit transparency, and image quality gate; rev. 5 added the scraper
+webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront redesign. See
+[README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 8)
+
+- **Customer order tracking portal — `/track`.** Guest lookup by order number + email (the only
+  credential a real customer has — there are no customer accounts in this app), POST-only so the
+  email never lands in a URL, browser history, or referrer header, rate-limited to 10/hour/IP
+  (`RateLimiter::for('track', ...)`, same bucket size as cart/checkout). A 5-stage stepper
+  (`OrderStatus::trackingStageIndex()`/`trackingStageLabels()`) maps the real order status —
+  Cancelled gets a dedicated banner instead of a partially-lit stepper, since there's no honest
+  position for a stopped order on a linear progress bar. The delivery address shows city/province/
+  postal only (street lines withheld, per your answer on the design question) and the hardware
+  manifest is pulled from the real `order->items`. **Courier tracking links** (`App\Services\
+  CourierTrackingLinks`) only link to a carrier's real tracking page — Courier Guy and DHL SA URLs
+  were confirmed via live web search before being hardcoded; RAM and DawnWing are best-effort from
+  third-party listings and worth a manual spot-check before relying on them. An unrecognized courier
+  still shows the tracking number as plain text rather than a guessed/broken deep link. 11 new tests
+  (`TrackOrderControllerTest`) cover the happy path, wrong-email rejection, case-insensitive email
+  matching, address masking, the cancelled banner, both courier-link branches, and the rate limit.
+- **PDP compliance badge strip — data-driven, not a fixed set.** `<x-compliance-badges>` renders
+  only badges the pipeline actually verified for *that specific product* — ICASA status, power/plug
+  check, ISO 11784/11785 (RFID category only), battery-transport cert, and an IP rating pulled from
+  a real spec-sheet row via a regex on the *value* (`/\bIP\s?\d{2}\b/`) rather than a specific
+  `spec_key` string, since the AI-generated key wording varies by category ("IP Rating", "Enclosure
+  Rating") but a real IP rating value always looks like IP54/IP65/IP67 — verified live against a
+  real approved product whose spec sheet used "Enclosure Rating" as the key, confirming the
+  value-based match catches it where a key-based match would have missed it. A product with fewer
+  verified attributes shows fewer badges — there is no "always show 4" fallback. Moved out of the
+  buried Compliance tab to directly under the price card. 5 new tests (`ComplianceBadgesTest`).
+- **WhatsApp specialist CTA**, gated entirely behind a new admin-configurable `support_whatsapp`
+  setting (`/admin/settings`, same key-value pattern as the existing margin/freight settings) — the
+  floating button (desktop bottom-right, mobile above the sticky add-to-cart bar), the inline PDP
+  card, and the footer badge all render *only* when a real number is configured, never a dead
+  `wa.me/` link. The prefilled message includes the product's title and SKU. Verified both states
+  live (absent when unset, present with a working `wa.me/` link once set) and by test.
+- **Industrial reskin.** The site's glassmorphism look (blurred, translucent surfaces) was
+  centralized in exactly two CSS component classes — `.glass-card` and `.glass-header`
+  (`resources/css/app.css`) — so redefining those two (solid background + hairline `border-slate-200`,
+  no blur) cascaded the new look through the header, hero showcase card, trending strip, and PDP
+  price card automatically, without a per-view rewrite. The homepage and category-page hero blocks
+  — previously full-bleed `bg-brand-950` dark-green/black, stacked directly on top of an equally dark
+  trending strip — moved to a light `bg-slate-50` canvas; the trending strip itself moved from dark
+  glass cards to `bg-slate-100/70` with white hairline-border cards matching the catalog grid's
+  existing `_card.blade.php` treatment, rather than inventing a third visual style. The footer stays
+  intentionally dark (light body + dark footer is a standard, non-clashing pattern) — flagged as a
+  design choice in my proposal, not silently decided. Verified live: `npm run build` clean, full
+  Laravel suite green, and manually driven in-browser (computed styles confirm `backdrop-filter:
+  none` and solid white backgrounds post-change; no horizontal overflow at a 375px mobile viewport).
+- **Category page rebuild.** Real breadcrumb, an industry-grouped sibling-category pill switcher
+  (`Industry::categories()` — e.g. the Scales page shows Scales/Ultrasound/RFID/Smart Irrigation/
+  Accessories, not all 15 flat), and a working control bar: `?sort=` (newest/price_asc/price_desc/
+  popularity — popularity reuses the exact same real-units-sold `withSum` logic as the Trending
+  strip, never a fabricated score) and `?in_stock=1`, replacing the old static "N products" text
+  with "Showing 1–12 of N items". Deliberately scoped to an in-stock toggle only, not a price-range
+  filter — sort-by-price already covers positioning by price, and there's no attribute-facet data
+  model to build a fuller filter system against yet. 6 new tests (`ProductGridControlsTest`).
+- **Broken/missing product images now show the category's own icon** on a subtle dot-grid
+  background (`<x-product-image-fallback>`) instead of a generic "No image" gray box — wired into
+  the catalog grid card and the PDP gallery. The trending strip's own image-absent state was left as
+  its existing simple text fallback rather than wiring per-category icons through its Alpine/JS
+  product-array pipeline — a real scope trim, not an oversight (see caveats).
+- **Footer extracted to `<x-footer>`** with the four requested columns: Brand/WhatsApp badge, all
+  15 category links, Import/Customs/Tracking (linking to `/track` and to real anchored sections of
+  the Terms page rather than inventing three near-duplicate content pages), and Legal. 5 new tests
+  across `PolicyPagesTest`.
+- **Three CPA-compliant legal pages** (`/policies/returns`, `/policies/terms`,
+  `/policies/icasa-compliance`) — every factual claim on them is real and already true elsewhere in
+  this codebase (14-day CPA defect-return window under section 56, all-inclusive VAT/duty pricing,
+  7–12 business day lead times, the actual ISO 11784/11785 + ICASA vetting process described
+  end-to-end). **Honest gap, not fabricated content**: you told me there is no registered legal
+  entity behind this site yet, so the registered company name, CIPC registration number, and
+  physical address are left as clearly bracketed placeholders (`[Company Registration Pending]`
+  etc.) rather than invented — presenting fake entity details on a page about a customer's actual
+  legal consumer rights would be actively misleading, not just an "honest gap" in the way a stock
+  photo substitution is. The returns policy references the National Consumer Commission generically
+  as the CPA regulator rather than naming a specific ombud membership that doesn't exist.
+- **Photography re-investigated, no viable improvements found.** Searched specifically against your
+  briefs (red-LED indicators, yellow ISO ear tags, green-beam laser levels) — the one promising lead
+  (a "134.2 kHz RFID animal tag" file) turned out to be an implant chip photographed next to an
+  injector, not an ear tag, so using it would have been a *worse* match than what's already live
+  despite the tempting filename. Same conclusion as rev. 6: Wikimedia Commons doesn't have
+  good free-licensed coverage of this specific B2B equipment niche. `category-images.php` is
+  unchanged this session rather than force a weak substitution.
+- **Full regression check**: 85 Laravel tests passing (up from 58; +27 new), 31 Node worker tests
+  unchanged and still passing, `npm run build` clean.
 
 ---
 
@@ -208,6 +297,26 @@ architecture/setup.
 
 ## ⚠️ Built, but with a real caveat attached
 
+- **The legal pages are not launch-ready as written** — the registered company name, CIPC
+  registration number, and physical address are bracketed placeholders, since you confirmed there
+  is no registered entity behind this site yet. Everything else on those pages (the CPA return
+  window, pricing/VAT facts, ICASA process description) is real and accurate today; only the entity
+  identity block needs filling in before this is genuine legal content a customer could rely on.
+- **RAM and DawnWing courier tracking links are best-effort, not independently confirmed.** Courier
+  Guy and DHL SA URLs were verified via live web search results showing the actual page title/URL;
+  RAM (`track.ramgroup.co.za`) and DawnWing (`dawnwing.co.za/.../online-parcel-tracking/`) came from
+  third-party aggregator summaries rather than a direct fetch of the page itself (one direct fetch
+  attempt timed out). Worth a manual click-through before relying on them in production — an
+  unrecognized/wrong courier name still degrades gracefully to plain text, never a broken link.
+- **No price-range filter on category pages**, only sort-by-price and an in-stock toggle. The
+  original design sketch mentioned a price-range filter alongside in-stock; I trimmed it as YAGNI
+  once building it — sort-by-price already lets a buyer find the cheap or expensive end of a
+  category, and there's no faceted-attribute data model yet to justify a fuller filter system.
+- **The trending strip's "no image" state still shows plain text, not the new per-category SVG
+  fallback.** The fallback component was wired into the catalog grid card and PDP gallery (both
+  server-rendered Blade), but the trending strip's product cards are built from a JSON array handed
+  to Alpine.js client-side — threading a per-category icon through that pipeline for a rare edge
+  case (an approved, trending product with zero images) wasn't worth the added complexity this pass.
 - **The Industry grouping only reaches the header nav, not the homepage tile grid or the admin
   category filter.** The header dropdown/mobile nav are the two places a flat 15-item list was
   actually unusable, so those got grouped by `Industry`. The homepage "Shop by Category" section
@@ -285,7 +394,18 @@ architecture/setup.
 4. A real invite-by-email flow for new admin/staff accounts (unchanged from rev. 3).
 5. A finer-grained permission system if Staff needs partial access to catalog/settings beyond the
    current binary Admin/Staff split.
-6. Courier Guy / DHL live integration — unchanged, still admin-entered free text.
+6. Live courier *integration* (auto-fetched status/ETA) is still unbuilt — rev. 8 added a link to
+   the carrier's own tracking page once the admin enters `courier_name`/`tracking_number` by hand,
+   which is real progress but not the same as an API integration.
+7. Real registered-company details (name, CIPC number, physical address) for the three legal pages
+   — currently bracketed placeholders, deliberately not invented (see caveats above).
+8. A real WhatsApp number in `/admin/settings` — the CTA is fully built and tested but hidden until
+   an admin configures one.
+9. RAM/DawnWing tracking URLs should be manually spot-checked (see caveats above).
+10. Product photography for the 10 categories added in rev. 7 is still the closest-real-match
+    Wikimedia Commons had, not purpose-shot product photography — re-investigated this session with
+    no improvement found; a real fix likely needs either purchased stock photography or actual
+    supplier product photos, not another Commons search.
 
 ---
 
@@ -313,15 +433,17 @@ architecture/setup.
 ## Known rough edges
 
 - Same Windows/local-install and dev-server-can-die caveats as before.
-- 46+ automated tests total across Laravel (33) and the Node worker (24) — genuinely covered, not
+- 116 automated tests total across Laravel (85) and the Node worker (31) — genuinely covered, not
   padding.
 
 ---
 
 ## Quick reference
 
-- Storefront: `http://localhost:8000` · Admin: `http://localhost:8000/admin/login` ·
-  Orders: `/admin/orders` · Your Profile: `/admin/profile` · Users: `/admin/users`
+- Storefront: `http://localhost:8000` · Track an order: `/track` · Returns policy: `/policies/returns`
+  · Terms: `/policies/terms` · ICASA compliance: `/policies/icasa-compliance` ·
+  Admin: `http://localhost:8000/admin/login` · Orders: `/admin/orders` · Settings (incl. WhatsApp
+  number): `/admin/settings` · Your Profile: `/admin/profile` · Users: `/admin/users`
 - Run the Laravel test suite: `php artisan test`
 - Run worker tests: `cd worker && npm test`
 - Build frontend assets: `npm run build`
