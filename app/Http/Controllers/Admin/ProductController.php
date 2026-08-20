@@ -134,8 +134,12 @@ class ProductController extends Controller
     private function calculator(): LandedCostCalculator
     {
         return new LandedCostCalculator(
-            freightUsdPerKg: (float) Setting::get('air_freight_usd_per_kg', 9.5),
-            clearingFeeZar: (float) Setting::get('clearing_agent_fee_zar', 450),
+            freightUsdPerKg: (float) Setting::get('air_freight_usd_per_kg', 16),
+            // Same settings key as before ('clearing_agent_fee_zar') — its
+            // real-world meaning shifted from "customs clearing agent fee"
+            // to "flat domestic delivery allowance" (see SettingsSeeder),
+            // so renaming the column would just be churn for zero benefit.
+            domesticDeliveryZar: (float) Setting::get('clearing_agent_fee_zar', 250),
             vatRate: (float) Setting::get('vat_rate', 0.15),
         );
     }

@@ -6,8 +6,11 @@ return [
     // from /admin/settings — this file only supplies the initial seed.
     'defaults' => [
         'target_margin_pct' => (float) env('DEFAULT_TARGET_MARGIN_PCT', 35),
-        'air_freight_usd_per_kg' => (float) env('DEFAULT_AIR_FREIGHT_USD_PER_KG', 9.5),
-        'clearing_agent_fee_zar' => (float) env('DEFAULT_CLEARING_AGENT_FEE_ZAR', 450),
+        'air_freight_usd_per_kg' => (float) env('DEFAULT_AIR_FREIGHT_USD_PER_KG', 16),
+        // Same settings key as before, redefined: was a customs "clearing
+        // agent fee" (R450), now a flat domestic delivery allowance (R250)
+        // per the arbitrage-filter cost model — see LandedCostCalculator.
+        'clearing_agent_fee_zar' => (float) env('DEFAULT_CLEARING_AGENT_FEE_ZAR', 250),
         'vat_rate' => (float) env('DEFAULT_VAT_RATE', 0.15),
     ],
 

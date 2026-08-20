@@ -15,26 +15,31 @@ return [
         'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
         'source_url' => 'https://commons.wikimedia.org/wiki/File:Cattle_at_a_kraal_in_Karamoja_04.jpg',
     ],
+    // Chosen to actually show the equipment, not just generic livestock/farm
+    // scenery — see PROGRESS.md for what Wikimedia Commons genuinely has
+    // free-licensed coverage of and what it doesn't (niche B2B product shots
+    // like a "digital indicator with red LED" are not well represented
+    // there; these are the closest real, correctly-licensed matches found).
     'scales' => [
-        'url' => 'https://upload.wikimedia.org/wikipedia/commons/a/a4/A_Bull_with_other_cattle_in_a_small_Zambian_mixed_farm_ranch.jpg',
-        'credit' => 'FraWanMalE',
+        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Electronic_Weighing_Scale.jpg/1920px-Electronic_Weighing_Scale.jpg',
+        'credit' => 'Aliva Sahoo',
         'license' => 'CC BY-SA 4.0',
         'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-        'source_url' => 'https://commons.wikimedia.org/wiki/File:A_Bull_with_other_cattle_in_a_small_Zambian_mixed_farm_ranch.jpg',
+        'source_url' => 'https://commons.wikimedia.org/wiki/File:Electronic_Weighing_Scale.jpg',
     ],
     'ultrasound' => [
-        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Herd_of_black_cattle_grazing_on_pasture_at_Coombe_Hill%2C_East_Sussex_-_geograph.org.uk_-_6977356.jpg/1920px-Herd_of_black_cattle_grazing_on_pasture_at_Coombe_Hill%2C_East_Sussex_-_geograph.org.uk_-_6977356.jpg',
-        'credit' => 'Andrew Diack',
-        'license' => 'CC BY-SA 2.0',
-        'license_url' => 'https://creativecommons.org/licenses/by-sa/2.0',
-        'source_url' => 'https://commons.wikimedia.org/wiki/File:Herd_of_black_cattle_grazing_on_pasture_at_Coombe_Hill,_East_Sussex_-_geograph.org.uk_-_6977356.jpg',
-    ],
-    'rfid' => [
-        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Sheep_eating_grass_Eastern_Cape.jpg/1920px-Sheep_eating_grass_Eastern_Cape.jpg',
-        'credit' => 'Popza1',
+        'url' => 'https://upload.wikimedia.org/wikipedia/commons/5/5d/USG_Pada_sapi_Bali.jpg',
+        'credit' => 'Langgeng Anggitobumi',
         'license' => 'CC BY-SA 4.0',
         'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-        'source_url' => 'https://commons.wikimedia.org/wiki/File:Sheep_eating_grass_Eastern_Cape.jpg',
+        'source_url' => 'https://commons.wikimedia.org/wiki/File:USG_Pada_sapi_Bali.jpg',
+    ],
+    'rfid' => [
+        'url' => 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Cattle_ear_tag_%281%29.jpg',
+        'credit' => 'Eliran t',
+        'license' => 'CC BY-SA 4.0',
+        'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
+        'source_url' => 'https://commons.wikimedia.org/wiki/File:Cattle_ear_tag_(1).jpg',
     ],
     'accessories' => [
         'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Gauteng-Sheep_Farming-001.jpg/1920px-Gauteng-Sheep_Farming-001.jpg',
@@ -44,17 +49,17 @@ return [
         'source_url' => 'https://commons.wikimedia.org/wiki/File:Gauteng-Sheep_Farming-001.jpg',
     ],
     'fencing' => [
-        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Wheatland_Farm_Historic_District_Kansas_fence_posts.jpg/1920px-Wheatland_Farm_Historic_District_Kansas_fence_posts.jpg',
-        'credit' => 'SharonPapierdreams',
-        'license' => 'CC BY-SA 4.0',
-        'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-        'source_url' => 'https://commons.wikimedia.org/wiki/File:Wheatland_Farm_Historic_District_Kansas_fence_posts.jpg',
+        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Electric_fence_energiser_%28AM_2017.92.25-1%29.jpg/1280px-Electric_fence_energiser_%28AM_2017.92.25-1%29.jpg',
+        'credit' => 'Auckland Museum',
+        'license' => 'CC BY 4.0',
+        'license_url' => 'https://creativecommons.org/licenses/by/4.0',
+        'source_url' => 'https://commons.wikimedia.org/wiki/File:Electric_fence_energiser_(AM_2017.92.25-1).jpg',
     ],
     'solar_pumps' => [
-        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/SOLAR_POWER_IRRIGATION_RICE_FARMING.jpg/1920px-SOLAR_POWER_IRRIGATION_RICE_FARMING.jpg',
-        'credit' => 'SMMIMAGES',
+        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Solar_powered_borehole.jpg/1280px-Solar_powered_borehole.jpg',
+        'credit' => 'Nzili',
         'license' => 'CC BY-SA 4.0',
         'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-        'source_url' => 'https://commons.wikimedia.org/wiki/File:SOLAR_POWER_IRRIGATION_RICE_FARMING.jpg',
+        'source_url' => 'https://commons.wikimedia.org/wiki/File:Solar_powered_borehole.jpg',
     ],
 ];

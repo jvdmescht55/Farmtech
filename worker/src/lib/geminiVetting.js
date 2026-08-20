@@ -4,10 +4,10 @@ import { VETTING_SYSTEM_PROMPT, VETTING_RESPONSE_SCHEMA, buildUserMessage } from
 const REQUIRED_PRODUCT_FIELDS = ['title', 'short_description', 'description_html', 'category', 'hs_code', 'specs'];
 const REQUIRED_COMPLIANCE_FIELDS = [
     'frequency_checked', 'icasa_status', 'plug_type_checked',
-    'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons',
+    'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons', 'pricing_verdict',
 ];
 
-export async function vetListing(listing, { apiKey, model }) {
+export async function vetListing(listing, { apiKey, model }, pricingContext) {
     if (!apiKey) {
         throw new Error('GEMINI_API_KEY is not set — cannot run AI vetting. Set it in .env.');
     }
@@ -16,7 +16,7 @@ export async function vetListing(listing, { apiKey, model }) {
 
     const response = await client.models.generateContent({
         model,
-        contents: buildUserMessage(listing),
+        contents: buildUserMessage(listing, pricingContext),
         config: {
             systemInstruction: VETTING_SYSTEM_PROMPT,
             responseMimeType: 'application/json',
@@ -56,6 +56,10 @@ function validateResult(result) {
 
     if (!['PASS', 'WARN', 'FAIL'].includes(result.compliance.audit_verdict)) {
         throw new Error(`Invalid audit_verdict: ${result.compliance.audit_verdict}`);
+    }
+
+    if (!['competitive', 'uncompetitive'].includes(result.compliance.pricing_verdict)) {
+        throw new Error(`Invalid pricing_verdict: ${result.compliance.pricing_verdict}`);
     }
 
     return result;

@@ -94,7 +94,7 @@
             @foreach ([
                 ['icon' => 'shield', 'title' => 'AI Compliance Checked', 'body' => 'Every listing is checked against the relevant SA standard — ISO 11784/11785, ICASA, or NRCS — before it goes live.'],
                 ['icon' => 'receipt', 'title' => 'All-In Pricing', 'body' => 'Import duty & 15% VAT are already in the price. Nothing extra to pay on delivery.'],
-                ['icon' => 'truck', 'title' => 'Tracked Delivery', 'body' => 'Direct Express air freight, door to door, in 7–12 business days.'],
+                ['icon' => 'truck', 'title' => 'Free Express Delivery', 'body' => 'Free Express Door-to-Door Delivery Across South Africa (All Customs & Clearance Handled) — Direct Express air freight, 7–12 business days.'],
                 ['icon' => 'lock', 'title' => 'Secure Checkout', 'body' => 'Card and EFT details are handled by PayFast, Ozow or Yoco — Farmtech never stores them.'],
             ] as $i => $item)
                 <div x-reveal.{{ $i * 100 }} class="group glass-card rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">

@@ -53,13 +53,17 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Admin (full access) vs. Staff (order fulfillment + own profile only —
      * see EnsureUserIsAdmin, which already gates panel entry for both
-     * roles). These three sections are Admin-only.
+     * roles). These sections are Admin-only.
      */
     private function registerGates(): void
     {
         Gate::define('manage-catalog', fn (User $user) => $user->isAdmin()); // Sourcing + Products
         Gate::define('manage-settings', fn (User $user) => $user->isAdmin());
         Gate::define('manage-users', fn (User $user) => $user->isAdmin());
+        // Profit/margin/cost data — Staff can work Orders without seeing what Farmtech
+        // actually makes on each one. Gates both the /admin/dashboard route and the
+        // "Profit Breakdown" card on the (otherwise Staff-visible) order detail page.
+        Gate::define('view-financials', fn (User $user) => $user->isAdmin());
     }
 
     private function registerRateLimiters(): void

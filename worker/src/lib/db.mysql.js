@@ -86,9 +86,10 @@ export async function insertVettedProduct({ sourced, vetting, costing, images, s
             `INSERT INTO products
                 (sku, title, slug, category, short_description, description_html,
                  original_price_usd, est_weight_kg, hs_code, customs_duty_rate, vat_rate,
+                 intl_freight_zar, customs_vat_zar, domestic_delivery_zar,
                  landed_cost_zar, retail_price_zar, profit_margin_pct,
                  stock_status, lead_time_days, status, is_active, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
             [
                 sku,
                 vetting.product.title,
@@ -101,6 +102,9 @@ export async function insertVettedProduct({ sourced, vetting, costing, images, s
                 vetting.product.hs_code,
                 sourced.duty_rate,
                 costing.vatRate,
+                costing.intl_freight_zar,
+                costing.customs_vat_zar,
+                costing.domestic_delivery_zar,
                 costing.landed_cost_zar,
                 costing.retail_price_zar,
                 costing.targetMarginPct,

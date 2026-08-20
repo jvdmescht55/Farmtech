@@ -1,17 +1,96 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 5 — scraper batch ingestion webhook). What changed since rev. 4:
-a `POST /api/pipeline/webhook` endpoint that lets a scheduled scraper (Apify or similar) submit a
-batch of raw listings and have them run through the exact same AI vetting + landed-cost pipeline
-the admin's manual "Source New Listing" form already uses, queued and emailed to the admin when
-something needs review. Rev. 4 covered role-based access control (Admin vs Staff), rate limiting,
-S3/R2-compatible cloud storage support, a GitHub Actions CI workflow, and the full storefront
-redesign. See [README.md](README.md) for architecture/setup.
+Last updated: 2026-08-20 (rev. 6 — arbitrage engine, profit transparency, image quality).
+What changed since rev. 5: the landed-cost formula was rebuilt to expose freight/customs/delivery
+as separate stored line items, a strict "worth importing" arbitrage filter now runs before and
+after AI vetting (minimum $50 base value, minimum 40% margin checked against AI-judged SA retail
+competitiveness), the admin gets a Profit Breakdown card on every product and order plus a 30-day
+Dashboard (Admin-only), the image pipeline now rejects undersized/wrong-aspect-ratio/watermarked
+images before saving, and several category hero photos were swapped for ones that actually show
+the equipment. Rev. 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage,
+CI, and the storefront redesign. See [README.md](README.md) for architecture/setup.
 
 ---
 
 ## ✅ Working and verified (this session)
 
+- **Rebuilt landed-cost formula with a separated cost breakdown.** `landed_cost_zar` used to be one
+  opaque number; the calculator (Node `landedCost.js` and PHP `LandedCostCalculator`, still kept
+  in sync deliberately) now also returns and stores `intl_freight_zar`, `customs_vat_zar`, and
+  `domestic_delivery_zar` as their own columns, so the admin UI can show exactly where the money
+  went without recomputing from settings that may have since changed. **One deliberate deviation
+  from the literal spec formula**: the spec's `customs_vat_zar = (base+freight) * (1+duty) * 1.15`
+  would, if summed directly into `landed_cost` alongside `base` and `freight` again, double-count
+  the base+freight principal (it's already embedded in that multiplication). I implemented
+  `customs_vat_zar` as the *incremental* tax amount — `(base+freight) * [(1+duty)(1+vat) - 1]` —
+  so the four line items sum to exactly the landed cost, verified by a dedicated test in both
+  Node and PHP. Freight defaults to $16/kg and the flat delivery allowance to R250 (was R450,
+  relabeled from "Clearing Agent Fee" to "Domestic Delivery Allowance" — same settings column,
+  new real-world meaning, see `config/farmtech.php`).
+- **Strict arbitrage filter, verified against three real live Gemini runs, not just unit tests.**
+  - **Rule 1 (min $50 base value)**: a cheap pre-check before any AI spend, same principle as the
+    existing supplier-blacklist check. Verified live: re-ran `mock_data.json`'s $9.50 "cheap pet
+    chip reader" test case — it was skipped with `below_minimum_base_value`, zero Gemini calls
+    made for it, while the other four (all ≥$50) were vetted normally.
+  - **Rule 2 (min 40% margin, AI-judged competitiveness)**: the pipeline now computes the required
+    retail price at *at least* 40% margin (a floor over whatever the admin's configured target
+    margin is) and hands that price to Gemini alongside the listing, asking it to judge whether
+    that's plausible against SA retail for the same tech spec. A `FAIL` compliance verdict always
+    wins; otherwise an `uncompetitive` pricing verdict sets `status = rejected_uncompetitive` — a
+    new status value, distinct from a compliance `rejected`, so an admin can tell "technically fine
+    but not worth importing" apart from "actually broke a rule." Verified live: ran the real
+    `mock_data.json` set (all came back genuinely `competitive`, which is a real result — I can't
+    force a fake rejection just to demo one) **and** a synthetic worked example (a $65 reader
+    artificially weighted at 22kg to blow out freight) that Gemini correctly flagged as
+    uncompetitive — real API call, real `rejected_uncompetitive` status, real rejection reason
+    quoting the inflated required price against the stated local comparable.
+  - Every listing now also carries the constant footer promise: "Free Express Door-to-Door Delivery
+    Across South Africa (All Customs & Clearance Handled)" — added to the homepage trust bar and
+    every product's Delivery & Warranty tab, verified rendering on a real approved product page.
+- **Admin Profit Breakdown + Dashboard, gated behind a new `view-financials` Gate (Admin only).**
+  - `/admin/products/{id}`: a Profit Breakdown card showing Base Cost (USD & ZAR), Freight +
+    Courier, Duty + VAT, Landed Cost, Retail Price, and "Your Cut" (net profit ZAR + margin %) —
+    live-recalculated as the margin slider moves, same AJAX endpoint as before, now returning the
+    fuller breakdown. Verified live against a real staged product: R1,258 base → R2,119.18 landed
+    → R3,260.28 retail → R1,141.10 / 35.0% margin, numbers that hand-check correctly.
+  - `/admin/orders/{id}`: a Profit Breakdown card (Sales, Landed Cost Basis, Your Cut), computed
+    from each line item's *current* product landed cost × quantity sold. **Verified hidden from
+    Staff and visible to Admin** — a dedicated test asserts both, since Orders is one of the two
+    sections Staff can otherwise reach, and profit data specifically should not be part of that.
+  - `/admin/dashboard` (new route, new nav link, Admin-only — Staff gets a 403, tested): Total
+    Sales, Total Freight & Customs Costs, and Total Net Profit over the last 30 days, counting only
+    orders with a confirmed `paid` payment status. Verified live in-browser (correctly showed
+    R0.00 across the board — genuinely no paid orders in the last 30 days in this dev environment,
+    not a broken query) and with a dedicated test seeding real paid/unpaid/out-of-window orders to
+    prove the filtering and arithmetic.
+- **Image quality filter in the sourcing pipeline**, verified against real downloaded images
+  (not mocked): images under 800×800px or with an aspect ratio outside roughly 2:5–5:2 are
+  rejected before saving — proven with two new tests that actually download undersized/
+  wide-banner test images and confirm they're skipped, not just asserted against fake data.
+  Accepted images convert to WebP at quality 85, max width 1200px (was 1600px/quality 82).
+  **Watermark/heavy-compression-artifact detection uses a real Gemini vision call** (one more
+  multimodal request per image, gracefully skipped — defaults to "accept" — if no API key or on
+  any failure, same degrade-gracefully principle as the existing hero-image enhancement step).
+  Verified live: called it against a real downloaded product photo and confirmed it returns a real
+  `{accept: true}` judgment from the actual API, not a stub.
+- **Category hero photography swapped for photos that actually show the equipment**, not generic
+  livestock/farm scenery. Real, license-verified swaps for Scales, Ultrasound, RFID, Fencing, and
+  Solar & Water — every replacement URL was independently confirmed to return HTTP 200 with real
+  image bytes before being committed, and license/credit/source data updated to match. **Also
+  replaced the 5 `picsum.photos` (literally random, unrelated stock photos) placeholder URLs in
+  `worker/mock_data.json`** with the same real photos. **Honest gap**: the spec's exact photography
+  brief (e.g. "stainless steel indicator with bright red LED display," "yellow ISO 11784 ear tags
+  with laser-etched numbers visible," "helical rotor submersible pump") describes product-catalog
+  photography that Wikimedia Commons — a general-purpose, user-contributed, freely-licensed photo
+  library — does not have good free-licensed coverage of for this specific niche B2B equipment.
+  What's live now is the closest real, correctly-licensed, on-topic match found for each category,
+  not an exact match to every micro-detail in the brief; a couple of entries (e.g. the RFID/scales
+  mock-data reuse) are real and passing the new quality filter rather than perfectly on-theme.
+  **Note on where this landed vs. the request**: the request named `DatabaseSeeder.php` as the
+  file to update — that file only ever seeded Settings/Admin/ExchangeRate data, never product
+  images. The actual seam for this is `resources/data/category-images.php` (category tiles/hero)
+  and `worker/mock_data.json` (the 5 demo product listings' own photos), both of which are what I
+  updated; nothing in `DatabaseSeeder.php` needed to change.
 - **Scraper batch ingestion webhook — `POST /api/pipeline/webhook`.** Guarded by a shared
   `X-Pipeline-Secret` header (fails closed with 503 if `PIPELINE_WEBHOOK_SECRET` isn't set, 401 on
   a wrong/missing header — verified by test, not just written). Accepts a batch of raw listings
@@ -123,6 +202,17 @@ redesign. See [README.md](README.md) for architecture/setup.
   no site-wide warranty policy was ever specified. The Delivery & Warranty tab honestly says terms
   vary by supplier/model and to contact support with the SKU, rather than inventing a "12-month
   warranty" figure that isn't true for every listing.
+- **Products sourced before this revision have `NULL` freight/customs/delivery breakdown columns.**
+  The new `intl_freight_zar`/`customs_vat_zar`/`domestic_delivery_zar` columns only get populated
+  by the pipeline going forward; older rows keep their original (still-correct) `landed_cost_zar`
+  and `retail_price_zar`, but contribute `R0` to those specific breakdown fields wherever they're
+  summed (e.g. the Dashboard's "Total Freight & Customs Costs" tile) until re-sourced or manually
+  backfilled. The Product review page's Profit Breakdown card is unaffected — it always
+  live-recalculates from the current formula/settings, never reads the stored breakdown columns.
+- **The image watermark/artifact check adds one Gemini call per downloaded image**, on top of the
+  one vetting call per listing — a batch with several product photos now makes noticeably more API
+  calls than before. It degrades gracefully (defaults to accept) rather than blocking the pipeline
+  if that call fails, but the added cost/latency is real, not hypothetical.
 
 ---
 

@@ -109,7 +109,10 @@ test('sqlite driver: insertVettedProduct writes product + specs + images + compl
                 rejection_reasons: [],
             },
         },
-        costing: { landed_cost_zar: 1000, retail_price_zar: 1538.46, vatRate: 0.15, targetMarginPct: 35 },
+        costing: {
+            intl_freight_zar: 148, customs_vat_zar: 172.5, domestic_delivery_zar: 250,
+            landed_cost_zar: 1000, retail_price_zar: 1538.46, vatRate: 0.15, targetMarginPct: 35,
+        },
         images: [{ original_url: 'https://example.com/a.jpg', local_path: 'TEST-1.webp' }],
         sku: `TEST-SKU-${Date.now()}`,
         status: 'pending_review',

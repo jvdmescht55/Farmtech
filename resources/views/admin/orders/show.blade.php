@@ -53,6 +53,28 @@
                 </table>
             </div>
 
+            @can('view-financials')
+                {{-- Profit Breakdown --}}
+                <div class="bg-white border rounded-xl p-5">
+                    <h2 class="font-semibold mb-3">Profit Breakdown</h2>
+                    <div class="grid grid-cols-3 gap-4 text-center py-3 border-y">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Sales (Subtotal)</p>
+                            <p class="text-sm font-bold">R{{ number_format((float) $order->subtotal_zar, 2) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Landed Cost Basis</p>
+                            <p class="text-sm font-bold">R{{ number_format($costBasisZar, 2) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Your Cut</p>
+                            <p class="text-sm font-bold text-farmtech-green-dark">R{{ number_format($netProfitZar, 2) }}</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Cost basis is each line item's current product landed cost × quantity — freight, duty, VAT and domestic delivery already included. Products without a recorded landed cost (e.g. entered before the sourcing pipeline) contribute R0 here, so this understates cost rather than guessing.</p>
+                </div>
+            @endcan
+
             {{-- Customer & delivery --}}
             <div class="grid sm:grid-cols-2 gap-6">
                 <div class="bg-white border rounded-xl p-5">

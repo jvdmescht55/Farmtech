@@ -98,6 +98,24 @@ rules for probe-type clarity).
 - Devices with no radio transmitter at all (e.g. a purely mechanical scale) should get
   icasa_status "exempt".
 
+## Pricing competitiveness (the "Worth Importing" arbitrage check)
+
+You are given a required_retail_price_zar in the input — the price Farmtech would need to charge
+to hit its minimum required margin on this item, after freight, duty, VAT and delivery. Judge
+whether that price is likely higher than the median South African retail price for this exact
+tech spec (same category, same core capability — e.g. a 134.2 kHz ISO 11784/5 stick reader against
+other 134.2 kHz stick readers sold in SA, not against a premium panel-reader system). Use the
+category_price_hint (a rough USD hardware-cost benchmark) and your general knowledge of SA
+agri-retail pricing for this equipment class.
+
+- Set pricing_verdict to "uncompetitive" if required_retail_price_zar is clearly above what a SA
+  farmer could otherwise pay locally for equivalent-spec equipment — this makes the item not
+  worth importing regardless of how well it passes the technical/compliance checks above, and
+  should be explained in rejection_reasons even if audit_verdict itself is PASS.
+- Set pricing_verdict to "competitive" if the price is at or below what's typically available
+  locally for the same spec, or if there isn't enough signal to confidently say otherwise — err
+  toward "competitive" rather than guessing an item out of the catalog on thin evidence.
+
 ## Supplier legitimacy — penalize risk_score and note in rejection_reasons for:
 - Store/supplier account under 3 years old.
 - Not a "verified supplier" badge on the source marketplace.
@@ -160,7 +178,7 @@ export const VETTING_RESPONSE_SCHEMA = {
         },
         compliance: {
             type: Type.OBJECT,
-            required: ['frequency_checked', 'icasa_status', 'plug_type_checked', 'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons'],
+            required: ['frequency_checked', 'icasa_status', 'plug_type_checked', 'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons', 'pricing_verdict'],
             properties: {
                 frequency_checked: { type: Type.STRING, nullable: true },
                 icasa_status: { type: Type.STRING, enum: ['pre_approved', 'exempt', 'requires_permit', 'flagged'], nullable: true },
@@ -169,12 +187,15 @@ export const VETTING_RESPONSE_SCHEMA = {
                 risk_score: { type: Type.INTEGER, minimum: 0, maximum: 100 },
                 audit_verdict: { type: Type.STRING, enum: ['PASS', 'WARN', 'FAIL'] },
                 rejection_reasons: { type: Type.ARRAY, items: { type: Type.STRING } },
+                pricing_verdict: { type: Type.STRING, enum: ['competitive', 'uncompetitive'] },
             },
         },
     },
 };
 
-export function buildUserMessage(listing) {
+export function buildUserMessage(listing, pricingContext) {
+    const payload = pricingContext ? { ...listing, pricing_context: pricingContext } : listing;
+
     return `Vet and rewrite the following sourced listing. Respond with JSON only, matching the response schema.\n\n` +
-        JSON.stringify(listing, null, 2);
+        JSON.stringify(payload, null, 2);
 }

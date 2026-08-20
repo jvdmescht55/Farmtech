@@ -177,6 +177,7 @@
 
                     <div x-show="tab === 'delivery'" x-cloak class="pt-5">
                         <div class="border border-slate-200 rounded-xl bg-white p-5">
+                            <p class="text-sm font-semibold text-brand-900 mb-3">Free Express Door-to-Door Delivery Across South Africa (All Customs &amp; Clearance Handled)</p>
                             <div class="flex items-center text-[11px] text-slate-500">
                                 @foreach (['Order Placed', 'Customs Clearance', 'Delivered'] as $i => $step)
                                     <div class="flex-1 flex flex-col items-center text-center">

@@ -56,10 +56,14 @@ test('VETTING_RESPONSE_SCHEMA requires the DB-mapped fields on both product and 
     );
     assert.deepEqual(
         VETTING_RESPONSE_SCHEMA.properties.compliance.required.sort(),
-        ['audit_verdict', 'battery_transport_cert', 'frequency_checked', 'icasa_status', 'plug_type_checked', 'rejection_reasons', 'risk_score'].sort()
+        ['audit_verdict', 'battery_transport_cert', 'frequency_checked', 'icasa_status', 'plug_type_checked', 'pricing_verdict', 'rejection_reasons', 'risk_score'].sort()
     );
     assert.deepEqual(
         VETTING_RESPONSE_SCHEMA.properties.compliance.properties.audit_verdict.enum,
         ['PASS', 'WARN', 'FAIL']
+    );
+    assert.deepEqual(
+        VETTING_RESPONSE_SCHEMA.properties.compliance.properties.pricing_verdict.enum,
+        ['competitive', 'uncompetitive']
     );
 });

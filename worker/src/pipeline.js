@@ -18,8 +18,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DRY_RUN_DEFAULTS = {
     target_margin_pct: Number(process.env.DEFAULT_TARGET_MARGIN_PCT ?? 35),
-    air_freight_usd_per_kg: Number(process.env.DEFAULT_AIR_FREIGHT_USD_PER_KG ?? 9.5),
-    clearing_agent_fee_zar: Number(process.env.DEFAULT_CLEARING_AGENT_FEE_ZAR ?? 450),
+    air_freight_usd_per_kg: Number(process.env.DEFAULT_AIR_FREIGHT_USD_PER_KG ?? 16),
+    clearing_agent_fee_zar: Number(process.env.DEFAULT_CLEARING_AGENT_FEE_ZAR ?? 250),
     vat_rate: Number(process.env.DEFAULT_VAT_RATE ?? 0.15),
     dry_run_usd_zar_rate: 18.5,
 };
@@ -28,6 +28,14 @@ const REQUIRED_LISTING_FIELDS = [
     'sku', 'raw_title', 'category_hint', 'supplier_name',
     'supplier_price_usd', 'weight_kg', 'duty_rate', 'raw_specs_text',
 ];
+
+// The "Worth Importing" strict arbitrage rule — fixed platform policy, not
+// admin-tunable via settings (unlike freight/VAT/delivery, which genuinely
+// vary with real-world costs). Rule 1 short-circuits before any AI spend,
+// same principle as the supplier-blacklist check below. Rule 2 is enforced
+// after vetting, once the AI's pricing_verdict is known.
+const MIN_BASE_VALUE_USD = 50;
+const MIN_ARBITRAGE_MARGIN_PCT = 40;
 
 async function main() {
     const args = parseArgs(process.argv.slice(2));
@@ -41,7 +49,7 @@ async function main() {
     const listings = await loadListings(args.file, args.sku);
     console.log(`Loaded ${listings.length} listing(s) from ${args.file}${args.dryRun ? ' [DRY RUN]' : ''}\n`);
 
-    const results = { passed: 0, warned: 0, failed: 0, errored: 0, items: [] };
+    const results = { passed: 0, warned: 0, failed: 0, uncompetitive: 0, errored: 0, items: [] };
 
     for (const listing of listings) {
         console.log(`── ${listing.sku}: ${listing.raw_title}`);
@@ -59,14 +67,17 @@ async function main() {
     console.log('─'.repeat(60));
     console.log(
         `Done. PASS/staged: ${results.passed}  WARN/staged: ${results.warned}  ` +
-        `FAIL/rejected: ${results.failed}  errors: ${results.errored}`
+        `FAIL/rejected: ${results.failed}  uncompetitive/rejected: ${results.uncompetitive}  errors: ${results.errored}`
     );
 
     // Machine-readable summary on its own line — callers that shell out to
     // this script (SourcingPipelineRunner) parse this instead of scraping
     // the human-readable log lines above, which are for the CLI/manual use.
     console.log('RESULT_JSON:'+JSON.stringify({
-        counts: { passed: results.passed, warned: results.warned, failed: results.failed, errored: results.errored },
+        counts: {
+            passed: results.passed, warned: results.warned, failed: results.failed,
+            uncompetitive: results.uncompetitive, errored: results.errored,
+        },
         items: results.items,
     }));
 
@@ -97,6 +108,15 @@ async function processListing(listing, args, results) {
         return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: 'blacklisted_supplier' };
     }
 
+    // 1b. Arbitrage Rule 1 — minimum base value. Also short-circuits before
+    // any AI spend: a sub-$50 item loses all margin to base freight/customs
+    // minimums regardless of what the AI would say about it, so there's no
+    // reason to pay for a vetting call to find that out.
+    if (listing.supplier_price_usd < MIN_BASE_VALUE_USD) {
+        console.log(`  SKIPPED — supplier cost $${listing.supplier_price_usd} is below the $${MIN_BASE_VALUE_USD} minimum base value threshold.\n`);
+        return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: 'below_minimum_base_value' };
+    }
+
     // 2. Live forex with DB fallback (or a fixed dry-run rate).
     const { rate: usdZarRate, source: rateSource } = args.dryRun
         ? { rate: DRY_RUN_DEFAULTS.dry_run_usd_zar_rate, source: 'dry-run-fixed' }
@@ -118,6 +138,10 @@ async function processListing(listing, args, results) {
             vat_rate: await getSetting('vat_rate', DRY_RUN_DEFAULTS.vat_rate),
         };
 
+    // Arbitrage Rule 2 — minimum 40% gross margin, as a floor over whatever
+    // the admin-configured target margin is (never lower, can be higher).
+    const effectiveMarginPct = Math.max(settings.target_margin_pct, MIN_ARBITRAGE_MARGIN_PCT);
+
     const costing = calculateLandedCost({
         supplierUsd: listing.supplier_price_usd,
         weightKg: listing.weight_kg,
@@ -125,17 +149,24 @@ async function processListing(listing, args, results) {
         dutyRate: listing.duty_rate,
         freightUsdPerKg: settings.air_freight_usd_per_kg,
         vatRate: settings.vat_rate,
-        clearingFeeZar: settings.clearing_agent_fee_zar,
-        targetMarginPct: settings.target_margin_pct,
+        domesticDeliveryZar: settings.clearing_agent_fee_zar,
+        targetMarginPct: effectiveMarginPct,
     });
-    console.log(`  Landed cost: R${costing.landed_cost_zar}  →  Retail: R${costing.retail_price_zar}`);
+    console.log(`  Landed cost: R${costing.landed_cost_zar}  →  Required retail (${effectiveMarginPct}% margin): R${costing.retail_price_zar}`);
 
-    // 4. AI compliance vetting + copywriting (strict JSON via Gemini responseSchema).
+    // 4. AI compliance vetting + copywriting (strict JSON via Gemini responseSchema),
+    // handed the price this item would need to sell at so the model can judge
+    // whether that's competitive against SA retail for the same tech spec.
     const vetting = await withRetry(
-        () => vetListing(listing, { apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' }),
+        () => vetListing(
+            listing,
+            { apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' },
+            { required_retail_price_zar: costing.retail_price_zar, target_margin_pct: effectiveMarginPct },
+        ),
         { attempts: 3, baseDelayMs: 1500, label: `Gemini vetting for ${listing.sku}` }
     );
     console.log(`  Verdict: ${vetting.compliance.audit_verdict} (risk ${vetting.compliance.risk_score}/100) — ${vetting.product.category}/${vetting.product.hs_code}`);
+    console.log(`  Pricing: ${vetting.compliance.pricing_verdict}`);
 
     if (vetting.compliance.rejection_reasons?.length) {
         for (const reason of vetting.compliance.rejection_reasons) {
@@ -151,15 +182,29 @@ async function processListing(listing, args, results) {
             sku: listing.sku,
             geminiApiKey: process.env.GEMINI_API_KEY,
             geminiImageModel: process.env.GEMINI_IMAGE_MODEL,
+            geminiModel: process.env.GEMINI_MODEL,
         });
         console.log(`  Images: ${images.length}/${listing.image_urls.length} downloaded and converted to webp`);
     }
 
-    const status = vetting.compliance.audit_verdict === 'FAIL' ? 'rejected' : 'pending_review';
-
-    if (vetting.compliance.audit_verdict === 'PASS') results.passed++;
-    else if (vetting.compliance.audit_verdict === 'WARN') results.warned++;
-    else results.failed++;
+    // Compliance FAIL always wins (a non-compliant item is never "just a
+    // pricing problem"). Otherwise, an AI-flagged uncompetitive price is its
+    // own rejection reason — a technically-fine product a SA farmer could
+    // buy cheaper locally isn't worth importing either.
+    let status;
+    if (vetting.compliance.audit_verdict === 'FAIL') {
+        status = 'rejected';
+        results.failed++;
+    } else if (vetting.compliance.pricing_verdict === 'uncompetitive') {
+        status = 'rejected_uncompetitive';
+        results.uncompetitive++;
+    } else if (vetting.compliance.audit_verdict === 'WARN') {
+        status = 'pending_review';
+        results.warned++;
+    } else {
+        status = 'pending_review';
+        results.passed++;
+    }
 
     if (args.dryRun) {
         console.log(`  [DRY RUN] Would insert as status="${status}". Vetting result:`);
@@ -183,7 +228,7 @@ async function processListing(listing, args, results) {
             lead_time_days: listing.lead_time_days,
         },
         vetting,
-        costing: { ...costing, vatRate: settings.vat_rate, targetMarginPct: settings.target_margin_pct },
+        costing: { ...costing, vatRate: settings.vat_rate, targetMarginPct: effectiveMarginPct },
         images,
         sku: listing.sku,
         status,

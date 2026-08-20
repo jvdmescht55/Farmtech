@@ -8,6 +8,12 @@
         <div class="bg-white border rounded-xl p-6 h-fit space-y-4">
             <h2 class="font-semibold">Compliance Sidebar</h2>
 
+            @if ($product->status === 'rejected_uncompetitive')
+                <div class="bg-amber-50 border border-amber-300 text-amber-900 rounded-md px-3 py-2 text-xs">
+                    <strong>Rejected — uncompetitive.</strong> This item passed compliance but the AI flagged the required selling price as likely above SA retail for this spec — not worth importing even though nothing is technically wrong with it.
+                </div>
+            @endif
+
             @if ($audit = $product->complianceAudit)
                 <div class="space-y-3 text-sm">
                     <div class="flex items-center justify-between">
@@ -61,9 +67,9 @@
         </div>
 
         <div class="lg:col-span-2 space-y-6">
-            {{-- Financial Breakdown Matrix --}}
+            {{-- Profit Breakdown --}}
             <div class="bg-white border rounded-xl p-6">
-                <h2 class="font-semibold mb-4">Financial Breakdown</h2>
+                <h2 class="font-semibold mb-4">Profit Breakdown</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                     <div>
                         <p class="text-gray-500">Base USD</p>
@@ -83,19 +89,36 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 text-center py-4 border-y">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center py-4 border-y">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase">Base ZAR</p>
-                        <p id="breakdown-base" class="text-lg font-bold">R{{ number_format($breakdown['base_zar'], 2) }}</p>
+                        <p class="text-xs text-gray-500 uppercase">Base Cost</p>
+                        <p id="breakdown-base" class="text-sm font-bold">R{{ number_format($breakdown['base_zar'], 2) }}</p>
+                        <p class="text-xs text-gray-400">${{ number_format($product->original_price_usd, 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Freight + Courier</p>
+                        <p id="breakdown-freight" class="text-sm font-bold">R{{ number_format($breakdown['intl_freight_zar'] + $breakdown['domestic_delivery_zar'], 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Duty + VAT</p>
+                        <p id="breakdown-customs" class="text-sm font-bold">R{{ number_format($breakdown['customs_vat_zar'], 2) }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 uppercase">Landed Cost</p>
-                        <p id="breakdown-landed" class="text-lg font-bold">R{{ number_format($breakdown['landed_cost_zar'], 2) }}</p>
+                        <p id="breakdown-landed" class="text-sm font-bold">R{{ number_format($breakdown['landed_cost_zar'], 2) }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 uppercase">Retail Price</p>
-                        <p id="breakdown-retail" class="text-lg font-bold text-farmtech-green-dark">R{{ number_format($breakdown['retail_price_zar'], 2) }}</p>
+                        <p id="breakdown-retail" class="text-sm font-bold text-farmtech-green-dark">R{{ number_format($breakdown['retail_price_zar'], 2) }}</p>
                     </div>
+                </div>
+
+                <div class="mt-4 bg-farmtech-cream/60 border border-farmtech-gold/30 rounded-lg px-4 py-3 flex items-center justify-between">
+                    <span class="text-sm font-semibold text-gray-700">Your Cut (Net Profit)</span>
+                    <span class="text-right">
+                        <span id="breakdown-profit" class="text-lg font-bold text-farmtech-green-dark">R{{ number_format($breakdown['retail_price_zar'] - $breakdown['landed_cost_zar'], 2) }}</span>
+                        <span id="breakdown-profit-pct" class="text-sm text-gray-500 ml-1">({{ number_format((($breakdown['retail_price_zar'] - $breakdown['landed_cost_zar']) / max($breakdown['retail_price_zar'], 0.01)) * 100, 1) }}% margin)</span>
+                    </span>
                 </div>
 
                 <div class="mt-4">
@@ -209,10 +232,19 @@
 
             if (!response.ok) return;
             const data = await response.json();
+            const fmt = (n) => 'R' + Number(n).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
 
-            document.getElementById('breakdown-base').textContent = 'R' + Number(data.base_zar).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
-            document.getElementById('breakdown-landed').textContent = 'R' + Number(data.landed_cost_zar).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
-            document.getElementById('breakdown-retail').textContent = 'R' + Number(data.retail_price_zar).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('breakdown-base').textContent = fmt(data.base_zar);
+            document.getElementById('breakdown-freight').textContent = fmt(data.intl_freight_zar + data.domestic_delivery_zar);
+            document.getElementById('breakdown-customs').textContent = fmt(data.customs_vat_zar);
+            document.getElementById('breakdown-landed').textContent = fmt(data.landed_cost_zar);
+            document.getElementById('breakdown-retail').textContent = fmt(data.retail_price_zar);
+
+            const profit = data.retail_price_zar - data.landed_cost_zar;
+            const profitPct = data.retail_price_zar > 0 ? (profit / data.retail_price_zar) * 100 : 0;
+            document.getElementById('breakdown-profit').textContent = fmt(profit);
+            document.getElementById('breakdown-profit-pct').textContent = '(' + profitPct.toFixed(1) + '% margin)';
+
             retailInput.value = data.retail_price_zar;
         });
     </script>

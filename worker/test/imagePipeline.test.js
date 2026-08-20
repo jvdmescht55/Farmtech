@@ -22,8 +22,34 @@ test('downloads a real image, validates it, and re-encodes to webp under the siz
     const meta = await sharp(written).metadata();
 
     assert.equal(meta.format, 'webp');
-    assert.ok(meta.width <= 1600, `expected width <= 1600, got ${meta.width}`);
-    assert.ok(meta.height <= 1600, `expected height <= 1600, got ${meta.height}`);
+    assert.ok(meta.width <= 1200, `expected width <= 1200, got ${meta.width}`);
+    assert.ok(meta.height <= 1200, `expected height <= 1200, got ${meta.height}`);
+});
+
+test('rejects an image smaller than the 800x800 minimum instead of saving it', async (t) => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'farmtech-img-'));
+    t.after(() => rm(dir, { recursive: true, force: true }));
+
+    const results = await downloadAndOptimizeImages(
+        ['https://picsum.photos/seed/farmtech-too-small/400/400'],
+        { uploadDir: dir, sku: 'TEST-SKU' }
+    );
+
+    assert.equal(results.length, 0);
+});
+
+test('rejects an image with an extreme aspect ratio instead of saving it', async (t) => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'farmtech-img-'));
+    t.after(() => rm(dir, { recursive: true, force: true }));
+
+    // Both dimensions clear the 800px minimum on their own — only the 3:1
+    // ratio should trigger the rejection, isolating this from the dimension check above.
+    const results = await downloadAndOptimizeImages(
+        ['https://picsum.photos/seed/farmtech-banner/2400/800'],
+        { uploadDir: dir, sku: 'TEST-SKU' }
+    );
+
+    assert.equal(results.length, 0);
 });
 
 test('skips a URL that returns a non-image MIME type instead of throwing', async (t) => {

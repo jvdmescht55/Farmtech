@@ -3,6 +3,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { enhanceHeroImage } from './imageEnhance.js';
 import { isS3Configured, uploadToS3 } from './s3Storage.js';
+import { checkDimensions, checkArtifactsAndWatermarks } from './imageQuality.js';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024; // 15MB guard against runaway/hostile responses
@@ -20,7 +21,7 @@ const MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024; // 15MB guard against runaway/hosti
  *
  * @returns {Promise<Array<{ original_url: string, local_path: string }>>}
  */
-export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fetchImpl = fetch, geminiApiKey, geminiImageModel }) {
+export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fetchImpl = fetch, geminiApiKey, geminiImageModel, geminiModel }) {
     const useS3 = isS3Configured();
     const destDir = useS3 ? null : path.resolve(uploadDir);
     if (destDir) await mkdir(destDir, { recursive: true });
@@ -29,7 +30,17 @@ export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fet
 
     for (const [index, url] of imageUrls.entries()) {
         try {
-            const { webpBuffer, rawBuffer, mime } = await fetchAndConvert(url, fetchImpl);
+            const { webpBuffer, rawBuffer, mime, width, height } = await fetchAndConvert(url, fetchImpl);
+
+            const dimensionCheck = checkDimensions(width, height);
+            if (!dimensionCheck.ok) {
+                throw new Error(dimensionCheck.reason);
+            }
+
+            const artifactCheck = await checkArtifactsAndWatermarks(rawBuffer, mime, { apiKey: geminiApiKey, model: geminiModel });
+            if (!artifactCheck.ok) {
+                throw new Error(`rejected — ${artifactCheck.reason}`);
+            }
 
             let finalBuffer = webpBuffer;
 
@@ -84,9 +95,9 @@ async function fetchAndConvert(url, fetchImpl) {
     }
 
     const webpBuffer = await sharp(buffer)
-        .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 82 })
+        .resize({ width: 1200, withoutEnlargement: true })
+        .webp({ quality: 85 })
         .toBuffer();
 
-    return { webpBuffer, rawBuffer: buffer, mime: detectedMime };
+    return { webpBuffer, rawBuffer: buffer, mime: detectedMime, width: meta.width, height: meta.height };
 }

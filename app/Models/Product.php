@@ -15,6 +15,7 @@ class Product extends Model
     protected $fillable = [
         'sku', 'title', 'slug', 'category', 'short_description', 'description_html',
         'original_price_usd', 'est_weight_kg', 'hs_code', 'customs_duty_rate', 'vat_rate',
+        'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
         'stock_status', 'lead_time_days', 'status', 'is_active',
         'stock_quantity', 'allow_backorder', 'low_stock_threshold',
@@ -27,6 +28,9 @@ class Product extends Model
             'est_weight_kg' => 'decimal:3',
             'customs_duty_rate' => 'decimal:4',
             'vat_rate' => 'decimal:4',
+            'intl_freight_zar' => 'decimal:2',
+            'customs_vat_zar' => 'decimal:2',
+            'domestic_delivery_zar' => 'decimal:2',
             'landed_cost_zar' => 'decimal:2',
             'retail_price_zar' => 'decimal:2',
             'profit_margin_pct' => 'decimal:2',
@@ -36,6 +40,25 @@ class Product extends Model
             'allow_backorder' => 'boolean',
             'low_stock_threshold' => 'integer',
         ];
+    }
+
+    /** "Your Cut" — net gross profit in ZAR, retail price minus everything it cost to land the item. */
+    public function getNetProfitZarAttribute(): ?float
+    {
+        if ($this->retail_price_zar === null || $this->landed_cost_zar === null) {
+            return null;
+        }
+
+        return round((float) $this->retail_price_zar - (float) $this->landed_cost_zar, 2);
+    }
+
+    public function getNetProfitMarginPctAttribute(): ?float
+    {
+        if (! $this->retail_price_zar || (float) $this->retail_price_zar <= 0 || $this->net_profit_zar === null) {
+            return null;
+        }
+
+        return round(($this->net_profit_zar / (float) $this->retail_price_zar) * 100, 2);
     }
 
     protected static function booted(): void

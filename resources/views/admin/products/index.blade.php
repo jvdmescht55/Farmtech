@@ -5,7 +5,7 @@
 @section('content')
     <form method="GET" class="flex flex-wrap gap-3 mb-6">
         <select name="status" onchange="this.form.submit()" class="border rounded-md px-3 py-2 text-sm">
-            @foreach (['pending_review' => 'Pending Review', 'approved' => 'Approved', 'rejected' => 'Rejected', 'draft' => 'Draft', 'archived' => 'Archived'] as $value => $label)
+            @foreach (['pending_review' => 'Pending Review', 'approved' => 'Approved', 'rejected' => 'Rejected', 'rejected_uncompetitive' => 'Rejected (Uncompetitive)', 'draft' => 'Draft', 'archived' => 'Archived'] as $value => $label)
                 <option value="{{ $value }}" @selected(($filters['status'] ?? 'pending_review') === $value)>{{ $label }}</option>
             @endforeach
         </select>
@@ -33,6 +33,7 @@
                     <th class="px-4 py-3">Category</th>
                     <th class="px-4 py-3">Supplier</th>
                     <th class="px-4 py-3">Verdict</th>
+                    <th class="px-4 py-3">Status</th>
                     <th class="px-4 py-3">Risk</th>
                     <th class="px-4 py-3">Retail (ZAR)</th>
                     <th class="px-4 py-3"></th>
@@ -58,6 +59,15 @@
                                 <x-badge color="gray">N/A</x-badge>
                             @endif
                         </td>
+                        <td class="px-4 py-3">
+                            @if ($product->status === 'rejected_uncompetitive')
+                                <x-badge color="yellow">Uncompetitive</x-badge>
+                            @elseif ($product->status === 'rejected')
+                                <x-badge color="red">Rejected</x-badge>
+                            @else
+                                <x-badge color="gray">{{ \Illuminate\Support\Str::headline($product->status) }}</x-badge>
+                            @endif
+                        </td>
                         <td class="px-4 py-3">{{ $product->complianceAudit?->risk_score ?? '—' }}</td>
                         <td class="px-4 py-3">R{{ number_format($product->retail_price_zar ?? 0, 2) }}</td>
                         <td class="px-4 py-3 text-right">
@@ -65,7 +75,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No products match these filters.</td></tr>
+                    <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">No products match these filters.</td></tr>
                 @endforelse
             </tbody>
         </table>

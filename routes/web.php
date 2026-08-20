@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
@@ -94,6 +95,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('can:manage-settings')->group(function () {
             Route::get('/settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
             Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+        });
+
+        Route::middleware('can:view-financials')->group(function () {
+            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         });
     });
 });

@@ -52,7 +52,20 @@ class OrderController extends Controller
     {
         $order->load(['items.product', 'notes.user']);
 
-        return view('admin.orders.show', ['order' => $order]);
+        // Cost basis per line: the product's current landed cost * quantity
+        // sold — same "join through the live product" approach the
+        // duty/VAT column already uses. Products without a recorded landed
+        // cost (e.g. hand-entered before the pipeline existed) contribute
+        // nothing to cost, so profit is understated rather than guessed.
+        $costBasisZar = $order->items->sum(
+            fn ($item) => (float) ($item->product?->landed_cost_zar ?? 0) * $item->quantity
+        );
+
+        return view('admin.orders.show', [
+            'order' => $order,
+            'costBasisZar' => $costBasisZar,
+            'netProfitZar' => (float) $order->subtotal_zar - $costBasisZar,
+        ]);
     }
 
     public function update(Request $request, Order $order)

@@ -46,7 +46,7 @@ export async function enhanceHeroImage(imageBuffer, mimeType, { apiKey, model })
         // Round-trip through sharp: confirms it's a real decodable image and
         // normalizes it to the same webp pipeline as the original download.
         return await sharp(buffer)
-            .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+            .resize({ width: 1200, withoutEnlargement: true })
             .webp({ quality: 85 })
             .toBuffer();
     } catch (err) {

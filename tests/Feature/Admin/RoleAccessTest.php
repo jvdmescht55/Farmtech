@@ -53,6 +53,13 @@ class RoleAccessTest extends TestCase
         $this->actingAs($staff)->get(route('admin.source.create'))->assertForbidden();
     }
 
+    public function test_staff_gets_403_on_dashboard(): void
+    {
+        $staff = $this->makeUser('staff');
+
+        $this->actingAs($staff)->get(route('admin.dashboard'))->assertForbidden();
+    }
+
     public function test_admin_can_access_every_section(): void
     {
         $admin = $this->makeUser('admin');
@@ -62,6 +69,7 @@ class RoleAccessTest extends TestCase
         $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk();
         $this->actingAs($admin)->get(route('admin.products.index'))->assertOk();
         $this->actingAs($admin)->get(route('admin.source.create'))->assertOk();
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
     }
 
     private function makeUser(string $role): User
