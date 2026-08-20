@@ -123,6 +123,14 @@ class Product extends Model
         return $query->where('category', $category);
     }
 
+    /** All products across every ProductCategory that belongs to the given Industry. */
+    public function scopeIndustry(Builder $query, \App\Enums\Industry $industry): Builder
+    {
+        $values = array_map(fn (\App\Enums\ProductCategory $c) => $c->value, $industry->categories());
+
+        return $query->whereIn('category', $values);
+    }
+
     /**
      * "Top 5 Trending" — ranked by real units actually sold (order_items.quantity),
      * not a fabricated view/conversion metric we don't track. Products tied on zero

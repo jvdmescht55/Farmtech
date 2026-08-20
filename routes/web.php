@@ -28,6 +28,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search.index')->middleware('throttle:search');
 Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest')->middleware('throttle:search');
 Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
+Route::get('/industry/{industry}', [ProductController::class, 'industry'])->name('industry.show');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::middleware('throttle:cart')->group(function () {

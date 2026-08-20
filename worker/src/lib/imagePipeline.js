@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import { enhanceHeroImage } from './imageEnhance.js';
+import { enhanceProductImage } from './imageEnhance.js';
+import { normalizeToSquareCanvas } from './imageNormalize.js';
 import { isS3Configured, uploadToS3 } from './s3Storage.js';
 import { checkDimensions, checkArtifactsAndWatermarks } from './imageQuality.js';
 
@@ -11,13 +12,15 @@ const MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024; // 15MB guard against runaway/hosti
 /**
  * Downloads each source image URL, validates its MIME type from the actual
  * response bytes (not just the URL extension — supplier CDNs frequently
- * hotlink-break or redirect to garbage), re-encodes to .webp, and stores it
- * — locally under uploadDir by default, or in S3/R2 when
- * WORKER_FILESYSTEM_DISK=s3 (see s3Storage.js; mirrors Laravel's
- * FILESYSTEM_DISK so one .env drives both sides). The first (hero/
- * thumbnail) image also gets an AI background/lighting cleanup pass — see
- * imageEnhance.js — with the original photo used as-is if that fails for
- * any reason.
+ * hotlink-break or redirect to garbage), and normalizes every one onto a
+ * consistent 1000x1000 white studio canvas before storing — locally under
+ * uploadDir by default, or in S3/R2 when WORKER_FILESYSTEM_DISK=s3 (see
+ * s3Storage.js; mirrors Laravel's FILESYSTEM_DISK so one .env drives both
+ * sides). Every image gets Gemini's AI background/lighting cleanup (see
+ * imageEnhance.js) when an API key is configured; when it isn't, or the AI
+ * call fails for any reason, a deterministic trim-and-pad-to-square pass
+ * (see imageNormalize.js) still runs — real border/whitespace cleanup, not
+ * true background removal, but never a bare unprocessed photo.
  *
  * @returns {Promise<Array<{ original_url: string, local_path: string }>>}
  */
@@ -30,7 +33,7 @@ export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fet
 
     for (const [index, url] of imageUrls.entries()) {
         try {
-            const { webpBuffer, rawBuffer, mime, width, height } = await fetchAndConvert(url, fetchImpl);
+            const { rawBuffer, mime, width, height } = await fetchAndConvert(url, fetchImpl);
 
             const dimensionCheck = checkDimensions(width, height);
             if (!dimensionCheck.ok) {
@@ -42,14 +45,18 @@ export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fet
                 throw new Error(`rejected — ${artifactCheck.reason}`);
             }
 
-            let finalBuffer = webpBuffer;
+            let finalBuffer = null;
 
-            if (index === 0 && geminiApiKey) {
-                const enhanced = await enhanceHeroImage(rawBuffer, mime, { apiKey: geminiApiKey, model: geminiImageModel });
+            if (geminiApiKey) {
+                const enhanced = await enhanceProductImage(rawBuffer, mime, { apiKey: geminiApiKey, model: geminiImageModel });
                 if (enhanced) {
                     finalBuffer = enhanced;
-                    console.log('  [image-enhance] hero image cleaned up (background/lighting)');
+                    console.log(`  [image-enhance] image ${index + 1} cleaned up (background/lighting)`);
                 }
+            }
+
+            if (!finalBuffer) {
+                finalBuffer = await normalizeToSquareCanvas(rawBuffer);
             }
 
             const filename = `${sku}-${index + 1}.webp`;
@@ -94,10 +101,5 @@ async function fetchAndConvert(url, fetchImpl) {
         throw new Error(`unsupported image format detected: ${meta.format}`);
     }
 
-    const webpBuffer = await sharp(buffer)
-        .resize({ width: 1200, withoutEnlargement: true })
-        .webp({ quality: 85 })
-        .toBuffer();
-
-    return { webpBuffer, rawBuffer: buffer, mime: detectedMime, width: meta.width, height: meta.height };
+    return { rawBuffer: buffer, mime: detectedMime, width: meta.width, height: meta.height };
 }

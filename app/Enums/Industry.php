@@ -39,7 +39,15 @@ enum Industry: string
 
     public function categories(): array
     {
-        return array_filter(ProductCategory::cases(), fn (ProductCategory $c) => $c->industry() === $this);
+        return array_values(array_filter(ProductCategory::cases(), fn (ProductCategory $c) => $c->industry() === $this));
+    }
+
+    /** Built from the real category list rather than separately-authored marketing copy that could drift out of sync with it. */
+    public function description(): string
+    {
+        $labels = array_map(fn (ProductCategory $c) => $c->shortLabel(), $this->categories());
+
+        return implode(', ', $labels).'.';
     }
 
     public static function values(): array

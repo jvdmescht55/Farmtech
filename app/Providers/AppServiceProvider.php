@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Sticky Top-5 Trending sub-bar on catalog pages — composed here so
         // the query runs once, shared, rather than duplicated per controller.
-        View::composer(['storefront.products.category', 'storefront.search'], function ($view) {
+        View::composer(['storefront.products.category', 'storefront.products.industry', 'storefront.search'], function ($view) {
             $view->with('trending', \App\Models\Product::query()->trending()->with('thumbnail')->limit(5)->get());
         });
 

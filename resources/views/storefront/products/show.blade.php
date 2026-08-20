@@ -36,7 +36,7 @@
                             <img x-show="active === {{ $i }}" x-transition.opacity.duration.300ms
                                  src="{{ $image->url }}" alt="{{ $product->title }}"
                                  @click="zoomed = true"
-                                 class="absolute inset-0 object-contain w-full h-full p-4 cursor-zoom-in">
+                                 class="absolute inset-0 object-contain w-full h-full p-4 drop-shadow-sm cursor-zoom-in">
                         @endforeach
                         <button type="button" @click="zoomed = true" aria-label="Zoom image"
                                 class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/90 border border-slate-200 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand-900 hover:scale-110 transition">

@@ -41,4 +41,14 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
+// Cinematic entrance sequence, once per browser tab session — read before
+// marking played, so THIS page load still gets `alreadyPlayed: false` and
+// plays the animation; every subsequent navigation in the same tab sees it
+// already set and skips straight to the settled state.
+document.addEventListener('alpine:init', () => {
+    const alreadyPlayed = sessionStorage.getItem('intro_animated') === '1';
+    sessionStorage.setItem('intro_animated', '1');
+    Alpine.store('intro', { alreadyPlayed });
+});
+
 Alpine.start();

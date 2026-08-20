@@ -13,13 +13,14 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased flex flex-col min-h-screen font-body">
 
-    {{-- Rotating honest-claims strip --}}
+    {{-- Rotating honest-claims strip — slides down once per tab session on first load --}}
     <div x-data="{ i: 0, msgs: [
-            'All prices include SA import duty &amp; 15% VAT — nothing extra on delivery',
-            'Direct Express Delivery, 7–12 business days, tracked door to door',
-            'Every listing is AI-checked against ISO 11784/11785, ICASA &amp; SARS requirements',
+            'All-Inclusive ZAR Pricing',
+            'Import Duty &amp; 15% VAT Already Handled',
+            'Free Door-to-Door Delivery',
         ] }"
          x-init="setInterval(() => i = (i + 1) % msgs.length, 4500)"
+         :class="$store.intro.alreadyPlayed ? '' : 'animate-slide-down-in'"
          class="bg-brand-900 text-white text-xs sm:text-sm text-center py-2 px-4 font-medium tracking-wide">
         <span x-text="msgs[i]" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"></span>
     </div>
@@ -63,7 +64,8 @@
                          class="absolute left-0 top-full mt-2 w-[640px] max-w-[90vw] glass-card bg-white/95 rounded-2xl shadow-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
                         @foreach (\App\Enums\Industry::cases() as $navIndustry)
                             <div>
-                                <p class="px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-slate-400">{{ $navIndustry->label() }}</p>
+                                <a href="{{ route('industry.show', $navIndustry) }}" @click="categoriesOpen = false"
+                                   class="block px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-slate-400 hover:text-mint-dark transition">{{ $navIndustry->label() }}</a>
                                 @foreach ($navIndustry->categories() as $navCategory)
                                     <a href="{{ route('category.show', $navCategory) }}" @click="categoriesOpen = false"
                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-mint/10 text-slate-700 hover:text-brand-900 transition group">

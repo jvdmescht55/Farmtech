@@ -1,21 +1,87 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 8 — order tracking portal, PDP compliance badges, WhatsApp CTA,
-industrial reskin, category grid controls, legal pages).
-What changed since rev. 7: a full guest order-tracking portal at `/track` (5-stage stepper, masked
-address, courier links); a data-driven compliance badge strip on the product page (never a fixed
-set — only shows what the pipeline actually verified for that item); an admin-configurable WhatsApp
-CTA; the storefront's visual identity moved from glassmorphism (blurred, translucent) to a solid,
-hairline-bordered "industrial" surface, and the homepage/category hero blocks moved from full-bleed
-dark green-black to a light canvas; category pages gained a working sort/filter control bar and an
-industry-grouped sibling-category switcher; a proper `<x-footer>` component with real navigation
-(catalogs, tracking, legal); and three CPA-compliant legal pages (returns, terms, ICASA compliance)
-with real operational facts and clearly-bracketed placeholders for the entity details that don't
-exist yet (see caveats below — there is no registered company behind this site yet). Rev. 7 added
-the multi-industry expansion, Value-Density Feasibility Engine, and Top-5 Trending strip; rev. 6
-added the arbitrage engine, profit transparency, and image quality gate; rev. 5 added the scraper
-webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront redesign. See
-[README.md](README.md) for architecture/setup.
+Last updated: 2026-08-20 (rev. 9 — cinematic entrance animation, image normalization pipeline,
+Industry browse pages, product card/grid overhaul).
+What changed since rev. 8: a session-scoped entrance animation (top bar slides down, hero text
+staggers in, the showcase card scales in) that plays once per browser tab and never replays on
+in-session navigation; every sourced product image now gets a real background/lighting cleanup pass
+(extended from hero-only to every image) with a deterministic trim-and-pad-to-1000×1000 fallback
+when no AI key is configured — not true alpha-transparency background removal, which the current
+stack genuinely can't do (see caveats); a new `/industry/{industry}` browse page so the homepage's
+4 industry tiles (replacing the old flat 15-category grid) actually go somewhere real; and the
+product card was rebuilt with a standardized `<x-product-image>` studio canvas, a top badge row
+(industry + compliance status), and bottom-aligned price/stock/CTA regardless of title length. Rev.
+8 added the order tracking portal, PDP compliance badges, WhatsApp CTA, and the industrial reskin;
+rev. 7 added the multi-industry expansion, Value-Density Feasibility Engine, and Top-5 Trending
+strip; rev. 6 added the arbitrage engine, profit transparency, and image quality gate; rev. 5 added
+the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront redesign.
+See [README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 9)
+
+- **Cinematic entrance animation, session-scoped.** A global `Alpine.store('intro')`
+  (`resources/js/app.js`) reads `sessionStorage.getItem('intro_animated')` once at page-init time
+  *before* marking it set — so the very page load that finds it unset still gets `alreadyPlayed:
+  false` and plays the sequence, while every subsequent navigation within the same browser tab sees
+  it already set and skips straight to the resting state. The top claims bar slides down
+  (`animate-slide-down-in`), the hero badge/title/subtitle/CTA stagger in at 0/80/140/200ms
+  (existing `animate-reveal-up`, now conditionally applied instead of unconditional), and the
+  showcase card scales in from 95%→100% (`animate-scale-in`, a new keyframe) with a hover lift.
+  Verified live: `Alpine.store('intro').alreadyPlayed` is `false` with the animation class present
+  on first navigation, and `true` with the class absent on the very next navigation in the same tab
+  — the "once per visit" behavior actually works, not just looks right on first load.
+  **The requested top-bar copy included "0% Duty"** — factually wrong for this business (real SA
+  import duty rates of 10–15%+ are charged per HS code and are exactly what the landed-cost engine
+  calculates and folds into the price; claiming 0% duty to a customer would be a false statement
+  about their actual costs). Shipped as "Import Duty & 15% VAT Already Handled" instead — same
+  intent (all-inclusive pricing, nothing extra to pay), accurate claim.
+- **Image background normalization, extended and made honest about its real limits.** Every sourced
+  image (not just the hero/first one, as of this session) now gets Gemini's real background/lighting
+  cleanup pass (`imageEnhance.js`, renamed `enhanceHeroImage` → `enhanceProductImage`) targeting a
+  clean white/light-grey studio background and centered crop on a 1000×1000 canvas. When no Gemini
+  key is configured, or the AI call fails, a new deterministic fallback
+  (`worker/src/lib/imageNormalize.js`) trims uniform-color borders (sharp's own edge detection) and
+  pads the result onto a plain white 1000×1000 canvas — a real, honest improvement (dead whitespace
+  removed, consistent framing) but explicitly **not** true background removal: sharp has no
+  subject-matting model, so a photo with a complex/busy background keeps that background, just
+  cropped and centered. You chose this approach (extend the existing proven AI step + a deterministic
+  fallback) over adding a dedicated background-removal service/API, which would have been a real new
+  cost/infra dependency. 3 new tests (`imageNormalize.test.js`) plus updated coverage in
+  `imagePipeline.test.js` confirming the fixed 1000×1000 output; all 34 worker tests pass.
+- **`/industry/{industry}` browse pages — the homepage's 4 industry tiles actually go somewhere.**
+  New `Product::scopeIndustry()`, a shared `ProductController::filteredAndSorted()` helper (same
+  sort/in-stock logic as the category page, extracted rather than copy-pasted), and
+  `storefront/products/industry.blade.php` — same sort/filter control bar and sticky trending strip
+  as the category page, plus a pill row of every category *in* that industry. The header mega-menu's
+  industry group headers are now real links to these pages too. **Found and fixed a real bug while
+  building this**: `Industry::categories()` used `array_filter()` without re-indexing, so
+  `$industry->categories()[0]` (used for the homepage tile icon) threw "Undefined array key 0" for
+  every industry except Agriculture (the only one whose filtered categories happen to start at
+  index 0 in the original enum-declaration order) — this was latent in rev. 7/8's code too, just
+  never exercised because nothing had indexed into position 0 before. Fixed with `array_values()`;
+  4 new tests (`IndustryPageTest`).
+- **Product card rebuilt**: a new `<x-product-image>` component (standardized
+  `aspect-square bg-slate-50 border ... object-contain` studio canvas, used by the card and — where
+  a fallback is needed — the same category-icon-on-dot-grid treatment from rev. 8) replaces the old
+  `object-cover` full-bleed thumbnail; a top badge row shows the industry badge and compliance
+  status (moved off the rotated corner stamp, which stays as-is on the PDP gallery — unrelated,
+  untouched); the card is `h-full flex flex-col` so grid rows align regardless of title length, with
+  price/stock/CTA pinned to the bottom via `mt-auto`; and a "View Specs" affordance replaces the
+  bare card-as-link with an explicit visual call to action. One literal spec detail substituted:
+  `border-slate-150` isn't a real Tailwind shade (the default slate scale has no 150 step) — used
+  `border-slate-200`, the closest real token, instead.
+- **Photography**: not re-searched this session. The spec's isolated/transparent-background studio
+  photography brief is even less likely to exist as free-licensed Commons content than the
+  "shows the equipment" brief already confirmed unavailable in rev. 7/8 — isolated product-catalog
+  photography is typically commercial/proprietary stock content, not the kind of thing a
+  general-purpose freely-licensed image library carries. The new AI enhancement pass (above) is the
+  practical answer to "make the photos look more consistent," applied to whatever real photos exist.
+- **Full regression check**: 89 Laravel tests passing (up from 85; +4 new), 34 Node worker tests
+  (up from 31; +3 new), `npm run build` clean, verified live in-browser at desktop and 375px mobile
+  (no horizontal overflow, no real console errors beyond the pre-existing offline-Google-Fonts
+  warnings this sandbox always shows).
 
 ---
 
@@ -297,6 +363,16 @@ webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront 
 
 ## ⚠️ Built, but with a real caveat attached
 
+- **Image "background normalization" is real border-trim-and-pad, or real AI cleanup with a key —
+  never true alpha-transparency background removal.** The spec asked for images "centered on a
+  clean transparent/white 1000x1000 canvas," which implies subject-matting (isolating the product
+  from its background). Neither sharp (deterministic resize/crop library) nor the existing
+  Gemini-image-edit step can do that — Gemini's image edit returns a new flattened photo with a
+  repainted background, not an alpha-channel cutout, and sharp's `.trim()` only removes uniform-color
+  borders, not a complex photographic background. This was a deliberate choice you made between two
+  real options (extend the existing step vs. add a paid/self-hosted matting service) — not a
+  silent shortfall, but worth restating here since "clean canvas" and "true transparency" read as
+  the same thing in the original ask and they are not the same feature.
 - **The legal pages are not launch-ready as written** — the registered company name, CIPC
   registration number, and physical address are bracketed placeholders, since you confirmed there
   is no registered entity behind this site yet. Everything else on those pages (the CPA return
@@ -403,9 +479,16 @@ webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront 
    an admin configures one.
 9. RAM/DawnWing tracking URLs should be manually spot-checked (see caveats above).
 10. Product photography for the 10 categories added in rev. 7 is still the closest-real-match
-    Wikimedia Commons had, not purpose-shot product photography — re-investigated this session with
+    Wikimedia Commons had, not purpose-shot product photography — re-investigated in rev. 8 with
     no improvement found; a real fix likely needs either purchased stock photography or actual
     supplier product photos, not another Commons search.
+11. True background removal (alpha-transparency subject cutout) if the "isolated on transparent
+    canvas" look genuinely matters beyond what the current AI-cleanup/deterministic-trim pass
+    delivers — needs a real matting model or paid API, a follow-up decision, not a code gap.
+12. `worker/mock_data.json` and `resources/data/category-images.php` were not re-generated against
+    the new 1000×1000 normalization pipeline — existing entries are untouched real images, just not
+    yet re-processed through the new pipeline path to see the consistent-canvas treatment applied
+    to them specifically (new listings sourced going forward get it automatically).
 
 ---
 
@@ -433,15 +516,16 @@ webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront 
 ## Known rough edges
 
 - Same Windows/local-install and dev-server-can-die caveats as before.
-- 116 automated tests total across Laravel (85) and the Node worker (31) — genuinely covered, not
+- 123 automated tests total across Laravel (89) and the Node worker (34) — genuinely covered, not
   padding.
 
 ---
 
 ## Quick reference
 
-- Storefront: `http://localhost:8000` · Track an order: `/track` · Returns policy: `/policies/returns`
-  · Terms: `/policies/terms` · ICASA compliance: `/policies/icasa-compliance` ·
+- Storefront: `http://localhost:8000` · Browse by industry: `/industry/{agriculture|construction|
+  industrial_logistics|solar_power}` · Track an order: `/track` · Returns policy:
+  `/policies/returns` · Terms: `/policies/terms` · ICASA compliance: `/policies/icasa-compliance` ·
   Admin: `http://localhost:8000/admin/login` · Orders: `/admin/orders` · Settings (incl. WhatsApp
   number): `/admin/settings` · Your Profile: `/admin/profile` · Users: `/admin/users`
 - Run the Laravel test suite: `php artisan test`

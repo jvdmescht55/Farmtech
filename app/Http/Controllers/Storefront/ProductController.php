@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\Industry;
 use App\Enums\ProductCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -13,13 +15,43 @@ class ProductController extends Controller
 
     public function category(ProductCategory $category, Request $request)
     {
+        [$products, $sort, $inStock] = $this->filteredAndSorted(
+            Product::storefrontVisible()->category($category->value),
+            $request
+        );
+
+        return view('storefront.products.category', [
+            'category' => $category,
+            'products' => $products,
+            'sort' => $sort,
+            'inStock' => $inStock,
+        ]);
+    }
+
+    public function industry(Industry $industry, Request $request)
+    {
+        [$products, $sort, $inStock] = $this->filteredAndSorted(
+            Product::storefrontVisible()->industry($industry),
+            $request
+        );
+
+        return view('storefront.products.industry', [
+            'industry' => $industry,
+            'products' => $products,
+            'sort' => $sort,
+            'inStock' => $inStock,
+        ]);
+    }
+
+    /** @return array{0: \Illuminate\Contracts\Pagination\LengthAwarePaginator, 1: string, 2: bool} */
+    private function filteredAndSorted(Builder $query, Request $request): array
+    {
         $sort = in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : 'newest';
+        $inStock = $request->boolean('in_stock');
 
-        $query = Product::storefrontVisible()
-            ->category($category->value)
-            ->with(['thumbnail', 'complianceAudit']);
+        $query->with(['thumbnail', 'complianceAudit']);
 
-        if ($request->boolean('in_stock')) {
+        if ($inStock) {
             $query->where('stock_status', 'in_stock');
         }
 
@@ -31,14 +63,7 @@ class ProductController extends Controller
             default => $query->orderByDesc('created_at'),
         };
 
-        $products = $query->paginate(12)->withQueryString();
-
-        return view('storefront.products.category', [
-            'category' => $category,
-            'products' => $products,
-            'sort' => $sort,
-            'inStock' => $request->boolean('in_stock'),
-        ]);
+        return [$query->paginate(12)->withQueryString(), $sort, $inStock];
     }
 
     public function show(Product $product)

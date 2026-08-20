@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Storefront;
 
-use App\Enums\ProductCategory;
+use App\Enums\Industry;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 
@@ -22,7 +22,7 @@ class HomeController extends Controller
         $costSample = $featured->first(fn (Product $p) => $p->landed_cost_zar && $p->retail_price_zar);
 
         return view('storefront.home', [
-            'categories' => ProductCategory::cases(),
+            'industries' => Industry::cases(),
             'heroProducts' => $heroProducts,
             'featured' => $featured,
             'trending' => $trending,

@@ -7,20 +7,20 @@
     {{-- Split hero — light industrial canvas --}}
     @if ($heroProducts->isNotEmpty())
         @php($hero = $heroProducts->first())
-        <section class="relative bg-slate-50 border-b border-slate-200 overflow-hidden">
+        <section x-data class="relative bg-slate-50 border-b border-slate-200 overflow-hidden">
             <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
                 <div>
-                    <span class="inline-flex items-center gap-2 bg-white border border-slate-200 text-mint-dark text-xs font-semibold uppercase tracking-[0.15em] px-3.5 py-1.5 rounded-full mb-6 animate-reveal-up">
+                    <span :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="inline-flex items-center gap-2 bg-white border border-slate-200 text-mint-dark text-xs font-semibold uppercase tracking-[0.15em] px-3.5 py-1.5 rounded-full mb-6">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
                         AI-Vetted Before It's Listed
                     </span>
-                    <h1 class="font-display font-extrabold text-4xl sm:text-5xl text-brand-900 leading-[1.08] mb-5 animate-reveal-up" style="animation-delay:80ms">
+                    <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="font-display font-extrabold text-4xl sm:text-5xl text-brand-900 leading-[1.08] mb-5" style="animation-delay:80ms">
                         Agricultural technology, sourced and cleared for South African farms.
                     </h1>
-                    <p class="text-slate-600 text-base sm:text-lg max-w-lg mb-8 leading-relaxed animate-reveal-up" style="animation-delay:140ms">
+                    <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-slate-600 text-base sm:text-lg max-w-lg mb-8 leading-relaxed" style="animation-delay:140ms">
                         Every listing is checked against ISO 11784/11785, ICASA or NRCS requirements before it goes live — with all-in ZAR pricing, so what you see is what you pay.
                     </p>
-                    <div class="flex flex-wrap items-center gap-4 animate-reveal-up" style="animation-delay:200ms">
+                    <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="flex flex-wrap items-center gap-4" style="animation-delay:200ms">
                         <a href="{{ route('products.show', $hero) }}" class="relative inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-6 py-3.5 rounded-full transition-all hover:gap-3">
                             Shop the {{ $hero->category_label }}
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -39,7 +39,8 @@
                         prev() { this.slide = (this.slide - 1 + this.total) % this.total; },
                     }"
                     x-init="start()" @mouseenter="stop()" @mouseleave="start()"
-                    class="relative animate-reveal-up" style="animation-delay:260ms">
+                    :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'"
+                    class="relative hover:-translate-y-1 transition-all duration-300" style="animation-delay:260ms">
                     <div class="relative aspect-[4/3] rounded-2xl overflow-hidden glass-card">
                         @foreach ($heroProducts as $i => $product)
                             <a href="{{ route('products.show', $product) }}"
@@ -114,30 +115,26 @@
             @endforeach
         </section>
 
-        {{-- Category tiles --}}
+        {{-- Industry tiles --}}
         <section class="mb-20">
             <div class="flex items-baseline justify-between mb-5">
-                <h2 class="font-display font-bold text-xl text-brand-900">Shop by Category</h2>
-                <span class="text-xs text-slate-500 font-mono">{{ count($categories) }} ranges</span>
+                <h2 class="font-display font-bold text-xl text-brand-900">Shop by Industry</h2>
+                <span class="text-xs text-slate-500 font-mono">{{ count($industries) }} sectors</span>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                @foreach ($categories as $i => $category)
-                    @php($image = $category->image())
-                    <a href="{{ route('category.show', $category) }}"
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                @foreach ($industries as $i => $industry)
+                    <a href="{{ route('industry.show', $industry) }}"
                        x-reveal.{{ $i * 70 }}
-                       class="group relative rounded-2xl overflow-hidden aspect-[4/3] flex items-end p-5">
-                        <img src="{{ $image['url'] }}" alt="" class="absolute inset-0 w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-700 ease-out">
-                        <div class="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/40 to-transparent group-hover:from-brand-950/95 transition-colors"></div>
-                        <span class="absolute top-3 left-3 w-8 h-8 rounded-lg bg-white/15 backdrop-blur text-white flex items-center justify-center">
-                            <x-category-icon :icon="$category->icon()" class="w-4 h-4" />
+                       class="group bg-white border border-slate-200 hover:border-mint/40 rounded-2xl p-5 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                        <span class="w-12 h-12 rounded-xl bg-brand-900 text-white flex items-center justify-center mb-4 group-hover:bg-mint transition-colors">
+                            <x-category-icon :icon="$industry->categories()[0]->icon()" class="w-6 h-6" />
                         </span>
-                        <div class="relative">
-                            <span class="block font-display font-semibold text-white text-sm sm:text-base">{{ $category->shortLabel() }}</span>
-                            <span class="flex items-center gap-1 mt-1 text-xs text-mint-light opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">
-                                Shop range
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                            </span>
-                        </div>
+                        <span class="font-display font-bold text-brand-900">{{ $industry->label() }}</span>
+                        <span class="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">{{ $industry->description() }}</span>
+                        <span class="flex items-center gap-1 mt-3 text-xs font-semibold text-mint-dark group-hover:gap-1.5 transition-all">
+                            Shop {{ count($industry->categories()) }} {{ \Illuminate\Support\Str::plural('range', count($industry->categories())) }}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </span>
                     </a>
                 @endforeach
             </div>

@@ -21,9 +21,12 @@ test('downloads a real image, validates it, and re-encodes to webp under the siz
     const written = await readFile(path.join(dir, 'TEST-SKU-1.webp'));
     const meta = await sharp(written).metadata();
 
+    // No Gemini key in this test env, so this exercises the deterministic
+    // normalizeToSquareCanvas fallback — every image lands on the same
+    // fixed 1000x1000 canvas regardless of its source dimensions.
     assert.equal(meta.format, 'webp');
-    assert.ok(meta.width <= 1200, `expected width <= 1200, got ${meta.width}`);
-    assert.ok(meta.height <= 1200, `expected height <= 1200, got ${meta.height}`);
+    assert.equal(meta.width, 1000);
+    assert.equal(meta.height, 1000);
 });
 
 test('rejects an image smaller than the 800x800 minimum instead of saving it', async (t) => {
