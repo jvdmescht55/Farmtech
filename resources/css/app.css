@@ -63,11 +63,26 @@
      * automatically, without a per-view rewrite.
      */
     .glass-card {
-        @apply bg-white border border-slate-200 shadow-none;
+        @apply bg-white border border-border shadow-none;
     }
 
     .glass-header {
-        @apply bg-white/95 border-b border-slate-200 transition-colors duration-300;
+        @apply bg-white/95 border-b border-border transition-colors duration-300;
+    }
+
+    /*
+     * rev. 11 — the locked card style: 12px radius (was 20–24px), 1px
+     * #DCE5E0 border, no resting shadow, a very subtle lift + shadow on
+     * hover. Use this going forward for any new card-like surface; existing
+     * cards are being migrated to it incrementally, not all in one sweep.
+     */
+    .card {
+        @apply bg-white border border-border rounded-xl shadow-none transition-all duration-300;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(11, 74, 54, 0.10);
     }
 }
 

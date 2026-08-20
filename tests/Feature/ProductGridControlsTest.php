@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ProductCategory;
 use App\Models\Product;
+use App\Models\ProductSpec;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -72,5 +73,55 @@ class ProductGridControlsTest extends TestCase
         Product::factory()->create(['category' => ProductCategory::Scales]);
 
         $this->get(route('category.show', ProductCategory::Scales).'?sort=not-a-real-sort')->assertOk();
+    }
+
+    public function test_spec_filter_narrows_results_to_matching_value(): void
+    {
+        $big = Product::factory()->create(['category' => ProductCategory::Scales]);
+        ProductSpec::create(['product_id' => $big->id, 'spec_group' => 'Performance', 'spec_key' => 'Capacity', 'spec_value' => '3000 kg', 'is_highlight' => true]);
+
+        $small = Product::factory()->create(['category' => ProductCategory::Scales]);
+        ProductSpec::create(['product_id' => $small->id, 'spec_group' => 'Performance', 'spec_key' => 'Capacity', 'spec_value' => '500 kg', 'is_highlight' => true]);
+
+        $response = $this->get(route('category.show', ProductCategory::Scales).'?'.http_build_query(['spec' => ['Capacity' => ['3000 kg']]]));
+
+        $products = $response->viewData('products');
+        $this->assertTrue($products->contains('id', $big->id));
+        $this->assertFalse($products->contains('id', $small->id));
+    }
+
+    public function test_facets_are_built_from_real_spec_data_in_this_category_only(): void
+    {
+        $scale = Product::factory()->create(['category' => ProductCategory::Scales]);
+        ProductSpec::create(['product_id' => $scale->id, 'spec_group' => 'Performance', 'spec_key' => 'Capacity', 'spec_value' => '3000 kg', 'is_highlight' => true]);
+
+        $rfid = Product::factory()->create(['category' => ProductCategory::Rfid]);
+        ProductSpec::create(['product_id' => $rfid->id, 'spec_group' => 'Compliance', 'spec_key' => 'Frequency', 'spec_value' => '134.2 kHz', 'is_highlight' => true]);
+
+        $response = $this->get(route('category.show', ProductCategory::Scales));
+
+        $facets = $response->viewData('facets');
+        $this->assertTrue($facets->has('Capacity'));
+        $this->assertTrue($facets->get('Capacity')->contains('3000 kg'));
+        $this->assertFalse($facets->has('Frequency'));
+    }
+
+    public function test_selecting_a_spec_filter_does_not_remove_other_facet_options(): void
+    {
+        $a = Product::factory()->create(['category' => ProductCategory::Scales]);
+        ProductSpec::create(['product_id' => $a->id, 'spec_group' => 'Performance', 'spec_key' => 'Capacity', 'spec_value' => '3000 kg', 'is_highlight' => true]);
+        ProductSpec::create(['product_id' => $a->id, 'spec_group' => 'Connectivity', 'spec_key' => 'Connectivity', 'spec_value' => 'Bluetooth', 'is_highlight' => true]);
+
+        $b = Product::factory()->create(['category' => ProductCategory::Scales]);
+        ProductSpec::create(['product_id' => $b->id, 'spec_group' => 'Performance', 'spec_key' => 'Capacity', 'spec_value' => '500 kg', 'is_highlight' => true]);
+        ProductSpec::create(['product_id' => $b->id, 'spec_group' => 'Connectivity', 'spec_key' => 'Connectivity', 'spec_value' => 'Wi-Fi', 'is_highlight' => true]);
+
+        $response = $this->get(route('category.show', ProductCategory::Scales).'?'.http_build_query(['spec' => ['Capacity' => ['3000 kg']]]));
+
+        $facets = $response->viewData('facets');
+        // Even though the result set is narrowed to product A, the Connectivity
+        // facet still shows both real options — filters don't erase each other.
+        $this->assertTrue($facets->get('Connectivity')->contains('Bluetooth'));
+        $this->assertTrue($facets->get('Connectivity')->contains('Wi-Fi'));
     }
 }

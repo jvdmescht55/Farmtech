@@ -82,7 +82,7 @@ class PipelineTest extends TestCase
         $response->assertSee('134.2 kHz ISO 11784/5 compliant');
     }
 
-    public function test_a_warn_verdict_product_shows_the_softer_ai_checked_badge_not_verified_and_cleared(): void
+    public function test_a_warn_verdict_product_shows_the_softer_farmtech_checked_badge_not_farmtech_verified(): void
     {
         $warned = Product::factory()->create([
             'title' => 'Ultrasound Scanner Missing Battery Cert',
@@ -100,8 +100,10 @@ class PipelineTest extends TestCase
 
         $response = $this->get(route('category.show', $warned->category));
 
+        // Not assertDontSee('Farmtech Verified') — the shared "what does this
+        // mean" modal (see layouts.storefront) always contains that phrase in
+        // its heading, on every page, regardless of this product's own badge.
         $response->assertOk();
-        $response->assertSee('AI Checked');
-        $response->assertDontSee('Verified &amp; Cleared', false);
+        $response->assertSee('Farmtech Checked');
     }
 }

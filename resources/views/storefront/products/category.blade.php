@@ -42,51 +42,11 @@
     <x-trending-strip :products="$trending" :sticky="true" />
 
     <div class="max-w-7xl mx-auto px-4 py-10">
-        <div x-data="{ filtersOpen: false }" class="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <p class="text-sm text-slate-500 font-mono">
-                @if ($products->total() > 0)
-                    Showing {{ $products->firstItem() }}&ndash;{{ $products->lastItem() }} of {{ $products->total() }} {{ \Illuminate\Support\Str::plural('item', $products->total()) }}
-                @else
-                    0 items
-                @endif
-            </p>
-
-            <div class="flex items-center gap-2">
-                <button type="button" @click="filtersOpen = !filtersOpen"
-                        class="inline-flex items-center gap-1.5 text-sm font-medium border rounded-full px-4 py-2 transition {{ $inStock ? 'bg-mint/10 border-mint/40 text-mint-dark' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    Filters
-                    @if ($inStock)<span class="w-1.5 h-1.5 rounded-full bg-mint"></span>@endif
-                </button>
-
-                <form method="GET" class="relative">
-                    @if ($inStock)<input type="hidden" name="in_stock" value="1">@endif
-                    <select name="sort" onchange="this.form.submit()"
-                            class="appearance-none bg-white border border-slate-200 rounded-full pl-4 pr-9 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-mint/30 cursor-pointer">
-                        <option value="newest" @selected($sort === 'newest')>Newest</option>
-                        <option value="price_asc" @selected($sort === 'price_asc')>Price: Low to High</option>
-                        <option value="price_desc" @selected($sort === 'price_desc')>Price: High to Low</option>
-                        <option value="popularity" @selected($sort === 'popularity')>Popularity</option>
-                    </select>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </form>
-            </div>
-
-            <div x-show="filtersOpen" x-transition x-cloak
-                 class="w-full border border-slate-200 bg-white rounded-xl p-4">
-                <form method="GET" class="flex items-center gap-3">
-                    <input type="hidden" name="sort" value="{{ $sort }}">
-                    <label class="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                        <input type="checkbox" name="in_stock" value="1" onchange="this.form.submit()" {{ $inStock ? 'checked' : '' }}
-                               class="rounded border-slate-300 text-mint focus:ring-mint/30">
-                        In Stock Only
-                    </label>
-                    @if ($inStock)
-                        <a href="{{ route('category.show', $category) }}?sort={{ $sort }}" class="text-xs text-slate-400 hover:text-slate-600 transition">Clear</a>
-                    @endif
-                </form>
-            </div>
-        </div>
+        @include('storefront.products._filter-panel', [
+            'targetUrl' => route('category.show', $category),
+            'products' => $products, 'sort' => $sort, 'inStock' => $inStock,
+            'facets' => $facets, 'selectedSpecs' => $selectedSpecs,
+        ])
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             @forelse ($products as $i => $product)

@@ -20,4 +20,9 @@ class PolicyController extends Controller
     {
         return view('storefront.policies.icasa-compliance');
     }
+
+    public function privacy()
+    {
+        return view('storefront.policies.privacy');
+    }
 }

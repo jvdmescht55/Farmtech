@@ -1,173 +1,225 @@
 @extends('layouts.storefront')
 
-@section('title', 'Farmtech — AI-Vetted Agricultural Technology for South African Farms')
+@section('title', 'Farmtech — Professional Equipment, Sourced Globally, Delivered Locally')
+
+@php
+    $heroImage = \App\Enums\ProductCategory::heroFallbackImage();
+@endphp
 
 @section('content')
 
-    {{-- Split hero — light industrial canvas --}}
-    @if ($heroProducts->isNotEmpty())
-        @php($hero = $heroProducts->first())
-        <section x-data class="relative bg-slate-50 border-b border-slate-200 overflow-hidden">
-            <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
-                <div>
-                    <span :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="inline-flex items-center gap-2 bg-white border border-slate-200 text-mint-dark text-xs font-semibold uppercase tracking-[0.15em] px-3.5 py-1.5 rounded-full mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
-                        AI-Vetted Before It's Listed
-                    </span>
-                    <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="font-display font-extrabold text-4xl sm:text-5xl text-brand-900 leading-[1.08] mb-5" style="animation-delay:80ms">
-                        Agricultural technology, sourced and cleared for South African farms.
-                    </h1>
-                    <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-slate-600 text-base sm:text-lg max-w-lg mb-8 leading-relaxed" style="animation-delay:140ms">
-                        Every listing is checked against ISO 11784/11785, ICASA or NRCS requirements before it goes live — with all-in ZAR pricing, so what you see is what you pay.
-                    </p>
-                    <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="flex flex-wrap items-center gap-4" style="animation-delay:200ms">
-                        <a href="{{ route('products.show', $hero) }}" class="relative inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-6 py-3.5 rounded-full transition-all hover:gap-3">
-                            Shop the {{ $hero->category_label }}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                        </a>
-                        <a href="{{ route('search.index') }}" class="text-sm font-semibold text-slate-600 hover:text-brand-900 transition">Browse all products</a>
-                    </div>
-                </div>
+    {{-- Hero: exact 50/50 split — text left, one large photograph right. Search lives in the
+         header now (see layouts.storefront), not duplicated here. --}}
+    <section x-data class="bg-white border-b border-border overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 items-center min-h-[600px] lg:min-h-[700px] py-16 lg:py-0 gap-12">
+            <div>
+                <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-5">Professional Equipment</p>
+                <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:80ms" class="font-display font-extrabold text-4xl sm:text-5xl text-charcoal leading-[1.1] mb-6">
+                    Sourced globally.<br>Delivered locally.
+                </h1>
+                <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:140ms" class="text-ink-secondary text-base sm:text-lg max-w-md mb-10 leading-relaxed">
+                    Verified agricultural and industrial technology for South African businesses and farms.
+                </p>
 
-                <div x-data="{
-                        slide: 0,
-                        total: {{ $heroProducts->count() }},
-                        timer: null,
-                        start() { this.timer = setInterval(() => this.next(), 5500); },
-                        stop() { clearInterval(this.timer); },
-                        next() { this.slide = (this.slide + 1) % this.total; },
-                        prev() { this.slide = (this.slide - 1 + this.total) % this.total; },
-                    }"
-                    x-init="start()" @mouseenter="stop()" @mouseleave="start()"
-                    :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'"
-                    class="relative hover:-translate-y-1 transition-all duration-300" style="animation-delay:260ms">
-                    <div class="relative aspect-[4/3] rounded-2xl overflow-hidden glass-card">
-                        @foreach ($heroProducts as $i => $product)
-                            <a href="{{ route('products.show', $product) }}"
-                               x-show="slide === {{ $i }}" @if ($i > 0) x-cloak @endif
-                               x-transition:enter="transition ease-out duration-700"
-                               x-transition:enter-start="opacity-0 scale-105"
-                               x-transition:enter-end="opacity-100 scale-100"
-                               class="absolute inset-0 block group">
-                                @if ($product->thumbnail)
-                                    <img src="{{ $product->thumbnail->url }}" alt="{{ $product->title }}" class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-[3000ms] ease-out">
-                                @endif
-                                <div class="absolute inset-0 bg-gradient-to-t from-brand-950/85 via-brand-950/5 to-transparent"></div>
-                                <div class="absolute bottom-0 left-0 right-0 p-5">
-                                    <p class="text-white font-display font-semibold text-lg leading-tight mb-1">{{ $product->title }}</p>
-                                    <p class="font-mono text-mint-light text-xl font-semibold">R{{ number_format($product->retail_price_zar, 2) }}</p>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                    @if ($heroProducts->count() > 1)
-                        <button @click="prev()" aria-label="Previous" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-slate-300 hover:scale-110 text-brand-900 flex items-center justify-center transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                        </button>
-                        <button @click="next()" aria-label="Next" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-slate-300 hover:scale-110 text-brand-900 flex items-center justify-center transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                        </button>
-                        <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                            @foreach ($heroProducts as $i => $product)
-                                <button @click="slide = {{ $i }}" :class="slide === {{ $i }} ? 'w-8 bg-mint' : 'w-2 bg-white border border-slate-300'" class="h-2 rounded-full transition-all duration-300"></button>
-                            @endforeach
-                        </div>
-                    @endif
+                <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:200ms" class="flex flex-wrap items-center gap-4">
+                    <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition-all hover:gap-3">
+                        Explore equipment
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                    <a href="{{ route('how-it-works') }}" class="inline-flex items-center gap-2 border border-border hover:border-charcoal/30 text-charcoal text-sm font-semibold px-7 py-3.5 rounded-full transition">
+                        How Farmtech works
+                    </a>
                 </div>
             </div>
-        </section>
-    @else
-        <section class="relative bg-slate-50 border-b border-slate-200 text-brand-900 overflow-hidden">
-            <div class="relative px-4 py-24 text-center">
-                <h1 class="font-display font-extrabold text-3xl sm:text-4xl mb-3 max-w-2xl mx-auto">Agricultural technology, sourced and checked for South African farms.</h1>
-                <p class="text-slate-600 max-w-xl mx-auto">Products will appear here once the admin team approves the first listings.</p>
+
+            <div :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'" style="animation-delay:120ms" class="relative aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[500px] rounded-xl overflow-hidden">
+                <img src="{{ $heroImage['url'] }}" alt="Modern South African farm" class="absolute inset-0 w-full h-full object-cover">
+            </div>
+        </div>
+    </section>
+
+    {{-- Trust bar — white, 80-100px tall, items separated by a hairline vertical divider --}}
+    <div class="bg-white border-b border-border">
+        <div class="max-w-6xl mx-auto px-4 h-20 sm:h-24 flex flex-wrap items-center justify-center divide-x divide-border">
+            @foreach ([
+                'Verified suppliers',
+                'VAT included',
+                'Import costs shown',
+                'Door-to-door delivery',
+            ] as $item)
+                <span class="flex items-center gap-2 px-4 sm:px-8 text-xs sm:text-sm font-semibold text-charcoal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mint-dark flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {{ strtoupper($item) }}
+                </span>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Shop by application — 3x2 large image cards. Replaces the earlier industry-card
+         grid at this position per the exact-spec walkthrough (items 11-12); industry-level
+         browsing is still reachable via the header's Equipment mega-menu and /industry/*. --}}
+    <section id="shop-by-application" class="max-w-7xl mx-auto px-4 py-20 sm:py-24 scroll-mt-20">
+        <div class="max-w-2xl mb-12">
+            <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Solutions</p>
+            <h2 class="font-display font-bold text-3xl sm:text-4xl text-charcoal">What are you trying to achieve?</h2>
+            <p class="text-ink-secondary mt-3">Find equipment by application instead of technical jargon.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (\App\Support\Applications::all() as $i => $app)
+                @php $appImage = \App\Support\Applications::image($app); @endphp
+                <a href="{{ \App\Support\Applications::url($app) }}"
+                   x-reveal.{{ $i * 90 }}
+                   class="group relative rounded-xl overflow-hidden aspect-[4/3] flex items-end p-5">
+                    <img src="{{ $appImage['url'] }}" alt="" class="absolute inset-0 w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out">
+                    <div class="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/30 to-transparent group-hover:from-brand-950/95 transition-colors"></div>
+                    <div class="relative">
+                        <h3 class="font-display font-bold text-white text-lg uppercase tracking-wide mb-1">{{ $app['label'] }}</h3>
+                        <p class="text-white/70 text-sm mb-3">{{ $app['description'] }}</p>
+                        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-light group-hover:gap-2.5 transition-all">
+                            Explore
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </span>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- Popular equipment — real units-sold data, given its own proper section rather than a bolted-on strip --}}
+    @if ($trending->isNotEmpty())
+        <section class="bg-canvas border-y border-slate-200 py-20 sm:py-24">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="max-w-2xl mb-10">
+                    <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Popular Equipment</p>
+                    <h2 class="font-display font-bold text-3xl text-charcoal mb-2">Equipment South African buyers are choosing</h2>
+                    <p class="text-slate-600">Ranked by real units sold — not a promoted placement.</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                    @foreach ($trending as $i => $product)
+                        @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
+                    @endforeach
+                </div>
             </div>
         </section>
     @endif
 
-    <x-trending-strip :products="$trending" />
-
-    <div class="max-w-7xl mx-auto px-4">
-
-        {{-- Trust bar --}}
-        <section class="grid sm:grid-cols-4 gap-4 mt-10 relative z-10 mb-20">
+    {{-- Why Farmtech — the verification story as a real selling point --}}
+    <section class="max-w-6xl mx-auto px-4 py-20 sm:py-24">
+        <div class="max-w-2xl mb-12">
+            <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Why Farmtech</p>
+            <h2 class="font-display font-bold text-3xl sm:text-4xl text-charcoal">Why buy through Farmtech?</h2>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
             @foreach ([
-                ['icon' => 'shield', 'title' => 'AI Compliance Checked', 'body' => 'Every listing is checked against the relevant SA standard — ISO 11784/11785, ICASA, or NRCS — before it goes live.'],
-                ['icon' => 'receipt', 'title' => 'All-In Pricing', 'body' => 'Import duty & 15% VAT are already in the price. Nothing extra to pay on delivery.'],
-                ['icon' => 'truck', 'title' => 'Free Express Delivery', 'body' => 'Free Express Door-to-Door Delivery Across South Africa (All Customs & Clearance Handled) — Direct Express air freight, 7–12 business days.'],
-                ['icon' => 'lock', 'title' => 'Secure Checkout', 'body' => 'Card and EFT details are handled by PayFast, Ozow or Yoco — Farmtech never stores them.'],
-            ] as $i => $item)
-                <div x-reveal.{{ $i * 100 }} class="group glass-card rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-mint/10 text-mint-dark flex items-center justify-center mb-3 group-hover:bg-mint group-hover:text-white transition-colors">
-                        @if ($item['icon'] === 'shield')
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
-                        @elseif ($item['icon'] === 'receipt')
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
-                        @elseif ($item['icon'] === 'lock')
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="7" width="15" height="10"/><path d="M16 10h4l3 3v4h-7z"/><circle cx="5.5" cy="19.5" r="1.5"/><circle cx="18.5" cy="19.5" r="1.5"/></svg>
-                        @endif
-                    </div>
-                    <p class="font-display font-semibold text-brand-900 text-sm mb-1">{{ $item['title'] }}</p>
-                    <p class="text-xs text-slate-600 leading-relaxed">{{ $item['body'] }}</p>
+                ['n' => '01', 'title' => 'Supplier verified', 'body' => 'We screen suppliers before products are listed — trading history, verified-account status, trade assurance.'],
+                ['n' => '02', 'title' => 'Product checked', 'body' => 'Specifications are checked against the relevant SA standard — ISO 11784/11785, ICASA, or NRCS — for the product\'s category.'],
+                ['n' => '03', 'title' => 'Import calculated', 'body' => 'VAT, import duty and delivery are calculated per product and already included in the price you see.'],
+                ['n' => '04', 'title' => 'Delivered to you', 'body' => 'Door-to-door delivery with real order tracking — see exactly where your equipment is.'],
+            ] as $item)
+                <div>
+                    <span class="font-mono text-sm text-mint-dark font-bold">{{ $item['n'] }}</span>
+                    <h3 class="font-display font-bold text-lg text-charcoal mt-1.5 mb-1.5">{{ $item['title'] }}</h3>
+                    <p class="text-slate-600 leading-relaxed text-sm">{{ $item['body'] }}</p>
                 </div>
             @endforeach
-        </section>
+        </div>
+        <a href="{{ route('how-it-works') }}" class="inline-flex items-center gap-1.5 mt-10 text-sm font-semibold text-mint-dark hover:text-mint-darker transition">
+            See the full process
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+    </section>
 
-        {{-- Industry tiles --}}
-        <section class="mb-20">
-            <div class="flex items-baseline justify-between mb-5">
-                <h2 class="font-display font-bold text-xl text-brand-900">Shop by Industry</h2>
-                <span class="text-xs text-slate-500 font-mono">{{ count($industries) }} sectors</span>
+    {{-- How Farmtech Works — visually prominent, dark section for rhythm against the light sections either side --}}
+    <section class="bg-brand-950 py-20 sm:py-24">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="max-w-2xl mx-auto text-center mb-14">
+                <p class="text-xs uppercase tracking-[0.2em] text-mint-light font-semibold mb-3">How Farmtech Works</p>
+                <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Equipment without the import headache.</h2>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                @foreach ($industries as $i => $industry)
-                    <a href="{{ route('industry.show', $industry) }}"
-                       x-reveal.{{ $i * 70 }}
-                       class="group bg-white border border-slate-200 hover:border-mint/40 rounded-2xl p-5 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-                        <span class="w-12 h-12 rounded-xl bg-brand-900 text-white flex items-center justify-center mb-4 group-hover:bg-mint transition-colors">
-                            <x-category-icon :icon="$industry->categories()[0]->icon()" class="w-6 h-6" />
-                        </span>
-                        <span class="font-display font-bold text-brand-900">{{ $industry->label() }}</span>
-                        <span class="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">{{ $industry->description() }}</span>
-                        <span class="flex items-center gap-1 mt-3 text-xs font-semibold text-mint-dark group-hover:gap-1.5 transition-all">
-                            Shop {{ count($industry->categories()) }} {{ \Illuminate\Support\Str::plural('range', count($industry->categories())) }}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                        </span>
-                    </a>
+            @php
+                $howItWorksSteps = [
+                    ['n' => '01', 'title' => 'Choose equipment'],
+                    ['n' => '02', 'title' => 'See your complete price'],
+                    ['n' => '03', 'title' => 'Place your order'],
+                    ['n' => '04', 'title' => 'We handle the import'],
+                    ['n' => '05', 'title' => 'Delivered to your door'],
+                ];
+            @endphp
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-6 sm:gap-2">
+                @foreach ($howItWorksSteps as $step)
+                    <div class="flex sm:flex-col items-center gap-4 sm:gap-3 sm:text-center flex-1">
+                        <span class="font-mono text-2xl font-bold text-mint/50 flex-shrink-0">{{ $step['n'] }}</span>
+                        <span class="text-white font-semibold text-sm">{{ $step['title'] }}</span>
+                    </div>
+                    @if (!$loop->last)
+                        <div class="hidden sm:flex flex-shrink-0 items-center text-mint/30 -mx-1 mt-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </div>
+                    @endif
                 @endforeach
             </div>
-        </section>
+            <div class="text-center mt-12">
+                <a href="{{ route('how-it-works') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-light hover:text-white transition">
+                    See the full process
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
 
-        {{-- Landed-cost transparency widget — real numbers from one live listing, never a fabricated "vs local retail" figure. --}}
+    <div class="max-w-7xl mx-auto px-4">
+        {{-- Import pricing card — real decomposed numbers from one live listing, never a
+             fabricated "vs local retail" figure. Duty is shown as the real per-product rate
+             (it varies by HS code), not a universal claim — VAT genuinely is a flat 15% under
+             South African law, so that line is the one that's honestly always the same. --}}
         @if ($costSample)
-            <section class="mb-20" x-reveal>
-                <div class="glass-card rounded-2xl p-6 sm:p-8 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+            @php
+                $baseZar = $costSample->landed_cost_zar - ($costSample->intl_freight_zar ?? 0) - ($costSample->customs_vat_zar ?? 0) - ($costSample->domestic_delivery_zar ?? 0);
+            @endphp
+            <section class="my-20 sm:my-24" x-data="{ howOpen: false }" x-reveal>
+                <div class="glass-card rounded-xl p-6 sm:p-8 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-mint-dark mb-2">Landed-Cost Transparency</p>
-                        <h2 class="font-display font-bold text-xl text-brand-900 mb-2">See exactly what's in the price — no hidden markup.</h2>
-                        <p class="text-sm text-slate-600 leading-relaxed max-w-xl">
-                            Using a real listing, <strong>{{ $costSample->title }}</strong>, as an example: import duty is charged at {{ number_format($costSample->customs_duty_rate * 100, 1) }}% and VAT at {{ number_format($costSample->vat_rate * 100, 0) }}% under South African import rules. Both are already folded into the price you see — freight, clearing, duty and VAT included, before Farmtech's margin.
+                        <p class="text-xs font-semibold uppercase tracking-wide text-mint-dark mb-2">Your Price</p>
+                        <h2 class="font-display font-bold text-xl text-charcoal mb-2">No import surprises.</h2>
+                        <p class="text-sm text-ink-secondary leading-relaxed max-w-xl">
+                            Using a real listing, <strong>{{ $costSample->title }}</strong>, as an example: import duty is
+                            charged at {{ number_format($costSample->customs_duty_rate * 100, 1) }}% for this product's HS
+                            code (duty varies by product — it's calculated per item, never a flat universal rate) and VAT
+                            at the standard South African rate of {{ number_format($costSample->vat_rate * 100, 0) }}%.
+                            Both are already folded into the price below.
+                        </p>
+                        <button type="button" @click="howOpen = !howOpen" class="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-mint-dark hover:text-mint-darker transition">
+                            How is this calculated?
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform" :class="howOpen && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <p x-show="howOpen" x-transition x-cloak class="text-xs text-ink-muted leading-relaxed mt-2 max-w-xl">
+                            Import charges depend on the product's classification (HS code), its declared value and
+                            weight, and applicable South African customs regulations. Farmtech calculates freight, duty
+                            and VAT per product before it's ever listed, and folds the total into the single price
+                            shown — you never receive a separate customs or clearing-agent invoice after checkout.
                         </p>
                     </div>
-                    <div class="flex flex-col gap-3 min-w-[220px] font-mono">
-                        <div class="flex items-baseline justify-between gap-6 text-sm text-slate-600">
-                            <span>Landed cost (all-in)</span>
-                            <span class="font-tabular">R{{ number_format($costSample->landed_cost_zar, 2) }}</span>
+                    <div class="flex flex-col gap-2.5 min-w-[260px] font-mono">
+                        <div class="flex items-baseline justify-between gap-6 text-sm text-ink-secondary">
+                            <span class="font-body">Equipment</span>
+                            <span class="font-tabular">R{{ number_format($baseZar, 0, '', ' ') }}</span>
                         </div>
-                        <div class="flex items-baseline justify-between gap-6 text-sm text-slate-600">
-                            <span>Import duty rate</span>
-                            <span class="font-tabular">{{ number_format($costSample->customs_duty_rate * 100, 1) }}%</span>
+                        <div class="flex items-baseline justify-between gap-6 text-sm text-ink-secondary">
+                            <span class="font-body">International freight</span>
+                            <span class="font-tabular">{{ $costSample->intl_freight_zar ? 'R'.number_format($costSample->intl_freight_zar, 0, '', ' ') : 'Included' }}</span>
                         </div>
-                        <div class="flex items-baseline justify-between gap-6 text-sm text-slate-600">
-                            <span>VAT rate</span>
-                            <span class="font-tabular">{{ number_format($costSample->vat_rate * 100, 0) }}%</span>
+                        <div class="flex items-baseline justify-between gap-6 text-sm text-ink-secondary">
+                            <span class="font-body">Import duty &amp; VAT</span>
+                            <span class="font-tabular">{{ $costSample->customs_vat_zar ? 'R'.number_format($costSample->customs_vat_zar, 0, '', ' ') : 'Included' }}</span>
+                        </div>
+                        <div class="flex items-baseline justify-between gap-6 text-sm text-ink-secondary">
+                            <span class="font-body">Delivery</span>
+                            <span class="font-tabular">{{ $costSample->domestic_delivery_zar ? 'R'.number_format($costSample->domestic_delivery_zar, 0, '', ' ') : 'Included' }}</span>
                         </div>
                         <div class="scan-divider"></div>
                         <div class="flex items-baseline justify-between gap-6">
-                            <span class="text-sm font-semibold text-brand-900">You pay</span>
-                            <span class="font-tabular text-lg font-bold text-brand-900">R{{ number_format($costSample->retail_price_zar, 2) }}</span>
+                            <span class="text-sm font-semibold text-charcoal font-body">TOTAL</span>
+                            <span class="font-tabular text-lg font-bold text-charcoal">R{{ number_format($costSample->retail_price_zar, 0, '', ' ') }}</span>
                         </div>
                     </div>
                 </div>
@@ -175,9 +227,9 @@
         @endif
 
         {{-- Latest approved products --}}
-        <section class="mb-20">
+        <section class="mb-20 sm:mb-24">
             <div class="flex items-baseline justify-between mb-6">
-                <h2 class="font-display font-bold text-2xl text-brand-900">Latest Approved Products</h2>
+                <h2 class="font-display font-bold text-2xl sm:text-3xl text-charcoal">Latest Equipment</h2>
                 <span class="text-xs text-slate-500 font-mono">{{ $featured->count() }} listed</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -185,8 +237,8 @@
                     @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
                 @empty
                     <div class="col-span-full border border-dashed border-slate-300 rounded-2xl p-10 text-center">
-                        <p class="text-brand-900 font-semibold">No products published yet.</p>
-                        <p class="text-slate-600 text-sm mt-1">Check back soon — new listings go through AI compliance checks before they appear here.</p>
+                        <p class="text-charcoal font-semibold">No products published yet.</p>
+                        <p class="text-slate-600 text-sm mt-1">Check back soon — new listings go through compliance checks before they appear here.</p>
                     </div>
                 @endforelse
             </div>

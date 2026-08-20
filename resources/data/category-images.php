@@ -8,12 +8,16 @@
  * license_url is the exact license version each photo was published under.
  */
 return [
+    // Replaced in rev. 10 — the previous fallback ("Cattle at a kraal in
+    // Karamoja") was actually a Ugandan farm photo, not South African, a
+    // mismatch nobody had caught. This one is real farmland photographed
+    // from Mount Ararat, Clarens, Free State, South Africa.
     'hero_fallback' => [
-        'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Cattle_at_a_kraal_in_Karamoja_04.jpg/1920px-Cattle_at_a_kraal_in_Karamoja_04.jpg',
-        'credit' => 'EO3669',
+        'url' => 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Farms_near_Clarens.jpg',
+        'credit' => 'Ossewa',
         'license' => 'CC BY-SA 4.0',
         'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-        'source_url' => 'https://commons.wikimedia.org/wiki/File:Cattle_at_a_kraal_in_Karamoja_04.jpg',
+        'source_url' => 'https://commons.wikimedia.org/wiki/File:Farms_near_Clarens.jpg',
     ],
     // Chosen to actually show the equipment, not just generic livestock/farm
     // scenery — see PROGRESS.md for what Wikimedia Commons genuinely has

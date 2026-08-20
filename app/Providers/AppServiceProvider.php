@@ -39,7 +39,10 @@ class AppServiceProvider extends ServiceProvider
         }
 
         View::composer('layouts.storefront', function ($view) {
+            $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
+
             $view->with('cartCount', app(Cart::class)->count());
+            $view->with('whatsappUrl', $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null);
         });
 
         // Sticky Top-5 Trending sub-bar on catalog pages — composed here so

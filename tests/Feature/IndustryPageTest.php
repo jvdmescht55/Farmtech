@@ -48,12 +48,20 @@ class IndustryPageTest extends TestCase
         $this->assertFalse($products->contains('id', $cheap->id));
     }
 
-    public function test_homepage_shows_exactly_four_industry_tiles(): void
+    /**
+     * rev. 11: the homepage's industry-tile grid was replaced by application-based
+     * cards (per the exact-spec walkthrough, items 11-12) — industries are still
+     * reachable from the header mega-menu and the footer (see PolicyPagesTest),
+     * just not as a dedicated homepage section any more.
+     */
+    public function test_homepage_shows_the_shop_by_application_section(): void
     {
         $response = $this->get(route('home'));
 
-        foreach (Industry::cases() as $industry) {
-            $response->assertSee(route('industry.show', $industry), false);
+        $response->assertSee('What are you trying to achieve?');
+
+        foreach (\App\Support\Applications::all() as $app) {
+            $response->assertSee($app['label']);
         }
     }
 }

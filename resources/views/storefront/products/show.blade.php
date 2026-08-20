@@ -35,7 +35,7 @@
                         @foreach ($product->images as $i => $image)
                             <img x-show="active === {{ $i }}" x-transition.opacity.duration.300ms
                                  src="{{ $image->url }}" alt="{{ $product->title }}"
-                                 @click="zoomed = true"
+                                 @click="zoomed = true" onerror="this.style.display='none'"
                                  class="absolute inset-0 object-contain w-full h-full p-4 drop-shadow-sm cursor-zoom-in">
                         @endforeach
                         <button type="button" @click="zoomed = true" aria-label="Zoom image"
@@ -56,7 +56,7 @@
                             <button type="button" @click="active = {{ $i }}"
                                     :class="active === {{ $i }} ? 'border-mint' : 'border-slate-200'"
                                     class="border-2 rounded-lg overflow-hidden aspect-square hover:border-mint/60 transition">
-                                <img src="{{ $image->url }}" alt="" class="object-cover w-full h-full">
+                                <img src="{{ $image->url }}" alt="" class="object-cover w-full h-full" onerror="this.remove()">
                             </button>
                         @endforeach
                     </div>
@@ -70,6 +70,7 @@
                     </button>
                     @if ($product->images->isNotEmpty())
                         <img :src="[{{ $product->images->map(fn ($img) => "'{$img->url}'")->implode(',') }}][active]" alt="{{ $product->title }}"
+                             onerror="this.style.display='none'"
                              class="max-w-full max-h-full object-contain rounded-lg" @click.stop>
                     @endif
                 </div>

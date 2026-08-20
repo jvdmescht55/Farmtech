@@ -1,21 +1,32 @@
 @props(['products', 'sticky' => false])
 
+@php
+    // Never show a bare "No image" placeholder — same category-icon-on-a-
+    // clean-background treatment as <x-product-image-fallback>, just built
+    // as a lookup table since these cards render client-side from a JSON
+    // array, not server-rendered Blade per product.
+    $iconSvgs = $products->pluck('category')->unique(fn ($c) => $c->icon())
+        ->mapWithKeys(fn ($c) => [$c->icon() => (string) view('components.category-icon', ['icon' => $c->icon(), 'class' => 'w-6 h-6'])]);
+@endphp
+
 @if ($products->isNotEmpty())
     <div
         x-data="{
             collapsed: false,
             quickView: null,
+            iconSvgs: {{ Illuminate\Support\Js::from($iconSvgs) }},
             products: {{ Illuminate\Support\Js::from($products->map(fn ($p) => [
                 'title' => $p->title,
                 'category' => $p->category->industry()->badgeLabel(),
                 'price' => number_format((float) $p->retail_price_zar, 2),
                 'image' => $p->thumbnail?->url,
+                'icon' => $p->category->icon(),
                 'stock_status' => $p->stock_status,
                 'is_low_stock' => $p->isLowStock(),
                 'url' => route('products.show', $p),
             ])) }},
         }"
-        {{ $attributes->merge(['class' => 'bg-slate-100/70 border-y border-slate-200 '.($sticky ? 'sticky top-[52px] z-30' : '')]) }}>
+        {{ $attributes->merge(['class' => 'bg-slate-100/70 border-y border-slate-200 '.($sticky ? 'sticky top-[76px] z-30' : '')]) }}>
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between py-2.5">
                 <p class="text-[11px] font-mono uppercase tracking-[0.15em] text-brand-900/70 flex items-center gap-2">
@@ -35,8 +46,8 @@
                     <button type="button" @click="quickView = product" class="flex-shrink-0 w-56 text-left bg-white border border-slate-200 rounded-xl p-3 hover:border-mint/40 hover:shadow-sm hover:-translate-y-0.5 transition-all group">
                         <div class="flex items-start gap-2.5">
                             <div class="w-14 h-14 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 relative">
-                                <img :src="product.image" x-show="product.image" class="w-full h-full object-cover" alt="">
-                                <span x-show="!product.image" class="absolute inset-0 flex items-center justify-center text-slate-400 text-[9px]">No image</span>
+                                <img :src="product.image" x-show="product.image" x-on:error="product.image = null" class="w-full h-full object-cover" alt="">
+                                <div x-show="!product.image" class="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-400" x-html="iconSvgs[product.icon]"></div>
                             </div>
                             <div class="min-w-0 flex-1">
                                 <span class="inline-block text-[9px] font-semibold uppercase tracking-wide text-mint-dark bg-mint/10 rounded px-1.5 py-0.5" x-text="product.category"></span>
@@ -65,7 +76,8 @@
                 <template x-if="quickView">
                     <div>
                         <div class="aspect-video bg-slate-100 relative">
-                            <img :src="quickView.image" x-show="quickView.image" class="w-full h-full object-cover" alt="">
+                            <img :src="quickView.image" x-show="quickView.image" x-on:error="quickView.image = null" class="w-full h-full object-cover" alt="">
+                            <div x-show="!quickView.image" class="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-400" x-html="iconSvgs[quickView.icon]"></div>
                             <button type="button" @click="quickView = null" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>

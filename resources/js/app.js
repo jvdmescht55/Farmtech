@@ -41,6 +41,14 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
+// Shared "What does Farmtech Verified mean?" modal — one instance in the
+// layout, triggered from any product-card badge via this store, so the
+// explanation doesn't need duplicating (or an invalid nested-link/button)
+// inside every card.
+document.addEventListener('alpine:init', () => {
+    Alpine.store('verifiedModal', { open: false });
+});
+
 // Cinematic entrance sequence, once per browser tab session — read before
 // marking played, so THIS page load still gets `alreadyPlayed: false` and
 // plays the animation; every subsequent navigation in the same tab sees it

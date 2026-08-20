@@ -8,6 +8,8 @@
         <h1 class="font-display font-bold text-2xl sm:text-3xl text-brand-900 mb-1 not-prose">ICASA &amp; ISO Compliance</h1>
         <p class="text-sm text-slate-500 mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
 
+        <p>Certain radio-emitting and electronic products sold in South Africa require regulatory compliance under ICASA and related standards. Not every product on Farmtech is subject to the same requirements — this page explains what applies to what, and every product page shows the specific checks recorded for that item.</p>
+
         <h2>What Gets Checked, and When</h2>
         <p>Every listing on Farmtech goes through an automated sourcing and compliance review before it's approved for sale — not after a customer complaint. The review covers three regulatory areas, depending on what the product actually is:</p>
 

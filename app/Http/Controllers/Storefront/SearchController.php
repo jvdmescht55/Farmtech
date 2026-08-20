@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\ProductCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\Applications;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
@@ -16,10 +18,14 @@ class SearchController extends Controller
 
         if ($query !== '') {
             $products = Product::storefrontVisible()
-                ->with(['thumbnail', 'complianceAudit'])
+                ->with(['thumbnail', 'complianceAudit', 'specs'])
                 ->where(function ($q) use ($query) {
                     $q->where('title', 'like', "%{$query}%")
                         ->orWhere('short_description', 'like', "%{$query}%")
+                        // Description prose often carries the real-world application
+                        // language ("for the crush, race, or loading ramp") that a
+                        // buyer searching by task rather than product name would type.
+                        ->orWhere('description_html', 'like', "%{$query}%")
                         ->orWhere('sku', 'like', "%{$query}%")
                         ->orWhereHas('specs', function ($specQuery) use ($query) {
                             $specQuery->where('spec_value', 'like', "%{$query}%")
@@ -37,20 +43,29 @@ class SearchController extends Controller
         ]);
     }
 
-    /** JSON, for the header search bar's live-typeahead preview — same match logic as the full results page, just capped and slim. */
+    /**
+     * JSON, for the header search bar's live-typeahead preview — grouped into
+     * Products / Categories / Applications, since a technical-equipment buyer
+     * searching "cattle scale" benefits from landing on the right category or
+     * application page just as much as an exact product match.
+     */
     public function suggest(Request $request)
     {
         $query = trim((string) $request->query('q', ''));
 
         if (mb_strlen($query) < 2) {
-            return response()->json(['results' => []]);
+            return response()->json(['products' => [], 'categories' => [], 'applications' => []]);
         }
 
         $products = Product::storefrontVisible()
             ->with('thumbnail')
             ->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
-                    ->orWhere('sku', 'like', "%{$query}%");
+                    ->orWhere('sku', 'like', "%{$query}%")
+                    ->orWhereHas('specs', function ($specQuery) use ($query) {
+                        $specQuery->where('spec_value', 'like', "%{$query}%")
+                            ->orWhere('spec_key', 'like', "%{$query}%");
+                    });
             })
             ->limit(6)
             ->get()
@@ -62,6 +77,18 @@ class SearchController extends Controller
                 'image' => $product->thumbnail?->url,
             ]);
 
-        return response()->json(['results' => $products]);
+        $needle = strtolower($query);
+        $categories = collect(ProductCategory::cases())
+            ->filter(fn (ProductCategory $c) => str_contains(strtolower($c->label()), $needle) || str_contains(strtolower($c->shortLabel()), $needle))
+            ->take(5)
+            ->map(fn (ProductCategory $c) => ['label' => $c->label(), 'url' => route('category.show', $c)])
+            ->values();
+
+        $applications = collect(Applications::matching($query))
+            ->take(4)
+            ->map(fn (array $app) => ['label' => $app['label'], 'url' => Applications::url($app)])
+            ->values();
+
+        return response()->json(['products' => $products, 'categories' => $categories, 'applications' => $applications]);
     }
 }

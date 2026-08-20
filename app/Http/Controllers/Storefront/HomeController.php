@@ -10,11 +10,10 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $base = Product::storefrontVisible()->with(['thumbnail', 'complianceAudit'])->latest();
+        $base = Product::storefrontVisible()->with(['thumbnail', 'complianceAudit', 'specs'])->latest();
 
-        $heroProducts = (clone $base)->limit(5)->get();
         $featured = (clone $base)->limit(8)->get();
-        $trending = Product::query()->trending()->with('thumbnail')->limit(5)->get();
+        $trending = Product::query()->trending()->with(['thumbnail', 'complianceAudit', 'specs'])->limit(5)->get();
 
         // Real cost breakdown for the landed-cost transparency widget — never
         // a fabricated "vs local retail" comparison, since we have no real
@@ -23,7 +22,6 @@ class HomeController extends Controller
 
         return view('storefront.home', [
             'industries' => Industry::cases(),
-            'heroProducts' => $heroProducts,
             'featured' => $featured,
             'trending' => $trending,
             'costSample' => $costSample,

@@ -7,37 +7,39 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Industrial palette: Deep Midnight Slate (primary dark surface —
-                // header/footer/nav), Industrial Forest Green (brand/logo accent,
-                // CTAs), Precision Amber (technical spec highlighting — distinct
-                // from `alert`'s inventory-warning role), crisp mint (secondary
-                // accent). Neutrals lean on Tailwind's built-in slate scale.
+                // rev. 11 — LOCKED design-system palette. Every green on the
+                // site must come from this list (brand.* / mint) — no other
+                // green hex should appear anywhere in the codebase. Only
+                // these exact values are the source of truth; midnight and
+                // precision below are the two non-green tokens kept for
+                // roles the locked palette doesn't name (a dark admin-nav
+                // surface, technical-spec amber highlighting).
                 midnight: {
                     DEFAULT: '#0F172A',
                     dark: '#0B132B',
                     light: '#1E293B',
                 },
                 brand: {
-                    500: '#2D7350',
-                    600: '#1F5A3E',
-                    700: '#1A4D35',
-                    800: '#163F2B',
-                    900: '#143D2B',
-                    950: '#0B2A1C',
+                    900: '#0B4A36', // Primary
+                    950: '#063525', // Dark
+                    975: '#04291D', // Darkest
                 },
                 mint: {
-                    DEFAULT: '#10B981',
-                    dark: '#059669',
-                    light: '#6EE7B7',
+                    DEFAULT: '#14A875', // Accent
+                    dark: '#0F8C61',
+                    light: '#5FCBA0',
                 },
                 alert: {
-                    DEFAULT: '#F59E0B',
-                    dark: '#B45309',
-                    light: '#FCD34D',
+                    DEFAULT: '#D97706', // Warning
+                    dark: '#92400E',
+                    light: '#FBBF24',
                 },
+                success: '#149B70',
+                error: '#C63C3C',
                 // Technical-spec highlight color (frequencies, tolerances, battery
                 // ratings) — visually distinct from `alert`'s stock-warning role
-                // even though both land in the amber family.
+                // even though both land in the amber family. Not part of the
+                // locked 7-role palette; kept for this one specific purpose.
                 precision: {
                     DEFAULT: '#D97706',
                     dark: '#92400E',
@@ -46,16 +48,35 @@ export default {
                 // Aliases so admin views (kept visually simpler/utilitarian on
                 // purpose) still resolve to the same real palette above.
                 farmtech: {
-                    green: '#143D2B',
-                    'green-dark': '#0B2A1C',
-                    gold: '#F59E0B',
-                    cream: '#F8FAFC',
+                    green: '#0B4A36',
+                    'green-dark': '#063525',
+                    gold: '#D97706',
+                    cream: '#F6F8F6',
+                },
+                canvas: '#F6F8F6', // Page background
+                border: '#DCE5E0', // Border
+                charcoal: '#10231C', // Main text
+                ink: {
+                    secondary: '#5E6F67', // Secondary text
+                    muted: '#82918B', // Muted text
                 },
             },
             fontFamily: {
-                display: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+                // rev. 11 — locked typography: Inter everywhere (headings included —
+                // no separate display face). `font-mono` (IBM Plex Mono) is reserved
+                // for model numbers, SKUs, dimensions, and other technical values —
+                // never body copy. `font-display` kept as a class name so existing
+                // markup doesn't need a mechanical rename; it now just resolves to Inter.
+                display: ['"Inter"', 'sans-serif'],
                 body: ['"Inter"', 'sans-serif'],
                 mono: ['"IBM Plex Mono"', 'monospace'],
+            },
+            // rev. 11 — locked spacing scale: 4/8/12/16/24/32/48/64/80/96/120px.
+            // Tailwind's own defaults already cover every step except 120px
+            // (p-1..p-24 = 4..96px); this adds the one missing step rather
+            // than redefining the whole scale.
+            spacing: {
+                30: '7.5rem', // 120px
             },
             backgroundImage: {
                 'grain': "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E\")",

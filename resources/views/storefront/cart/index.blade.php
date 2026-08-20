@@ -17,7 +17,7 @@
                     <div class="flex items-center gap-4 p-4">
                         <div class="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
                             @if ($item['product']->thumbnail)
-                                <img src="{{ $item['product']->thumbnail->url }}" class="object-cover w-full h-full" alt="">
+                                <img src="{{ $item['product']->thumbnail->url }}" class="object-cover w-full h-full" alt="" onerror="this.remove()">
                             @endif
                         </div>
                         <div class="flex-1 min-w-0">

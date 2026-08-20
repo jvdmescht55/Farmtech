@@ -104,6 +104,13 @@ class ProductController extends Controller
 
     public function approve(Product $product)
     {
+        // Real gate, not just an admin-UI convention — a product can't be
+        // published without at least one image on record, whatever route it
+        // was about to go live through.
+        if ($product->images()->doesntExist()) {
+            return back()->withErrors(['images' => "Cannot approve \"{$product->title}\" — it has no images. Add at least one before publishing."]);
+        }
+
         $product->update(['status' => 'approved', 'is_active' => true]);
 
         return redirect()->route('admin.products.index')->with('status', "\"{$product->title}\" approved and published.");
