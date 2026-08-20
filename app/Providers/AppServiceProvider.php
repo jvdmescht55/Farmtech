@@ -42,6 +42,12 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cartCount', app(Cart::class)->count());
         });
 
+        // Sticky Top-5 Trending sub-bar on catalog pages — composed here so
+        // the query runs once, shared, rather than duplicated per controller.
+        View::composer(['storefront.products.category', 'storefront.search'], function ($view) {
+            $view->with('trending', \App\Models\Product::query()->trending()->with('thumbnail')->limit(5)->get());
+        });
+
         Event::listen(OrderPlaced::class, SendOrderPlacedEmail::class);
         Event::listen(OrderPaid::class, SendNewOrderAdminAlert::class);
         Event::listen(OrderStatusUpdated::class, SendOrderStatusUpdatedEmail::class);

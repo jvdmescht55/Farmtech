@@ -3,8 +3,8 @@ import { VETTING_SYSTEM_PROMPT, VETTING_RESPONSE_SCHEMA, buildUserMessage } from
 
 const REQUIRED_PRODUCT_FIELDS = ['title', 'short_description', 'description_html', 'category', 'hs_code', 'specs'];
 const REQUIRED_COMPLIANCE_FIELDS = [
-    'frequency_checked', 'icasa_status', 'plug_type_checked',
-    'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons', 'pricing_verdict',
+    'frequency_checked', 'icasa_status', 'plug_type_checked', 'battery_transport_cert', 'risk_score',
+    'audit_verdict', 'rejection_reasons', 'pricing_verdict', 'local_price_delta_pct',
 ];
 
 export async function vetListing(listing, { apiKey, model }, pricingContext) {

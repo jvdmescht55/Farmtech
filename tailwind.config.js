@@ -7,9 +7,16 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Deep ag-tech green (brand/primary) + crisp mint (accent/CTA) +
-                // amber (inventory alerts, ICASA/compliance). Neutrals lean on
-                // Tailwind's built-in slate scale directly in views.
+                // Industrial palette: Deep Midnight Slate (primary dark surface —
+                // header/footer/nav), Industrial Forest Green (brand/logo accent,
+                // CTAs), Precision Amber (technical spec highlighting — distinct
+                // from `alert`'s inventory-warning role), crisp mint (secondary
+                // accent). Neutrals lean on Tailwind's built-in slate scale.
+                midnight: {
+                    DEFAULT: '#0F172A',
+                    dark: '#0B132B',
+                    light: '#1E293B',
+                },
                 brand: {
                     500: '#2D7350',
                     600: '#1F5A3E',
@@ -27,6 +34,14 @@ export default {
                     DEFAULT: '#F59E0B',
                     dark: '#B45309',
                     light: '#FCD34D',
+                },
+                // Technical-spec highlight color (frequencies, tolerances, battery
+                // ratings) — visually distinct from `alert`'s stock-warning role
+                // even though both land in the amber family.
+                precision: {
+                    DEFAULT: '#D97706',
+                    dark: '#92400E',
+                    light: '#FBBF24',
                 },
                 // Aliases so admin views (kept visually simpler/utilitarian on
                 // purpose) still resolve to the same real palette above.

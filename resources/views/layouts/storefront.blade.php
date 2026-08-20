@@ -60,15 +60,20 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform" :class="categoriesOpen && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div x-show="categoriesOpen" x-transition x-cloak
-                         class="absolute left-0 top-full mt-2 w-72 glass-card bg-white/95 rounded-2xl shadow-xl p-2 grid gap-1">
-                        @foreach (\App\Enums\ProductCategory::cases() as $navCategory)
-                            <a href="{{ route('category.show', $navCategory) }}" @click="categoriesOpen = false"
-                               class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-mint/10 text-slate-700 hover:text-brand-900 transition group">
-                                <span class="w-9 h-9 rounded-lg bg-brand-900/5 text-brand-900 flex items-center justify-center group-hover:bg-mint/15 group-hover:text-mint-dark transition">
-                                    <x-category-icon :icon="$navCategory->icon()" class="w-4.5 h-4.5" />
-                                </span>
-                                <span class="text-sm font-medium">{{ $navCategory->shortLabel() }}</span>
-                            </a>
+                         class="absolute left-0 top-full mt-2 w-[640px] max-w-[90vw] glass-card bg-white/95 rounded-2xl shadow-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
+                        @foreach (\App\Enums\Industry::cases() as $navIndustry)
+                            <div>
+                                <p class="px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-slate-400">{{ $navIndustry->label() }}</p>
+                                @foreach ($navIndustry->categories() as $navCategory)
+                                    <a href="{{ route('category.show', $navCategory) }}" @click="categoriesOpen = false"
+                                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-mint/10 text-slate-700 hover:text-brand-900 transition group">
+                                        <span class="w-7 h-7 rounded-lg bg-brand-900/5 text-brand-900 flex items-center justify-center group-hover:bg-mint/15 group-hover:text-mint-dark transition flex-shrink-0">
+                                            <x-category-icon :icon="$navCategory->icon()" class="w-3.5 h-3.5" />
+                                        </span>
+                                        <span class="text-[13px] font-medium leading-tight">{{ $navCategory->shortLabel() }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
                         @endforeach
                     </div>
                 </div>
@@ -113,9 +118,14 @@
                        class="w-full border border-slate-200 bg-white rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mint/40">
             </form>
 
-            <nav class="flex md:hidden gap-5 text-sm font-semibold pb-3 -mt-1 overflow-x-auto">
-                @foreach (\App\Enums\ProductCategory::cases() as $navCategory)
-                    <a href="{{ route('category.show', $navCategory) }}" class="text-slate-600 hover:text-mint-dark transition whitespace-nowrap">{{ $navCategory->shortLabel() }}</a>
+            <nav class="flex md:hidden items-center gap-5 text-sm font-semibold pb-3 -mt-1 overflow-x-auto">
+                @foreach (\App\Enums\Industry::cases() as $navIndustry)
+                    @foreach ($navIndustry->categories() as $navCategory)
+                        <a href="{{ route('category.show', $navCategory) }}" class="text-slate-600 hover:text-mint-dark transition whitespace-nowrap">{{ $navCategory->shortLabel() }}</a>
+                    @endforeach
+                    @if (!$loop->last)
+                        <span class="text-slate-300 flex-shrink-0" aria-hidden="true">|</span>
+                    @endif
                 @endforeach
             </nav>
         </div>

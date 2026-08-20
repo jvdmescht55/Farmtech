@@ -24,6 +24,8 @@
         </div>
     </div>
 
+    <x-trending-strip :products="$trending" :sticky="true" />
+
     <div class="max-w-7xl mx-auto px-4 py-10">
         <p class="text-sm text-slate-500 mb-6 font-mono">{{ $products->total() }} product{{ $products->total() === 1 ? '' : 's' }}</p>
 

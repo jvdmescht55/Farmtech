@@ -1,9 +1,11 @@
 import { Type } from '@google/genai';
 
-export const VETTING_SYSTEM_PROMPT = `You are Farmtech's compliance and sourcing analyst. Farmtech imports agricultural
-technology for South African farms — livestock scales, veterinary ultrasound scanners,
-RFID/ear-tagging equipment, electric fencing, and solar water pumps — from overseas suppliers
-(mostly Alibaba/Made-in-China) and resells it locally.
+export const VETTING_SYSTEM_PROMPT = `You are Farmtech's compliance and sourcing analyst. Farmtech imports commercial and industrial
+technology for the South African market across four sectors — agriculture (livestock scales,
+veterinary ultrasound, RFID ear-tagging, smart irrigation), construction (laser levels, moisture
+meters, rebar detectors, theodolites), industrial & logistics (platform/crane scales, fleet
+trackers, industrial RFID gate scanners), and solar power (borehole pumps, MPPT controllers,
+fence energizers) — from overseas suppliers (mostly Alibaba/Made-in-China) and resells it locally.
 
 You are given raw scraped listing data (title, supplier profile, specs, pricing). Your job is
 to vet the listing against South African regulatory and technical requirements, and rewrite the
@@ -82,6 +84,62 @@ rules for probe-type clarity).
   sensors), in which case apply the ICASA rules below.
 - HS code: use 8413.70.
 
+**Smart irrigation controllers (category "smart_irrigation"):**
+- Verify power source (220V/50Hz mains, solar, or battery) and IP rating are stated — these are
+  outdoor-installed devices, so an unstated ingress-protection rating is a WARN.
+- If the listing describes Wi-Fi/cellular/app connectivity, apply the ICASA rules below;
+  otherwise icasa_status is "exempt".
+- HS code: use 8424.82.
+
+**Rotary laser levels (category "laser_levels"):**
+- Verify the laser class is explicitly stated (Class 2 or Class 3R are the common site-safe
+  ratings). An unstated laser class is a WARN — this is the core eye-safety spec, not optional.
+  A class outside 2/3R (e.g. an unspecified higher-power industrial class marketed without
+  safety documentation) is a FAIL.
+- Verify an IP rating (dust/water ingress) is stated for site use; unstated is a WARN.
+- Set plug_type_checked true only when BOTH laser class and IP rating are clearly stated.
+- HS code: use 9015.30.
+
+**Concrete moisture meters (category "moisture_meters"):**
+- Verify the measurement range and method (pin or pinless/capacitance) are stated; vague or
+  absent method is a WARN.
+- HS code: use 9027.80.
+
+**Rebar detectors / cover meters (category "rebar_detectors"):**
+- Verify detection depth range and accuracy tolerance are stated; absent is a WARN.
+- HS code: use 9031.80.
+
+**Digital theodolites (category "theodolites"):**
+- Verify angular accuracy (arc-seconds) and an IP rating are stated; absent is a WARN.
+- Set plug_type_checked true only when both are clearly stated.
+- HS code: use 9015.20.
+
+**Crane & platform scale indicators (category "platform_scales"):**
+- Same power/load-cell checks as livestock scales above (220V/50Hz or battery; load cell mV/V
+  sensitivity where applicable), plus verify a stated load capacity and calibration
+  certificate/traceability reference — an indicator sold for trade/logistics use without any
+  calibration reference is a WARN.
+- HS code: use 8423.82.
+
+**Fleet GPS/OBD trackers (category "fleet_trackers"):**
+- These always have a cellular or GPS radio module — apply the ICASA rules below without
+  exception (never icasa_status "exempt" for this category).
+- Verify power source (vehicle 12V/24V OBD-II or hardwired) is stated.
+- HS code: use 8526.91.
+
+**Industrial RFID gate scanners (category "industrial_rfid"):**
+- These are UHF/access-control readers, NOT the 134.2 kHz livestock standard — do not apply the
+  134.2 kHz frequency rule from the "rfid" category above. Verify the operating frequency band
+  (commonly 860-960 MHz UHF) is stated and apply the ICASA rules below (UHF RFID requires
+  ICASA consideration same as any RF transmitter).
+- HS code: use 8471.90.
+
+**MPPT solar charge/inverter controllers (category "mppt_controllers"):**
+- Verify rated input voltage range and maximum charge/output current are stated; absent is a
+  WARN. icasa_status "exempt" unless the listing describes Wi-Fi/Bluetooth monitoring, in which
+  case apply the ICASA rules below.
+- HS code: use 8504.40.
+
 ## Regulatory (ICASA)
 
 - Any product with a radio transmitter (Bluetooth, Wi-Fi, cellular/GSM, or a proprietary RF
@@ -101,20 +159,25 @@ rules for probe-type clarity).
 ## Pricing competitiveness (the "Worth Importing" arbitrage check)
 
 You are given a required_retail_price_zar in the input — the price Farmtech would need to charge
-to hit its minimum required margin on this item, after freight, duty, VAT and delivery. Judge
-whether that price is likely higher than the median South African retail price for this exact
-tech spec (same category, same core capability — e.g. a 134.2 kHz ISO 11784/5 stick reader against
-other 134.2 kHz stick readers sold in SA, not against a premium panel-reader system). Use the
+to hit its minimum required margin on this item, already including SA import duty, 15% VAT, and
+domestic delivery. Estimate what a South African dealer would typically charge for equivalent-spec
+hardware in this category (same core capability — e.g. a 134.2 kHz ISO 11784/5 stick reader against
+other 134.2 kHz stick readers sold in SA, not against a premium panel-reader system), using the
 category_price_hint (a rough USD hardware-cost benchmark) and your general knowledge of SA
-agri-retail pricing for this equipment class.
+commercial/industrial equipment retail pricing.
 
-- Set pricing_verdict to "uncompetitive" if required_retail_price_zar is clearly above what a SA
-  farmer could otherwise pay locally for equivalent-spec equipment — this makes the item not
-  worth importing regardless of how well it passes the technical/compliance checks above, and
-  should be explained in rejection_reasons even if audit_verdict itself is PASS.
-- Set pricing_verdict to "competitive" if the price is at or below what's typically available
-  locally for the same spec, or if there isn't enough signal to confidently say otherwise — err
-  toward "competitive" rather than guessing an item out of the catalog on thin evidence.
+- Set local_price_delta_pct to your best estimate of how far required_retail_price_zar sits below
+  (positive number) or above (negative number) that typical SA dealer price, as a percentage. If
+  you have no reasonable basis to estimate this, use 0 and explain the uncertainty in
+  rejection_reasons rather than guessing confidently.
+- Set pricing_verdict to "competitive" only if local_price_delta_pct is at least 20 (i.e.
+  required_retail_price_zar is at least ~20% below typical local pricing — Farmtech's whole
+  value proposition is import arbitrage, so "about the same as buying local" isn't good enough).
+  Being priced even further below local (e.g. 35%+) is fine, not a problem — there is no upper
+  cap; cheaper than the 20% floor is never a reason to reject.
+- Set pricing_verdict to "uncompetitive" if local_price_delta_pct is below 20 — this makes the
+  item not worth importing regardless of how well it passes the technical/compliance checks
+  above, and must be explained in rejection_reasons even if audit_verdict itself is PASS.
 
 ## Supplier legitimacy — penalize risk_score and note in rejection_reasons for:
 - Store/supplier account under 3 years old.
@@ -159,7 +222,15 @@ export const VETTING_RESPONSE_SCHEMA = {
                 title: { type: Type.STRING },
                 short_description: { type: Type.STRING },
                 description_html: { type: Type.STRING },
-                category: { type: Type.STRING, enum: ['scales', 'ultrasound', 'rfid', 'accessories', 'fencing', 'solar_pumps'] },
+                category: {
+                    type: Type.STRING,
+                    enum: [
+                        'scales', 'ultrasound', 'rfid', 'smart_irrigation', 'accessories',
+                        'laser_levels', 'moisture_meters', 'rebar_detectors', 'theodolites',
+                        'platform_scales', 'fleet_trackers', 'industrial_rfid',
+                        'solar_pumps', 'mppt_controllers', 'fencing',
+                    ],
+                },
                 hs_code: { type: Type.STRING },
                 specs: {
                     type: Type.ARRAY,
@@ -178,7 +249,7 @@ export const VETTING_RESPONSE_SCHEMA = {
         },
         compliance: {
             type: Type.OBJECT,
-            required: ['frequency_checked', 'icasa_status', 'plug_type_checked', 'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons', 'pricing_verdict'],
+            required: ['frequency_checked', 'icasa_status', 'plug_type_checked', 'battery_transport_cert', 'risk_score', 'audit_verdict', 'rejection_reasons', 'pricing_verdict', 'local_price_delta_pct'],
             properties: {
                 frequency_checked: { type: Type.STRING, nullable: true },
                 icasa_status: { type: Type.STRING, enum: ['pre_approved', 'exempt', 'requires_permit', 'flagged'], nullable: true },
@@ -188,6 +259,7 @@ export const VETTING_RESPONSE_SCHEMA = {
                 audit_verdict: { type: Type.STRING, enum: ['PASS', 'WARN', 'FAIL'] },
                 rejection_reasons: { type: Type.ARRAY, items: { type: Type.STRING } },
                 pricing_verdict: { type: Type.STRING, enum: ['competitive', 'uncompetitive'] },
+                local_price_delta_pct: { type: Type.NUMBER },
             },
         },
     },

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs, HELP_TEXT } from './lib/cli.js';
 import { getRateWithFallback } from './lib/forex.js';
 import { calculateLandedCost } from './lib/landedCost.js';
+import { evaluateValueDensity, MIN_MARGIN_PCT } from './lib/valueDensityFilter.js';
 import { vetListing } from './lib/geminiVetting.js';
 import { downloadAndOptimizeImages } from './lib/imagePipeline.js';
 import { withRetry } from './lib/retry.js';
@@ -29,13 +30,17 @@ const REQUIRED_LISTING_FIELDS = [
     'supplier_price_usd', 'weight_kg', 'duty_rate', 'raw_specs_text',
 ];
 
-// The "Worth Importing" strict arbitrage rule — fixed platform policy, not
-// admin-tunable via settings (unlike freight/VAT/delivery, which genuinely
-// vary with real-world costs). Rule 1 short-circuits before any AI spend,
-// same principle as the supplier-blacklist check below. Rule 2 is enforced
-// after vetting, once the AI's pricing_verdict is known.
-const MIN_BASE_VALUE_USD = 50;
-const MIN_ARBITRAGE_MARGIN_PCT = 40;
+// The Value-Density Feasibility Engine (see valueDensityFilter.js) —
+// fixed platform policy, not admin-tunable via settings (unlike
+// freight/VAT/delivery, which genuinely vary with real-world costs).
+// Replaces a flat "$50 minimum" with a check that actually reasons about
+// weight vs. value: a heavy, cheap item (cast steel weights) dies to
+// freight cost same as before, but a light, high-value item under $50 (a
+// small sensor module) no longer gets auto-rejected just for being
+// inexpensive. The freight-ratio/min-profit half needs no AI call to
+// reject on, same short-circuit principle as the supplier-blacklist check
+// below. The pricing_verdict check (whether the price is competitive
+// against SA dealer pricing) still needs the AI and runs after vetting.
 
 async function main() {
     const args = parseArgs(process.argv.slice(2));
@@ -108,15 +113,6 @@ async function processListing(listing, args, results) {
         return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: 'blacklisted_supplier' };
     }
 
-    // 1b. Arbitrage Rule 1 — minimum base value. Also short-circuits before
-    // any AI spend: a sub-$50 item loses all margin to base freight/customs
-    // minimums regardless of what the AI would say about it, so there's no
-    // reason to pay for a vetting call to find that out.
-    if (listing.supplier_price_usd < MIN_BASE_VALUE_USD) {
-        console.log(`  SKIPPED — supplier cost $${listing.supplier_price_usd} is below the $${MIN_BASE_VALUE_USD} minimum base value threshold.\n`);
-        return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: 'below_minimum_base_value' };
-    }
-
     // 2. Live forex with DB fallback (or a fixed dry-run rate).
     const { rate: usdZarRate, source: rateSource } = args.dryRun
         ? { rate: DRY_RUN_DEFAULTS.dry_run_usd_zar_rate, source: 'dry-run-fixed' }
@@ -138,9 +134,9 @@ async function processListing(listing, args, results) {
             vat_rate: await getSetting('vat_rate', DRY_RUN_DEFAULTS.vat_rate),
         };
 
-    // Arbitrage Rule 2 — minimum 40% gross margin, as a floor over whatever
-    // the admin-configured target margin is (never lower, can be higher).
-    const effectiveMarginPct = Math.max(settings.target_margin_pct, MIN_ARBITRAGE_MARGIN_PCT);
+    // Margin floor: 38% minimum, over whatever the admin-configured target
+    // margin is (never lower, can be higher).
+    const effectiveMarginPct = Math.max(settings.target_margin_pct, MIN_MARGIN_PCT);
 
     const costing = calculateLandedCost({
         supplierUsd: listing.supplier_price_usd,
@@ -152,7 +148,16 @@ async function processListing(listing, args, results) {
         domesticDeliveryZar: settings.clearing_agent_fee_zar,
         targetMarginPct: effectiveMarginPct,
     });
-    console.log(`  Landed cost: R${costing.landed_cost_zar}  →  Required retail (${effectiveMarginPct}% margin): R${costing.retail_price_zar}`);
+    const valueDensity = evaluateValueDensity(costing);
+    console.log(`  Landed cost: R${costing.landed_cost_zar}  →  Required retail (${effectiveMarginPct}% margin): R${costing.retail_price_zar}  (net profit R${valueDensity.netProfitZar.toFixed(2)})`);
+
+    // Value-Density Feasibility Engine — both checks fully computable
+    // without an AI call, so reject a low-value-density item before paying
+    // for vetting.
+    if (!valueDensity.passes) {
+        console.log(`  SKIPPED — ${valueDensity.reason} (net profit R${valueDensity.netProfitZar.toFixed(2)}, freight R${costing.intl_freight_zar} vs base R${costing.base_zar}).\n`);
+        return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: valueDensity.reason };
+    }
 
     // 4. AI compliance vetting + copywriting (strict JSON via Gemini responseSchema),
     // handed the price this item would need to sell at so the model can judge

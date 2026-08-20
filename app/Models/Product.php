@@ -123,6 +123,20 @@ class Product extends Model
         return $query->where('category', $category);
     }
 
+    /**
+     * "Top 5 Trending" — ranked by real units actually sold (order_items.quantity),
+     * not a fabricated view/conversion metric we don't track. Products tied on zero
+     * sales (the common case in a young catalog) fall back to newest-first, so the
+     * strip is never empty just because nothing has sold yet.
+     */
+    public function scopeTrending(Builder $query): Builder
+    {
+        return $query->storefrontVisible()
+            ->withSum('orderItems as units_sold', 'quantity')
+            ->orderByDesc('units_sold')
+            ->orderByDesc('created_at');
+    }
+
     public function scopeStorefrontVisible(Builder $query): Builder
     {
         return $query->where('status', 'approved')->where('is_active', true);

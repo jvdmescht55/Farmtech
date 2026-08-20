@@ -1,14 +1,61 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 6 — arbitrage engine, profit transparency, image quality).
-What changed since rev. 5: the landed-cost formula was rebuilt to expose freight/customs/delivery
-as separate stored line items, a strict "worth importing" arbitrage filter now runs before and
-after AI vetting (minimum $50 base value, minimum 40% margin checked against AI-judged SA retail
-competitiveness), the admin gets a Profit Breakdown card on every product and order plus a 30-day
-Dashboard (Admin-only), the image pipeline now rejects undersized/wrong-aspect-ratio/watermarked
-images before saving, and several category hero photos were swapped for ones that actually show
-the equipment. Rev. 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage,
-CI, and the storefront redesign. See [README.md](README.md) for architecture/setup.
+Last updated: 2026-08-20 (rev. 7 — multi-industry expansion, Value-Density Feasibility Engine,
+Top-5 Trending strip).
+What changed since rev. 6: Farmtech expanded from a livestock-only catalog to four sectors —
+Agriculture, Construction, Industrial & Logistics, Solar Power — via a new `Industry` enum grouping
+10 new `ProductCategory` cases alongside the original 5; the flat "$50 minimum base value, 40%
+margin" arbitrage rule was replaced by a Value-Density Feasibility Engine (freight-to-base ratio
+check + R500 minimum net profit floor, mirrored identically in Node and PHP, plus an AI-judged
+`local_price_delta_pct` replacing the old binary competitive/uncompetitive call); and a "Top 5
+Trending" strip (ranked by real units sold, falling back to newest-first) now appears on the
+homepage and sticky on category/search pages. Rev. 6 added the arbitrage engine, profit
+transparency, and image quality gate; rev. 5 added the scraper webhook; rev. 4 covered RBAC, rate
+limiting, S3 storage, CI, and the storefront redesign. See [README.md](README.md) for
+architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 7)
+
+- **Multi-industry catalog expansion.** New `App\Enums\Industry` enum (`agriculture`,
+  `construction`, `industrial_logistics`, `solar_power`) groups the now-15 `ProductCategory` cases
+  — `category` is a plain string column, not a DB enum, so no migration was needed. Each new
+  category (Smart Irrigation, Laser Levels, Moisture Meters, Rebar Detectors, Theodolites, Platform
+  Scales, Fleet Trackers, Industrial RFID, MPPT Controllers) got its own icon, HS-code hint, hero
+  photo (real, license-checked Wikimedia Commons sources — two categories, Rebar Detectors and
+  Platform Scales, reuse the closest-real-match photo Commons has rather than an exact-topic shot,
+  same honest-gap principle as rev. 6's photography pass) and category-specific vetting ruleset in
+  `vettingPrompt.js` (e.g. fleet trackers always require ICASA review since they always carry a
+  cellular/GPS radio; industrial RFID is explicitly told not to apply the 134.2 kHz livestock
+  frequency rule).
+  **Header navigation was the one place this expansion actually broke usability, and has been
+  fixed**: the desktop category dropdown was a flat single-column list that would have rendered 15
+  rows (~630px) with no grouping despite `Industry` existing specifically for this; it's now a
+  4-column mega-menu grouped by industry (`resources/views/layouts/storefront.blade.php`). The
+  mobile horizontal nav got the same grouping with `|` separators between industries. Verified live
+  in-browser at both desktop and 375px mobile viewports — mega-menu opens with the correct 4
+  columns/15 items, mobile nav renders the same grouping.
+- **Value-Density Feasibility Engine**, replacing the flat $50-minimum-base-value rule from rev. 6.
+  `worker/src/lib/valueDensityFilter.js` (Node, the actual pipeline enforcement point) and
+  `app/Services/ValueDensityEvaluator.php` (PHP mirror for the admin margin-slider breakdown, kept
+  in sync deliberately, same principle as `LandedCostCalculator`) both implement: reject if
+  international freight exceeds 35% of base cost AND net profit is under R1,500 (a heavy/cheap item
+  is only worth it if the absolute profit is still substantial); reject if net profit is under R500
+  regardless. This fixes a real gap in the old rule — a light, high-value item under $50 (a small
+  sensor module) no longer auto-rejects just for being inexpensive, while a heavy, low-value item
+  (cast steel weights) still dies on freight cost. The AI-judged pricing half moved from a binary
+  competitive/uncompetitive call to `local_price_delta_pct`, an estimated percentage below/above
+  typical SA dealer pricing — `pricing_verdict` is now "competitive" only at 20%+ below local, not
+  merely "not obviously worse." 9 new tests (5 Node, 4 PHP) cover both engines against the same
+  worked examples so they can't silently drift apart; all 31 worker tests and 58 Laravel tests pass.
+- **"Top 5 Trending" strip.** `Product::scopeTrending()` ranks by real `order_items.quantity` sums
+  (`withSum`), falling back to newest-first when nothing's sold yet — never a fabricated
+  view/conversion metric. Renders on the homepage and sticky (collapsible) on category and search
+  pages via a shared `View::composer` in `AppServiceProvider` so the query runs once per request,
+  not duplicated per controller. Verified live: renders the real 4 approved products (there are
+  only 4 in this dev DB) with correct industry badges, prices, and stock status; the Quick View
+  modal opens and links through to the real product page.
 
 ---
 
@@ -161,6 +208,19 @@ CI, and the storefront redesign. See [README.md](README.md) for architecture/set
 
 ## ⚠️ Built, but with a real caveat attached
 
+- **The Industry grouping only reaches the header nav, not the homepage tile grid or the admin
+  category filter.** The header dropdown/mobile nav are the two places a flat 15-item list was
+  actually unusable, so those got grouped by `Industry`. The homepage "Shop by Category" section
+  (a 2/3-column photo-tile grid) and the admin products list's category `<select>` filter still
+  list all 15 categories flat, ungrouped — both remain fully functional (a bigger grid, a longer
+  dropdown), just not industry-sectioned like the nav now is. Left as-is rather than a speculative
+  redesign of sections that weren't actually broken.
+- **`mock_data.json` and the sourcing pipeline's live-fire verification were not re-run against the
+  10 new categories.** Rev. 6's real end-to-end pipeline runs (RFID listings) still pass, and the
+  Node/PHP unit tests cover every new category's vetting rules and the Value-Density engine, but no
+  new category beyond the original 5 has been proven against a real Gemini vetting call the way RFID
+  was in rev. 5/6 — that would need real listing data for e.g. a laser level or fleet tracker, which
+  doesn't exist in this dev environment.
 - **The webhook queues a job — it doesn't process it inline unless `QUEUE_CONNECTION=sync`.**
   Production (`.env.example`) defaults to `QUEUE_CONNECTION=database`, which means a worker
   process (`php artisan queue:work`) has to actually be running for `ProcessScrapedBatchJob` to

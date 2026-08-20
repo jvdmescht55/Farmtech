@@ -87,6 +87,8 @@
         </section>
     @endif
 
+    <x-trending-strip :products="$trending" />
+
     <div class="max-w-7xl mx-auto px-4">
 
         {{-- Trust bar --}}
