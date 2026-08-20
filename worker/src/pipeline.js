@@ -41,15 +41,17 @@ async function main() {
     const listings = await loadListings(args.file, args.sku);
     console.log(`Loaded ${listings.length} listing(s) from ${args.file}${args.dryRun ? ' [DRY RUN]' : ''}\n`);
 
-    const results = { passed: 0, warned: 0, failed: 0, errored: 0 };
+    const results = { passed: 0, warned: 0, failed: 0, errored: 0, items: [] };
 
     for (const listing of listings) {
         console.log(`── ${listing.sku}: ${listing.raw_title}`);
 
         try {
-            await processListing(listing, args, results);
+            const item = await processListing(listing, args, results);
+            results.items.push(item);
         } catch (err) {
             results.errored++;
+            results.items.push({ sku: listing.sku, title: listing.raw_title, error: err.message });
             console.error(`  ERROR: ${err.message}\n`);
         }
     }
@@ -59,6 +61,14 @@ async function main() {
         `Done. PASS/staged: ${results.passed}  WARN/staged: ${results.warned}  ` +
         `FAIL/rejected: ${results.failed}  errors: ${results.errored}`
     );
+
+    // Machine-readable summary on its own line — callers that shell out to
+    // this script (SourcingPipelineRunner) parse this instead of scraping
+    // the human-readable log lines above, which are for the CLI/manual use.
+    console.log('RESULT_JSON:'+JSON.stringify({
+        counts: { passed: results.passed, warned: results.warned, failed: results.failed, errored: results.errored },
+        items: results.items,
+    }));
 
     if (!args.dryRun) {
         await closeConnection();
@@ -84,7 +94,7 @@ async function processListing(listing, args, results) {
     // 1. Supplier blacklist check — short-circuit before spending an AI call.
     if (!args.dryRun && await isSupplierBlacklisted(listing.supplier_name)) {
         console.log(`  SKIPPED — supplier "${listing.supplier_name}" is blacklisted.\n`);
-        return;
+        return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: 'blacklisted_supplier' };
     }
 
     // 2. Live forex with DB fallback (or a fixed dry-run rate).
@@ -155,7 +165,9 @@ async function processListing(listing, args, results) {
         console.log(`  [DRY RUN] Would insert as status="${status}". Vetting result:`);
         console.log(JSON.stringify(vetting, null, 2));
         console.log('');
-        return;
+        return {
+            sku: listing.sku, title: vetting.product.title, verdict: vetting.compliance.audit_verdict, status, dryRun: true,
+        };
     }
 
     const { productId, slug } = await insertVettedProduct({
@@ -178,6 +190,10 @@ async function processListing(listing, args, results) {
     });
 
     console.log(`  Inserted product #${productId} ("${slug}") with status="${status}"\n`);
+
+    return {
+        sku: listing.sku, productId, slug, title: vetting.product.title, verdict: vetting.compliance.audit_verdict, status,
+    };
 }
 
 main().catch((err) => {

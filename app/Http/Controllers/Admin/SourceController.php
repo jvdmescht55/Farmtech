@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ProductCategory;
 use App\Http\Controllers\Controller;
-use Dotenv\Dotenv;
+use App\Services\SourcingPipelineRunner;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
 /**
@@ -28,7 +26,7 @@ class SourceController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, SourcingPipelineRunner $runner)
     {
         $validated = $request->validate([
             'raw_title' => ['required', 'string', 'max:255'],
@@ -67,80 +65,21 @@ class SourceController extends Controller
             'image_urls' => array_values(array_filter(array_map('trim', explode("\n", $validated['image_urls'] ?? '')))),
         ];
 
-        $workerPath = base_path('worker');
-        $tmpFile = storage_path('app/private/sourcing-'.Str::uuid().'.json');
-        File::ensureDirectoryExists(dirname($tmpFile));
-        File::put($tmpFile, json_encode($listing, JSON_PRETTY_PRINT));
+        $result = $runner->run([$listing]);
+        $item = $result->items[0] ?? null;
 
-        $result = Process::path($workerPath)
-            ->env($this->childProcessEnv($workerPath))
-            ->timeout(180)
-            ->run(['node', 'src/pipeline.js', '--file', $tmpFile, '--sku', $sku]);
-
-        File::delete($tmpFile);
-
-        $output = $result->output().$result->errorOutput();
-
-        if (preg_match('/Inserted product #(\d+)/', $output, $matches)) {
-            $productId = (int) $matches[1];
-            $verdict = str_contains($output, 'status="rejected"') ? 'rejected — see the review page for why' : 'staged for review';
+        if ($item && isset($item['productId'])) {
+            $verdict = $item['status'] === 'rejected' ? 'rejected — see the review page for why' : 'staged for review';
 
             return redirect()
-                ->route('admin.products.show', $productId)
+                ->route('admin.products.show', $item['productId'])
                 ->with('status', "Sourced \"{$validated['raw_title']}\" — {$verdict}.");
         }
 
+        $errorMessage = $item['error'] ?? 'The sourcing pipeline did not report a successful insert. Raw output below.';
+
         return back()->withInput()->withErrors([
-            'raw_title' => 'The sourcing pipeline did not report a successful insert. Raw output below.',
-        ])->with('pipeline_output', $output);
-    }
-
-    /**
-     * A minimal, explicit whitelist — NOT a full getenv() passthrough.
-     *
-     * Two Windows-only problems, one fix shape:
-     *  1) PHP's built-in dev server (`php artisan serve`) handles each
-     *     request in a child process that doesn't reliably propagate
-     *     SystemRoot/windir/PATH to getenv(), and Node's crypto init on
-     *     Windows needs SystemRoot to find bcrypt.dll — without it, node
-     *     crashes before it even reaches our code ("Assertion failed:
-     *     ncrypto::CSPRNG"). PATH is needed just to locate node.exe itself.
-     *  2) Laravel's own root .env defines WORKER_DB_HOST=mysql (the Docker
-     *     container's hostname — see .env.example). vlucas/phpdotenv has
-     *     already putenv()'d that into THIS PHP process's environment. If we
-     *     forwarded getenv() wholesale, that value would leak into the
-     *     spawned node process, and since dotenv doesn't override variables
-     *     that already exist, it would shadow worker/.env's real
-     *     WORKER_DB_HOST=127.0.0.1 — pointing the pipeline at a Docker
-     *     hostname that doesn't exist here. So: only forward what Windows
-     *     process creation actually needs, nothing app-specific — and then
-     *     explicitly re-parse worker/.env ourselves and layer it back on
-     *     top, so its values are guaranteed to win no matter how Symfony
-     *     Process merges explicit vs. inherited environment internally.
-     *
-     * Harmless no-op under Docker/Linux, where none of this applies.
-     */
-    private function childProcessEnv(string $workerPath): array
-    {
-        $env = [];
-
-        foreach (['SystemRoot', 'windir', 'ComSpec', 'PATH', 'Path'] as $key) {
-            if ($value = getenv($key)) {
-                $env[$key] = $value;
-            }
-        }
-
-        $env['SystemRoot'] ??= 'C:\\Windows';
-        $env['windir'] ??= 'C:\\Windows';
-        $env['TEMP'] = getenv('TEMP') ?: 'C:\\Windows\\Temp';
-        $env['TMP'] = getenv('TMP') ?: 'C:\\Windows\\Temp';
-
-        $workerEnvFile = $workerPath.DIRECTORY_SEPARATOR.'.env';
-
-        if (File::exists($workerEnvFile)) {
-            $env = array_merge($env, Dotenv::parse(File::get($workerEnvFile)));
-        }
-
-        return $env;
+            'raw_title' => $errorMessage,
+        ])->with('pipeline_output', $result->rawOutput);
     }
 }

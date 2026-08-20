@@ -1,15 +1,44 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 4 — operational hardening + storefront redesign). What changed
-since rev. 3: role-based access control (Admin vs Staff), rate limiting, S3/R2-compatible cloud
-storage support, a GitHub Actions CI workflow, and a full visual redesign of the storefront
-(new color system, sticky glass header with live search, redesigned homepage and product page,
-motion/micro-interactions). See [README.md](README.md) for architecture/setup.
+Last updated: 2026-08-20 (rev. 5 — scraper batch ingestion webhook). What changed since rev. 4:
+a `POST /api/pipeline/webhook` endpoint that lets a scheduled scraper (Apify or similar) submit a
+batch of raw listings and have them run through the exact same AI vetting + landed-cost pipeline
+the admin's manual "Source New Listing" form already uses, queued and emailed to the admin when
+something needs review. Rev. 4 covered role-based access control (Admin vs Staff), rate limiting,
+S3/R2-compatible cloud storage support, a GitHub Actions CI workflow, and the full storefront
+redesign. See [README.md](README.md) for architecture/setup.
 
 ---
 
 ## ✅ Working and verified (this session)
 
+- **Scraper batch ingestion webhook — `POST /api/pipeline/webhook`.** Guarded by a shared
+  `X-Pipeline-Secret` header (fails closed with 503 if `PIPELINE_WEBHOOK_SECRET` isn't set, 401 on
+  a wrong/missing header — verified by test, not just written). Accepts a batch of raw listings
+  (`{products: [{title, category_hint, price_usd, weight_kg, duty_rate, specs_table, images,
+  supplier_meta}, ...]}`, capped at 200/request), maps each into the same internal shape
+  `worker/src/pipeline.js` already expects, and dispatches a queued `ProcessScrapedBatchJob` — no
+  AI vetting ever runs inline on the request. The job reuses the exact same Node pipeline the
+  admin's manual sourcing form calls (extracted into `App\Services\SourcingPipelineRunner` so
+  there's one code path, not two), sends an admin email ("N new products sourced and awaiting
+  review") only when at least one listing actually lands as `pending_review`, and logs (without
+  emailing) batches that are all rejects or errors. 16 new PHPUnit tests cover the auth gate,
+  payload validation, the pipeline-output parser, and the job's email/no-email/log branches — all
+  against a mocked pipeline, the same principle as `PipelineTest`: proving Farmtech's own code
+  reacts correctly, not re-testing Gemini's judgment.
+  **Verified for real, not just in tests**: posted an actual 134.2 kHz RFID listing (the same one
+  from `mock_data.json`) to the running dev server with `QUEUE_CONNECTION=sync` so the whole chain
+  ran synchronously in one request — real Gemini API call, real landed-cost math, real DB insert
+  as `status=pending_review, is_active=false`, and a real "1 new product sourced and awaiting
+  review" email actually appeared in `storage/logs/laravel.log`. Then posted the known-bad 125 kHz
+  listing: correctly rejected with the right reasons (wrong frequency, unverified supplier, no
+  cert docs) and, since nothing in that batch needed review, no email fired. Confirmed the product
+  from the first request renders correctly in the real `/admin/products` Staging Queue UI.
+  **Extended beyond the requested field list on purpose**: `category_hint` and `duty_rate` are
+  required in the payload even though they weren't in the original title/price_usd/weight_kg/
+  specs_table/images/supplier_meta list — landed-cost math needs a real SA import duty rate before
+  vetting even runs, and nothing in this codebase invents one (the admin's manual form requires
+  the same field, by hand, today). A scraper config is expected to assign both per source/category.
 - **Role-Based Access Control.** `User::isAdmin()` / `canAccessAdminPanel()` gate two roles:
   Admin (full access) and Staff (Orders + own Profile only). Enforced via Laravel `Gate`s
   (`manage-catalog`, `manage-users`, `manage-settings`) on the relevant route groups, and the
@@ -53,6 +82,18 @@ motion/micro-interactions). See [README.md](README.md) for architecture/setup.
 
 ## ⚠️ Built, but with a real caveat attached
 
+- **The webhook queues a job — it doesn't process it inline unless `QUEUE_CONNECTION=sync`.**
+  Production (`.env.example`) defaults to `QUEUE_CONNECTION=database`, which means a worker
+  process (`php artisan queue:work`) has to actually be running for `ProcessScrapedBatchJob` to
+  ever execute. Nothing in this change starts that worker automatically — it's a process someone
+  has to supervise (systemd/supervisor/etc.), same as any Laravel queue deployment. My end-to-end
+  verification used `QUEUE_CONNECTION=sync` specifically so the job would run in the same request
+  and I could observe the real result immediately.
+- **No retry/backoff on a failed batch.** `ProcessScrapedBatchJob::$tries = 1` — if the Node
+  process itself crashes (not an individual listing failing vetting, but the whole pipeline dying,
+  e.g. Gemini quota exhausted mid-batch), the job fails once and stops; nothing currently
+  re-queues it. Individual listing failures within a batch don't have this problem — they're
+  caught in `pipeline.js` per-item and reported as `errored`, letting the rest of the batch finish.
 - **CI workflow (`.github/workflows/ci.yml`) is written but not verified to actually run.** This
   sandbox has no GitHub Actions runner available, so I could not push and watch it go green. The
   steps mirror exactly what already passes locally (`composer install` → migrate → `php artisan

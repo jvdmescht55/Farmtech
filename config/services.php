@@ -6,6 +6,13 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
     ],
 
+    // Shared secret for POST /api/pipeline/webhook — scheduled scrapers
+    // (Apify etc.) send this back in the X-Pipeline-Secret header. Not set
+    // by default, so the endpoint fails closed until an operator opts in.
+    'pipeline_webhook' => [
+        'secret' => env('PIPELINE_WEBHOOK_SECRET'),
+    ],
+
     'exchange_rate' => [
         'api_key' => env('USD_ZAR_API_KEY'),
         'provider_url' => env('USD_ZAR_API_URL', 'https://v6.exchangerate-api.com/v6'),
