@@ -36,4 +36,32 @@ class SearchController extends Controller
             'products' => $products,
         ]);
     }
+
+    /** JSON, for the header search bar's live-typeahead preview — same match logic as the full results page, just capped and slim. */
+    public function suggest(Request $request)
+    {
+        $query = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($query) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $products = Product::storefrontVisible()
+            ->with('thumbnail')
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('sku', 'like', "%{$query}%");
+            })
+            ->limit(6)
+            ->get()
+            ->map(fn (Product $product) => [
+                'title' => $product->title,
+                'category' => $product->category_label,
+                'price' => number_format((float) $product->retail_price_zar, 2),
+                'url' => route('products.show', $product),
+                'image' => $product->thumbnail?->url,
+            ]);
+
+        return response()->json(['results' => $products]);
+    }
 }

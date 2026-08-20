@@ -7,41 +7,39 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Field & instrument palette — khaki/steel/manifest-paper, with a
-                // safety-tag orange accent (calibration-tag / inspection-sticker
-                // territory, not a generic terracotta).
-                field: {
-                    950: '#141810',
-                    900: '#1E2418',
-                    800: '#2B3323',
-                    700: '#3C4830',
-                    600: '#4F5E3F',
+                // Deep ag-tech green (brand/primary) + crisp mint (accent/CTA) +
+                // amber (inventory alerts, ICASA/compliance). Neutrals lean on
+                // Tailwind's built-in slate scale directly in views.
+                brand: {
+                    500: '#2D7350',
+                    600: '#1F5A3E',
+                    700: '#1A4D35',
+                    800: '#163F2B',
+                    900: '#143D2B',
+                    950: '#0B2A1C',
                 },
-                steel: {
-                    100: '#EDEDE8',
-                    300: '#C9CABE',
-                    500: '#8B8C82',
-                    700: '#5C5D54',
+                mint: {
+                    DEFAULT: '#10B981',
+                    dark: '#059669',
+                    light: '#6EE7B7',
                 },
-                tag: {
-                    // Safety-orange, like an inspection/calibration tag.
-                    DEFAULT: '#C6560E',
-                    dark: '#9C420A',
-                    light: '#F0985A',
+                alert: {
+                    DEFAULT: '#F59E0B',
+                    dark: '#B45309',
+                    light: '#FCD34D',
                 },
-                paper: '#F3EFE4',
                 // Aliases so admin views (kept visually simpler/utilitarian on
                 // purpose) still resolve to the same real palette above.
                 farmtech: {
-                    green: '#3C4830',
-                    'green-dark': '#1E2418',
-                    gold: '#C6560E',
-                    cream: '#F3EFE4',
+                    green: '#143D2B',
+                    'green-dark': '#0B2A1C',
+                    gold: '#F59E0B',
+                    cream: '#F8FAFC',
                 },
             },
             fontFamily: {
-                display: ['"Space Grotesk"', 'sans-serif'],
-                body: ['"IBM Plex Sans"', 'sans-serif'],
+                display: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+                body: ['"Inter"', 'sans-serif'],
                 mono: ['"IBM Plex Mono"', 'monospace'],
             },
             backgroundImage: {
@@ -61,15 +59,27 @@ export default {
                     '0%': { transform: 'translateX(0)' },
                     '100%': { transform: 'translateX(-50%)' },
                 },
-                'scanline': {
-                    '0%': { backgroundPosition: '0 0' },
-                    '100%': { backgroundPosition: '0 24px' },
+                'pop-in': {
+                    '0%': { transform: 'scale(0.5)' },
+                    '50%': { transform: 'scale(1.25)' },
+                    '100%': { transform: 'scale(1)' },
+                },
+                'toast-in': {
+                    '0%': { opacity: '0', transform: 'translateY(-8px) translateX(-50%)' },
+                    '100%': { opacity: '1', transform: 'translateY(0) translateX(-50%)' },
+                },
+                'glow-pulse': {
+                    '0%, 100%': { boxShadow: '0 0 0 0 rgba(16,185,129,0.45)' },
+                    '50%': { boxShadow: '0 0 0 10px rgba(16,185,129,0)' },
                 },
             },
             animation: {
                 'reveal-up': 'reveal-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
                 'stamp-in': 'stamp-in 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
                 'ticker': 'ticker 22s linear infinite',
+                'pop-in': 'pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both',
+                'toast-in': 'toast-in 0.3s cubic-bezier(0.16,1,0.3,1) both',
+                'glow-pulse': 'glow-pulse 2.2s ease-out infinite',
             },
         },
     },

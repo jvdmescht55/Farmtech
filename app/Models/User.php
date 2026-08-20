@@ -14,6 +14,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -26,11 +27,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
+    /** Full-access role — Settings, Users, Sourcing, Products, plus everything Staff can do. */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' && $this->is_active;
+    }
+
+    /** Anyone allowed into /admin at all — both roles, as long as the account is active. */
+    public function canAccessAdminPanel(): bool
+    {
+        return $this->is_active && in_array($this->role, ['admin', 'staff'], true);
     }
 }

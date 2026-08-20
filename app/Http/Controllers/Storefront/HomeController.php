@@ -15,10 +15,16 @@ class HomeController extends Controller
         $heroProducts = (clone $base)->limit(5)->get();
         $featured = (clone $base)->limit(8)->get();
 
+        // Real cost breakdown for the landed-cost transparency widget — never
+        // a fabricated "vs local retail" comparison, since we have no real
+        // competitor pricing data source.
+        $costSample = $featured->first(fn (Product $p) => $p->landed_cost_zar && $p->retail_price_zar);
+
         return view('storefront.home', [
             'categories' => ProductCategory::cases(),
             'heroProducts' => $heroProducts,
             'featured' => $featured,
+            'costSample' => $costSample,
         ]);
     }
 }

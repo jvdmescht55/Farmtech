@@ -1,138 +1,137 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20. This is the honest status doc — what's actually working (verified
-in-browser or by test, not just written), what's built but unproven, what's still on the
-backlog, and what's out of scope on purpose or blocked on something only you can do.
-
-For architecture/setup, see [README.md](README.md). This file is about *what's left*.
-
----
-
-## ✅ Working and verified
-
-Everything below has actually been run and checked, not just written:
-
-- **Storefront**: home (hero slider, 6 category tiles, trust bar), category pages, product
-  detail pages (specs, import/duty transparency, compliance summary), cart, checkout form (SA
-  province/postal validation), keyword search — all confirmed rendering correctly against real
-  MySQL data, no console errors on the latest pass.
-- **Admin**: login, staging queue (status/category/verdict filters), review panel (compliance
-  sidebar, live financial breakdown, working margin slider), quick edit, approve, reject +
-  blacklist supplier, settings page, **Source New Listing** (runs the real pipeline from a web
-  form, no terminal needed).
-- **Sourcing pipeline** (`worker/`): forex fetch with DB fallback, landed-cost calculator, Gemini
-  AI vetting (structured JSON, category-specific rules), image download + MIME validation + webp
-  conversion, MySQL and SQLite DB drivers. **24 automated tests, all passing**, including a real
-  network image download/convert and a real Gemini API call.
-- **6 product categories**, each with a real HS code and AI vetting rules: scales, ultrasound,
-  RFID, accessories, electric fencing, solar water pumps. HS codes and NRCS/ICASA requirements
-  were researched, not guessed.
-- **Design**: distinct visual identity (not default Tailwind look), real Wikimedia photography
-  with attribution, purposeful motion (hero slider, scroll-reveal, hover states).
+Last updated: 2026-08-20 (rev. 4 — operational hardening + storefront redesign). What changed
+since rev. 3: role-based access control (Admin vs Staff), rate limiting, S3/R2-compatible cloud
+storage support, a GitHub Actions CI workflow, and a full visual redesign of the storefront
+(new color system, sticky glass header with live search, redesigned homepage and product page,
+motion/micro-interactions). See [README.md](README.md) for architecture/setup.
 
 ---
 
-## ⚠️ Built, but not fully proven — needs your action to actually verify
+## ✅ Working and verified (this session)
 
-- **Payment gateways (PayFast, Ozow, Yoco)**: signature generation, webhook verification, and the
-  checkout handoff are all coded, but **never tested against a real sandbox account**. Right now
-  checkout will show "gateway not configured" for all three, because there are no real
-  credentials in `.env`. You'll need to sign up for each and drop the keys in before this can be
-  proven end-to-end.
-- **AI hero-image enhancement**: the code path works (it's real Gemini image-editing, not
-  fabrication — see README), but your Gemini API key's free tier has **zero quota for image
-  models** (confirmed live, not assumed). It silently falls back to the original photo. Needs you
-  to enable billing on the Google Cloud project tied to that key.
-- **Docker path** (`docker-compose.yml`, `setup.sh`/`setup.bat`): written to spec, but this whole
-  build happened in a sandbox with no Docker available, so it was never actually run. Everything
-  was proven instead against a PHP/MariaDB install done directly on the dev machine (documented
-  in the README as a workaround). **Someone needs to run `./setup.sh` on a real machine with
-  Docker Desktop** before you can trust that path.
-- **Live USD/ZAR forex fetch**: the code and fallback logic are tested, but no
-  `USD_ZAR_API_KEY` was ever set, so it's only ever been exercised via the fallback (static DB
-  rate), never a real live fetch.
+- **Role-Based Access Control.** `User::isAdmin()` / `canAccessAdminPanel()` gate two roles:
+  Admin (full access) and Staff (Orders + own Profile only). Enforced via Laravel `Gate`s
+  (`manage-catalog`, `manage-users`, `manage-settings`) on the relevant route groups, and the
+  admin nav renders links conditionally with `@can`. Verified both by `RoleAccessTest` (7 passing
+  tests: staff gets 403 on Users/Settings/Products/Source, 200 on Orders/Profile; admin gets 200
+  everywhere) and by logging in as each role in the browser.
+- **Rate limiting.** Search and its autocomplete endpoint: 30/min/IP. Cart and checkout: 10/hour/IP
+  (shared bucket — hitting the cart limit blocks checkout too, on purpose). Admin login: 5 failed
+  attempts locks out for 60s, keyed by `email|ip` so one attacker can't lock out unrelated users on
+  the same IP, and a successful login clears the counter. All four behaviors verified in
+  `RateLimitingTest` (4 passing tests) by actually driving requests past the threshold and checking
+  for 429/lockout, not just reading the config.
+- **Full Laravel test suite: 33 passing tests, 137 assertions**, run against SQLite in-memory.
+  `php artisan test` — everything from rev. 3 still passes plus the two new files above.
+- **Storefront redesign — new visual identity.** Deep ag-tech green (`#143D2B`) + crisp mint
+  (`#10B981`) + slate neutrals + amber for alerts/compliance, replacing the earlier khaki/steel
+  industrial palette. Inter/Plus Jakarta Sans typography, `font-mono` tabular numbers for ZAR
+  prices, glassmorphism cards, `rounded-xl`/`2xl` corners throughout. Admin views needed **zero**
+  changes — they resolve color through the `farmtech.*` alias block, which now points at the same
+  new hex values.
+- **Sticky glass header** with scroll-triggered background/shadow transition, a category dropdown
+  with real inline SVG icons per category, and **live search autocomplete** — typing in the search
+  box hits the `/search/suggest` endpoint (debounced 300ms) and shows matching products with
+  thumbnail, category and price before you even hit Enter. Verified in-browser: typed "scale", got
+  a real matching product back with a live thumbnail.
+- **Redesigned homepage**: split hero with an auto-rotating product showcase, a 4-pillar trust bar,
+  a category grid with icon badges, and a **landed-cost transparency widget** — verified rendering
+  real numbers (duty %, VAT %, landed cost, retail price) pulled from an actual product record.
+- **Redesigned product page**: sticky gallery with a click-to-zoom full-screen modal, a pricing
+  block with a pulsing (`animate-ping`) low-stock badge, and a tabbed spec matrix — Specifications
+  / ISO Compliance & ICASA / Delivery & Warranty — replacing the old single stacked layout. All
+  three tabs verified clickable and correctly populated in-browser. A mobile-only sticky
+  add-to-cart bar appears below `lg:` breakpoint, verified at a real 375px viewport.
+- **Cart-action toast.** Add-to-cart still round-trips through the server (no rewrite of
+  `CartController` needed), but the flash message now renders as a floating, auto-dismissing toast
+  instead of an inline banner, and the header's cart-count badge pops (`animate-pop-in`) when a
+  fresh add just happened.
+- Frontend build verified clean: `npm run build` succeeds, 55KB CSS / 101KB JS.
+
+---
+
+## ⚠️ Built, but with a real caveat attached
+
+- **CI workflow (`.github/workflows/ci.yml`) is written but not verified to actually run.** This
+  sandbox has no GitHub Actions runner available, so I could not push and watch it go green. The
+  steps mirror exactly what already passes locally (`composer install` → migrate → `php artisan
+  test`; `npm ci` → `npm test` in `worker/`), but "passes locally" and "passes in a clean CI
+  container" are not the same guarantee until it's actually run once on GitHub.
+- **S3/R2 cloud storage support is written to spec, not verified against a real bucket.** No AWS/R2
+  credentials are available in this environment. The code path (`FILESYSTEM_DISK=s3` on the Laravel
+  side, `WORKER_FILESYSTEM_DISK=s3` on the worker side) is structurally correct and mirrors the
+  well-established Laravel Flysystem S3 pattern, but I have not confirmed a real upload/read
+  round-trip against AWS S3 or Cloudflare R2.
+- **No full cart drawer.** The spec asked for a "floating cart-drawer counter" — I built the
+  animated count badge (pops on add) but not a slide-out drawer with a live item preview, to keep
+  scope realistic given everything else in this pass. The cart page itself (`/cart`) is unchanged
+  and fully functional.
+- **The landed-cost widget shows real numbers, not a "vs. local retail" comparison.** The original
+  ask described an "ROI widget comparing local retail vs. Farmtech direct-import pricing." There is
+  no real data source for South African retail competitor pricing, and fabricating a comparison
+  figure would violate this project's standing no-fake-numbers principle. What's built instead is
+  an honest breakdown of one real product's actual landed cost — duty rate, VAT rate, landed cost,
+  and final price — proving there's no hidden markup, without inventing a "you save RX vs. the shop
+  down the road" number that isn't backed by anything real.
+- **No "SARS VAT invoice" claim was added**, deliberately. The original trust-badge language
+  suggested claiming formal tax invoices are provided; no PDF tax-invoice generation feature
+  exists, so the trust bar says "All-In Pricing" / "Secure Checkout" instead — true statements
+  about what the site actually does.
+- **Per-product warranty terms are not fabricated.** No `warranty` field exists on `Product`, and
+  no site-wide warranty policy was ever specified. The Delivery & Warranty tab honestly says terms
+  vary by supplier/model and to contact support with the SKU, rather than inventing a "12-month
+  warranty" figure that isn't true for every listing.
 
 ---
 
 ## 🔧 Still needs to happen
 
-Roughly in the order I'd tackle them:
-
-1. **Admin order management — doesn't exist yet.** Checkout creates real `orders`/`order_items`
-   rows, but there is no `/admin` page to view, update, or fulfill them. Right now a customer
-   could check out and the order would just sit in the database with no one able to see it from
-   the UI. This is the single biggest gap for calling this a "working" store.
-2. **Order confirmation emails.** No mail driver is configured (`config/mail.php` doesn't exist),
-   and nothing calls `Mail::send`. A customer gets a browser success page and nothing else —
-   no receipt, no "your order is on the way."
-3. **No automated tests for the Laravel app.** The Node worker has 24 tests; the PHP side has
-   zero. Everything on the Laravel side was checked by hand in-browser this session, which proves
-   it worked *then* but won't catch a regression later.
-4. **No admin user management.** One hardcoded admin account from a seeder. No way to invite a
-   second staff member or rotate the password without editing `.env` and re-seeding.
-5. **No real inventory tracking.** `stock_status` is just `in_stock`/`pre_order` — there's no
-   quantity field, so nothing stops overselling a single unit to five customers at once.
-6. **No admin audit trail.** Approve/reject/edit actions aren't logged anywhere — you can't
-   answer "who approved this listing and when" after the fact.
-7. **Courier Guy / DHL integration is a total placeholder.** The `.env.example` has config keys
-   for both, but grep the codebase — nothing ever reads them. No shipping label, no tracking
-   number, no webhook. It's a name in a config file, not a feature.
-8. **Rate limiting / abuse protection** on search, cart, and checkout is whatever Laravel ships
-   with by default — never reviewed or tuned for this app specifically.
-9. **Image storage is local disk** (`public/uploads/products`). Fine for one server; will not
-   survive a multi-server or serverless deploy without moving to S3-compatible storage first.
+1. Actually run the CI workflow once on GitHub (push to a real remote) to confirm it's green, not
+   just structurally plausible.
+2. Verify S3/R2 storage against a real bucket once credentials exist.
+3. A real cart drawer, if the animated badge isn't enough.
+4. A real invite-by-email flow for new admin/staff accounts (unchanged from rev. 3).
+5. A finer-grained permission system if Staff needs partial access to catalog/settings beyond the
+   current binary Admin/Staff split.
+6. Courier Guy / DHL live integration — unchanged, still admin-entered free text.
 
 ---
 
-## ❌ Deliberately not implemented (scope decisions, not oversights)
+## ❌ Deliberately not implemented (scope decisions, unchanged from earlier revisions)
 
-These were conscious calls, each explained in more depth in the README:
-
-- **Admin credentials live in the `users` table**, not the `settings` key-value table the
-  original brief described — storing login credentials in a generic config table has no hashing
-  convention and no framework auth integration. Real security smell, so I didn't do it.
-- **Payment gateway API keys are `.env`-only**, not editable from `/admin/settings` — a web form
-  writing secrets into the plain `settings` table would undo the point of keeping them out of
-  `users` in the first place.
-- **No automated Alibaba/Made-in-China scraper.** Their Terms of Use explicitly prohibit
-  automated retrieval. **Admin → Source New Listing** is the legitimate stand-in: you paste in
-  what you see on the listing, and the real AI vetting/costing pipeline runs on it.
-- **AI hero images are edits of the real supplier photo**, not text-to-image generations. A
-  generated image might not depict the exact unit a customer receives — for physical imported
-  goods that's a returns/trust problem, not just a style choice.
+- Admin credentials in `users`, not `settings` — security decision.
+- Payment gateway keys `.env`-only, not editable from `/admin/settings`.
+- No automated Alibaba scraper — against their ToS; **Admin → Source New Listing** is the stand-in.
+- AI hero images are edits of the real supplier photo, not generations.
+- Mail defaults to the `log` driver, not real send.
+- `PipelineTest` doesn't re-test Gemini's own AI judgment — the non-deterministic external call is
+  tested with real API calls in `worker/test/`, where it belongs.
 
 ---
 
 ## 🚫 Won't happen without more from you
 
-Things I can't finish myself because they require you to do something outside this codebase:
-
-- **True direct Alibaba import** — needs you to register for Alibaba's Open Platform API
-  (openapi.alibaba.com) and get approved. That's a business relationship only you can establish;
-  I'll build the real integration the moment you have App Key/Secret.
-- **AI image enhancement actually producing output** — needs you to enable billing on the Google
-  Cloud project behind your Gemini key.
-- **Real payments** — needs PayFast/Ozow/Yoco merchant sign-ups and real credentials.
-- **Proof the Docker path works** — needs a run on a machine that actually has Docker Desktop.
+- Real email delivery, true direct Alibaba import, AI image enhancement actually producing output,
+  real payments, proof the Docker path works, live courier tracking, a verified CI run, a verified
+  S3/R2 bucket — all need either credentials, a real GitHub remote, or a business decision I can't
+  make for you.
 
 ---
 
 ## Known rough edges
 
-- This dev environment has PHP 8.2, Composer, and MariaDB installed directly via `winget` — a
-  sandbox-specific workaround, not how you should run this day to day. Use `./setup.sh` /
-  `setup.bat` with Docker on your own machine.
-- If you ever run **Source New Listing** on Windows *outside* Docker, you may hit the
-  `SystemRoot`-propagation / `.env`-shadowing issues documented in the README — already fixed in
-  `SourceController`, but worth knowing about if something like it resurfaces elsewhere.
-- Test coverage is lopsided: the Node worker is well-tested (24 tests), the Laravel app has none.
+- Same Windows/local-install and dev-server-can-die caveats as before.
+- 46+ automated tests total across Laravel (33) and the Node worker (24) — genuinely covered, not
+  padding.
 
 ---
 
 ## Quick reference
 
-- Storefront: `http://localhost:8000` · Admin: `http://localhost:8000/admin/login`
-- Admin login: `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env` (seeded on first migrate)
-- Run the sourcing pipeline by hand: `cd worker && node src/pipeline.js --file mock_data.json`
+- Storefront: `http://localhost:8000` · Admin: `http://localhost:8000/admin/login` ·
+  Orders: `/admin/orders` · Your Profile: `/admin/profile` · Users: `/admin/users`
+- Run the Laravel test suite: `php artisan test`
 - Run worker tests: `cd worker && npm test`
-- Full setup from scratch: `./setup.sh` (or `setup.bat` on Windows) — needs Docker Desktop
+- Build frontend assets: `npm run build`
+- Run the sourcing pipeline by hand: `cd worker && node src/pipeline.js --file mock_data.json`

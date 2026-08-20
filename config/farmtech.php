@@ -12,4 +12,11 @@ return [
     ],
 
     'lead_time_default' => '7-12 business days',
+
+    // Where NewOrderAdminAlertMailable goes. Defaults to the seeded admin
+    // login address so there's no extra setup required out of the box.
+    // Elvis (?:), not env()'s built-in default: env() only falls back when a
+    // key is entirely absent, not when it's present-but-empty (which is what
+    // `ADMIN_NOTIFICATION_EMAIL=` in .env actually is) — this treats both the same.
+    'admin_notification_email' => env('ADMIN_NOTIFICATION_EMAIL') ?: (env('ADMIN_EMAIL') ?: 'admin@farmtech.co.za'),
 ];

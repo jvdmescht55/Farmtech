@@ -144,6 +144,28 @@
                     <label class="block text-sm font-medium mb-1">Lead Time</label>
                     <input type="text" name="lead_time_days" value="{{ $product->lead_time_days }}" class="w-full border rounded-md px-3 py-2">
                 </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Inventory</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Stock Quantity</label>
+                            <input type="number" name="stock_quantity" value="{{ $product->stock_quantity }}" placeholder="Untracked" class="w-full border rounded-md px-3 py-2">
+                            <p class="text-xs text-gray-400 mt-1">Blank = not tracked (unlimited)</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Low Stock Alert Below</label>
+                            <input type="number" name="low_stock_threshold" value="{{ $product->low_stock_threshold }}" min="0" class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div class="flex items-end pb-2">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" name="allow_backorder" value="1" @checked($product->allow_backorder)>
+                                Allow backorder
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="bg-gray-800 text-white font-semibold px-5 py-2 rounded-md hover:bg-gray-900">Save Changes</button>
             </form>
 

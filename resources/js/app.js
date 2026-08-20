@@ -25,4 +25,20 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
+// Global toast notifications — used for cart add/update feedback. A single
+// store (not per-component state) so any page/partial can call
+// Alpine.store('toast').push(...) without wiring up its own queue.
+document.addEventListener('alpine:init', () => {
+    Alpine.store('toast', {
+        items: [],
+        push(message, tone = 'success') {
+            const id = Date.now() + Math.random();
+            this.items.push({ id, message, tone });
+            setTimeout(() => {
+                this.items = this.items.filter((item) => item.id !== id);
+            }, 3200);
+        },
+    });
+});
+
 Alpine.start();

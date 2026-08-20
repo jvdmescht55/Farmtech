@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Events\OrderPlaced;
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -54,29 +56,44 @@ class CheckoutController extends Controller
         $subtotal = $this->cart->subtotal();
         $shipping = 0.00; // Direct Express Delivery is duty/VAT-inclusive in retail price — flat R0 shown, courier hook wires in real quotes later.
 
-        $order = DB::transaction(function () use ($validated, $items, $subtotal, $shipping) {
-            $order = Order::create([
-                ...$validated,
-                'subtotal_zar' => $subtotal,
-                'shipping_zar' => $shipping,
-                'total_zar' => $subtotal + $shipping,
-                'payment_status' => 'pending',
-                'status' => 'pending',
-            ]);
-
-            foreach ($items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product']->id,
-                    'title_snapshot' => $item['product']->title,
-                    'unit_price_zar' => $item['product']->retail_price_zar,
-                    'quantity' => $item['quantity'],
-                    'line_total_zar' => $item['line_total'],
+        try {
+            $order = DB::transaction(function () use ($validated, $items, $subtotal, $shipping) {
+                $order = Order::create([
+                    ...$validated,
+                    'subtotal_zar' => $subtotal,
+                    'shipping_zar' => $shipping,
+                    'total_zar' => $subtotal + $shipping,
+                    'payment_status' => 'pending',
+                    'status' => 'pending_payment',
                 ]);
-            }
 
-            return $order;
-        });
+                foreach ($items as $item) {
+                    // Atomic per-item decrement, checked inside the same
+                    // transaction as the order/line-item rows — if stock ran
+                    // out between "add to cart" and "place order" (a second
+                    // checkout beat this one), the whole order rolls back
+                    // rather than shipping someone a unit that doesn't exist.
+                    if (! $item['product']->decrementStock($item['quantity'])) {
+                        throw new InsufficientStockException($item['product']);
+                    }
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item['product']->id,
+                        'title_snapshot' => $item['product']->title,
+                        'unit_price_zar' => $item['product']->retail_price_zar,
+                        'quantity' => $item['quantity'],
+                        'line_total_zar' => $item['line_total'],
+                    ]);
+                }
+
+                return $order;
+            });
+        } catch (InsufficientStockException $e) {
+            return redirect()->route('cart.index')->withErrors(['stock' => $e->getMessage()]);
+        }
+
+        OrderPlaced::dispatch($order);
 
         $gateway = PaymentGatewayFactory::make($validated['payment_gateway']);
 

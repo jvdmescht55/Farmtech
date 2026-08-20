@@ -14,7 +14,11 @@ class EnsureUserIsAdmin
             return redirect()->route('admin.login');
         }
 
-        if (! $request->user()->isAdmin()) {
+        // Gates the panel — both roles pass. Per-section access (Settings,
+        // Users, Sourcing, Products) is enforced separately via the
+        // manage-catalog/manage-settings/manage-users Gates registered in
+        // AppServiceProvider, applied to those specific route groups.
+        if (! $request->user()->canAccessAdminPanel()) {
             abort(403);
         }
 

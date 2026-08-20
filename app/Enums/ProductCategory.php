@@ -44,6 +44,19 @@ enum ProductCategory: string
         };
     }
 
+    /** Icon key for resources/views/components/category-icon.blade.php — a real inline SVG per category, not a generic placeholder. */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Scales => 'scale',
+            self::Ultrasound => 'ultrasound',
+            self::Rfid => 'rfid',
+            self::Accessories => 'accessories',
+            self::Fencing => 'fencing',
+            self::SolarPumps => 'solar',
+        };
+    }
+
     public function description(): string
     {
         return match ($this) {

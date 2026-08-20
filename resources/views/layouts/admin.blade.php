@@ -13,14 +13,24 @@
             <div class="px-4 py-4 text-lg font-bold border-b border-white/10">
                 Farm<span class="text-farmtech-gold">tech</span> Admin
             </div>
-            <div class="px-3 pt-4">
-                <a href="{{ route('admin.source.create') }}" class="flex items-center justify-center gap-2 w-full bg-farmtech-gold hover:brightness-110 text-white text-sm font-semibold px-3 py-2.5 rounded-md transition">
-                    + Source New Listing
-                </a>
-            </div>
+            @can('manage-catalog')
+                <div class="px-3 pt-4">
+                    <a href="{{ route('admin.source.create') }}" class="flex items-center justify-center gap-2 w-full bg-farmtech-gold hover:brightness-110 text-white text-sm font-semibold px-3 py-2.5 rounded-md transition">
+                        + Source New Listing
+                    </a>
+                </div>
+            @endcan
             <nav class="px-2 py-4 text-sm space-y-1">
-                <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.*') ? 'bg-white/10 font-semibold' : '' }}">Staging Queue</a>
-                <a href="{{ route('admin.settings.edit') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.settings.*') ? 'bg-white/10 font-semibold' : '' }}">Settings</a>
+                @can('manage-catalog')
+                    <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.*') ? 'bg-white/10 font-semibold' : '' }}">Staging Queue</a>
+                @endcan
+                <a href="{{ route('admin.orders.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.orders.*') ? 'bg-white/10 font-semibold' : '' }}">Orders</a>
+                @can('manage-users')
+                    <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.users.*') ? 'bg-white/10 font-semibold' : '' }}">Users</a>
+                @endcan
+                @can('manage-settings')
+                    <a href="{{ route('admin.settings.edit') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.settings.*') ? 'bg-white/10 font-semibold' : '' }}">Settings</a>
+                @endcan
             </nav>
             <form action="{{ route('admin.logout') }}" method="POST" class="px-4 py-4 border-t border-white/10 mt-auto">
                 @csrf
@@ -32,7 +42,7 @@
             <header class="bg-white border-b px-6 py-4 flex items-center justify-between">
                 <h1 class="text-lg font-semibold">@yield('heading', 'Dashboard')</h1>
                 @auth
-                    <span class="text-sm text-gray-500">{{ auth()->user()->name }}</span>
+                    <a href="{{ route('admin.profile.edit') }}" class="text-sm text-gray-500 hover:text-farmtech-green transition">{{ auth()->user()->name }}</a>
                 @endauth
             </header>
 

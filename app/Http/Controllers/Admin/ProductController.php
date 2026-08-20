@@ -80,7 +80,7 @@ class ProductController extends Controller
         return response()->json($breakdown);
     }
 
-    /** Quick edit: inline editing of title, specs, retail price. */
+    /** Quick edit: inline editing of title, specs, retail price, inventory. */
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
@@ -90,7 +90,12 @@ class ProductController extends Controller
             'profit_margin_pct' => ['required', 'numeric', 'min:0', 'max:95'],
             'stock_status' => ['required', 'in:in_stock,pre_order'],
             'lead_time_days' => ['required', 'string', 'max:100'],
+            'stock_quantity' => ['nullable', 'integer'],
+            'allow_backorder' => ['sometimes', 'boolean'],
+            'low_stock_threshold' => ['required', 'integer', 'min:0'],
         ]);
+
+        $validated['allow_backorder'] = $request->boolean('allow_backorder');
 
         $product->update($validated);
 

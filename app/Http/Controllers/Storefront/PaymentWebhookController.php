@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Events\OrderPaid;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\Payments\PaymentGatewayFactory;
@@ -31,10 +32,12 @@ class PaymentWebhookController extends Controller
 
         $order->update([
             'payment_status' => 'paid',
-            'status' => 'processing',
+            'status' => 'paid',
             'payment_gateway' => $gateway,
             'payment_reference' => $payload['pf_payment_id'] ?? $payload['TransactionId'] ?? null,
         ]);
+
+        OrderPaid::dispatch($order);
 
         return response('OK');
     }

@@ -12,7 +12,7 @@
     }
 
     ::selection {
-        background-color: theme('colors.tag.DEFAULT');
+        background-color: theme('colors.mint.DEFAULT');
         color: white;
     }
 
@@ -25,16 +25,16 @@
     .badge-green { @apply bg-emerald-100 text-emerald-900 border border-emerald-300; }
     .badge-yellow { @apply bg-amber-100 text-amber-900 border border-amber-300; }
     .badge-red { @apply bg-red-100 text-red-900 border border-red-300; }
-    .badge-gray { @apply bg-steel-100 text-steel-700 border border-steel-300; }
+    .badge-gray { @apply bg-slate-100 text-slate-700 border border-slate-300; }
 
     /* Rotated compliance-stamp badge — the site's signature element. Only
        ever rendered for approved products, so it always reflects a real
        audit_verdict, never decoration. */
     .verified-stamp {
         @apply relative inline-flex flex-col items-center justify-center;
-        @apply w-20 h-20 rounded-full border-2 border-dashed border-tag text-tag;
+        @apply w-20 h-20 rounded-full border-2 border-dashed border-alert text-alert-dark;
         @apply -rotate-[8deg] font-display font-bold uppercase tracking-wide text-[10px] leading-tight;
-        background: radial-gradient(circle, rgba(198,86,14,0.06) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
     }
 
     .font-tabular {
@@ -42,15 +42,24 @@
     }
 
     .scan-divider {
-        @apply relative h-px w-full overflow-hidden bg-steel-300;
+        @apply relative h-px w-full overflow-hidden bg-slate-300;
     }
 
     .scan-divider::after {
         content: '';
         @apply absolute inset-0;
-        background: repeating-linear-gradient(90deg, theme('colors.tag.DEFAULT') 0 8px, transparent 8px 16px);
+        background: repeating-linear-gradient(90deg, theme('colors.mint.DEFAULT') 0 8px, transparent 8px 16px);
         animation: scanline 1.2s linear infinite;
         opacity: 0.5;
+    }
+
+    /* Glassmorphism surface per the design-system spec. */
+    .glass-card {
+        @apply backdrop-blur-md bg-white/80 border border-slate-200/80;
+    }
+
+    .glass-header {
+        @apply backdrop-blur-md border-b transition-colors duration-300;
     }
 }
 
