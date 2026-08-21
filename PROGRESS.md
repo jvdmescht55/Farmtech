@@ -1,6 +1,11 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-21 (rev. 15 — Domain navigation hierarchy, a Featured Innovation & Tech
+Last updated: 2026-08-21 (rev. 16 — fixed a real PDP mobile-overflow bug, plus a stale-dev-server
+asset-loading issue that could make the whole site look unstyled/broken depending on how it's
+viewed. Root cause of the layout bug turned out to be different from what was suspected — see rev.
+16's own notes below for the actual diagnosis, since it wasn't the hardcoded-max-width/unbalanced-
+div theory it was initially attributed to.)
+What changed since rev. 14 (rev. 15's own summary): Domain navigation hierarchy, a Featured Innovation & Tech
 marquee, and real B2B conversion cues. Renamed the 4 industries to benefit-driven "domain" names
 (Livestock Management / Site & Construction / Solar & Water Infrastructure / Fleet & Asset
 Logistics) with new short URLs (`/livestock`, `/construction`, `/solar`, `/logistics`), reworded
@@ -138,6 +143,45 @@ reskin; rev. 7 added the multi-industry expansion, Value-Density Feasibility Eng
 Trending strip; rev. 6 added the arbitrage engine, profit transparency, and image quality gate; rev.
 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront
 redesign. See [README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 16)
+
+- **A real, reproducible PDP mobile-overflow bug, found and fixed — root cause was NOT what it was
+  initially attributed to.** The request suspected hardcoded `max-w-sm`/`max-w-md`/fixed pixel
+  widths on layout roots and unbalanced `<div>` tags. Neither was true: the one `max-w-sm` in
+  `layouts/storefront.blade.php` is on the (correctly narrow-by-design) "Farmtech Verified" modal
+  dialog, not a layout root, and both files' `<div>` tags were confirmed balanced (40/40 and 36/36).
+  Live desktop verification (1280px) showed the PDP rendering a correct 2-column grid the whole
+  time. The **actual** bug, found by directly measuring `document.body.scrollWidth` at a real 375px
+  mobile viewport: the PDP's main grid (`resources/views/storefront/products/show.blade.php`) had
+  no explicit `grid-cols-1` at the base breakpoint — only `lg:grid-cols-2` — so below `lg:` it fell
+  back to an unconstrained implicit single column with none of Tailwind's `minmax(0,1fr)` overflow
+  protection. Combined with the gallery image box having `aspect-square` but no explicit `w-full`,
+  this let the box's ambiguous intrinsic sizing blow the whole page out to a ~666px effective
+  viewport on a 375px screen (confirmed via `window.innerWidth` reading 666 instead of 375, with the
+  real visual viewport silently scaling everything down to compensate — which is exactly the kind of
+  bug that looks "squished," since content is uniformly shrunk to fit rather than actually
+  reflowing). Fixed with the exact structural pattern the request itself suggested
+  (`grid grid-cols-1 lg:grid-cols-2 gap-12`), plus `w-full` on the gallery box and `min-w-0` on its
+  grid-item wrapper as defense-in-depth against the same CSS Grid `min-width: auto` pitfall
+  recurring. Verified live at both 375px (now correctly `innerWidth: 375`, zero overflow) and 1280px
+  (still a correct 2-column grid, `592.4px` per column, unaffected by the fix). Spot-checked the
+  homepage, a category page, cart, and checkout at 375px too — all already clean, confirming this
+  was isolated to the PDP's specific box/grid combination, not a sitewide pattern. 2 new tests
+  (`ProductDetailLayoutTest`) guard the markup-level fix, since this project has no headless-browser
+  test infrastructure to assert real computed layout dimensions automatically.
+- **A separate, real issue found while investigating**: a stale `public/hot` file (left behind by
+  an earlier `npm run dev` session in this sandbox) was making every page load its CSS/JS from the
+  Vite dev server (`http://[::1]:5173/...`) instead of the freshly built `public/build` assets —
+  invisible in this session's own browser (since that dev server happened to still be running here),
+  but a real problem for anyone viewing the app through any other path where port 5173 isn't
+  reachable, since the assets would fail to load entirely. Removed the stale file (confirmed
+  git-ignored, safe to delete) and reran `npm run build`; verified live that the page now actually
+  requests `/build/assets/app-*.{css,js}` rather than the dev-server URL.
+- **Full regression check**: 129 Laravel tests passing (up from 127; +2 new), 34 Node worker tests
+  unchanged, `npm run build` clean.
 
 ---
 
@@ -1149,7 +1193,7 @@ redesign. See [README.md](README.md) for architecture/setup.
 ## Known rough edges
 
 - Same Windows/local-install and dev-server-can-die caveats as before.
-- 161 automated tests total across Laravel (127) and the Node worker (34) — genuinely covered, not
+- 163 automated tests total across Laravel (129) and the Node worker (34) — genuinely covered, not
   padding.
 
 ---

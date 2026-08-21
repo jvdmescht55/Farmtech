@@ -27,10 +27,10 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 pb-28 lg:pb-16">
-        <div class="grid lg:grid-cols-2 gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {{-- Sticky gallery with zoom modal --}}
-            <div x-data="{ active: 0, zoomed: false }" class="lg:sticky lg:top-24 self-start">
-                <div class="relative aspect-square bg-white border border-border rounded-xl overflow-hidden flex items-center justify-center mb-3">
+            <div x-data="{ active: 0, zoomed: false }" class="min-w-0 lg:sticky lg:top-24 self-start">
+                <div class="relative w-full aspect-square bg-white border border-border rounded-xl overflow-hidden flex items-center justify-center mb-3">
                     @if ($product->images->isNotEmpty())
                         @foreach ($product->images as $i => $image)
                             <img x-show="active === {{ $i }}" x-transition.opacity.duration.300ms
