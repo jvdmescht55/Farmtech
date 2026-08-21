@@ -41,7 +41,7 @@ class PolicyPagesTest extends TestCase
         $response->assertSee(route('policies.icasa'), false);
         $response->assertSee(route('policies.privacy'), false);
         $response->assertSee(route('how-it-works'), false);
-        $response->assertSee(route('industry.show', Industry::Agriculture), false);
+        $response->assertSee(route('domain.'.Industry::Agriculture->domainSlug()), false);
     }
 
     public function test_footer_whatsapp_badge_only_shows_when_configured(): void

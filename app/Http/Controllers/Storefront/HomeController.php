@@ -15,6 +15,10 @@ class HomeController extends Controller
         $featured = (clone $base)->limit(8)->get();
         $trending = Product::query()->trending()->with(['thumbnail', 'complianceAudit', 'specs'])->limit(5)->get();
 
+        // Same real trending ranking as above, just a wider slice for the
+        // marquee strip — never a separately-curated/fabricated "featured" list.
+        $marqueeProducts = Product::query()->trending()->with(['thumbnail', 'complianceAudit', 'specs'])->limit(10)->get();
+
         // Real cost breakdown for the landed-cost transparency widget — never
         // a fabricated "vs local retail" comparison, since we have no real
         // competitor pricing data source.
@@ -24,6 +28,7 @@ class HomeController extends Controller
             'industries' => Industry::cases(),
             'featured' => $featured,
             'trending' => $trending,
+            'marqueeProducts' => $marqueeProducts,
             'costSample' => $costSample,
         ]);
     }

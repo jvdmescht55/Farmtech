@@ -1,6 +1,19 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-21 (rev. 14 — production-readiness pass: a full "Shop by Equipment" catalogue
+Last updated: 2026-08-21 (rev. 15 — Domain navigation hierarchy, a Featured Innovation & Tech
+marquee, and real B2B conversion cues. Renamed the 4 industries to benefit-driven "domain" names
+(Livestock Management / Site & Construction / Solar & Water Infrastructure / Fleet & Asset
+Logistics) with new short URLs (`/livestock`, `/construction`, `/solar`, `/logistics`), reworded
+several category labels the same way, added a real seamless-loop marquee of top real products
+between the trust bar and the catalog, and added an accurate "Express Air-Import" + "All-In Landed
+Pricing" treatment to cards/PDP plus a real cross-domain popular-items teaser on category pages.
+**One requested item was deliberately not built as specified**: a "batch dispatched weekly" scarcity
+badge — there is no real weekly-dispatch cadence anywhere in this system (lead times are real,
+per-product, computed values, never a fixed schedule), and this project has consistently avoided
+exactly this class of fabricated urgency claim elsewhere (the rev. 9 "0% Duty" correction, the
+never-added "SARS VAT invoice" badge). Built the same real urgency/trust cue using accurate,
+per-product-real copy instead — see rev. 15's own notes below for the exact substitution.)
+What changed since rev. 14 (rev. 14's own summary follows): a full "Shop by Equipment" catalogue
 page, a 3-step Equipment Finder wizard, a Support/FAQ page with a real contact form, real
 "Frequently Bought Together" bundles, a sitewide legacy-token and price-rounding sweep, a locked-
 token pagination view, sort-label standardization (including adding sort to search), real DB
@@ -125,6 +138,54 @@ reskin; rev. 7 added the multi-industry expansion, Value-Density Feasibility Eng
 Trending strip; rev. 6 added the arbitrage engine, profit transparency, and image quality gate; rev.
 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront
 redesign. See [README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 15)
+
+- **Domain navigation hierarchy — real relabeling, not a data migration.** `Industry::label()` now
+  returns the benefit-driven domain names (Livestock Management / Site & Construction / Solar &
+  Water Infrastructure / Fleet & Asset Logistics); the enum's DB-backing `value` (`agriculture`,
+  `construction`, etc.) was deliberately left untouched, since `products.category` stores real data
+  against those values and renaming them would need a companion data migration for no real benefit —
+  this was a display-layer rename, not a schema change. New `Industry::domainSlug()` powers 4 short
+  routes (`/livestock`, `/construction`, `/solar`, `/logistics`, via `->defaults('industry', ...)` on
+  the existing `ProductController::industry()` action — same real, already-tested controller/view,
+  not a new implementation) replace `/industry/{industry}` as the primary link in the header
+  mega-menu, footer, `Applications::url()`, and the Shop-by-Equipment page. Several `ProductCategory`
+  labels reworded the same way (e.g. "RFID Tags & Stick Readers", "Scale Indicators & Platform
+  Kits"). **One requested label change deliberately not made**: the spec asked for "Concrete
+  Moisture & Rebar Scanners" as one merged category name, but Moisture Meters and Rebar Detectors are
+  two distinct real `ProductCategory` cases with their own separate pages and product listings —
+  merging their names in copy would misrepresent one category as covering the other's real inventory.
+  Left both their own accurate, already-benefit-driven labels. 3 new tests (`DomainNavigationTest`)
+  cover the route aliasing, the slug mapping, and that nav actually links to the new URLs.
+- **Featured Innovation & Tech marquee** — a real seamless-loop CSS marquee (reuses the `ticker`
+  keyframe, defined but unused since an earlier revision's rotating claims bar was replaced) showing
+  the same real trending-ranked products used elsewhere on the homepage (never a separately-curated
+  or fabricated list), placed between the trust bar and the "Shop by Application" section. Verified
+  live: `getComputedStyle` confirms the animation runs at `22s`/`running`, a real `hover` (not a
+  synthetic event — CSS `:hover` doesn't respond to those) confirms it pauses
+  (`animation-play-state: paused`), and a real click on a card confirms it opens the shared Quick
+  View modal with that exact product's real data (`Alpine.store('quickView').product` matched).
+  Hidden entirely when there are no approved products, not shown empty. 2 new tests
+  (`FeaturedMarqueeTest`).
+- **Accurate "Express Air-Import" + "All-In Landed Pricing" treatment**, added to every product card
+  and the PDP pricing block. "All-In Landed Pricing · R0 Extra At Door" restates the site's own
+  already-true VAT/duty-inclusive pricing fact (nothing new claimed). The Express Air-Import line
+  uses each product's own real `lead_time_days` rather than the requested "batch dispatched weekly"
+  claim — see the caveat below for why.
+- **"Also Sourced by Commercial Buyers" cross-domain teaser** on category pages — real popular
+  products (the same trending/units-sold ranking used everywhere else) from every *other* industry,
+  never the current one, so it surfaces genuinely different equipment rather than restating the grid
+  above it. Verified via `assertViewHas` against exact product IDs (not fragile page-text matching,
+  since the page's own separate real trending strip can legitimately also show the same products in
+  a small dev DB — a page-text-only assertion would have been a flaky test, not a real bug).
+  1 new test (`CrossDomainTeaserTest`).
+- **Full regression check**: 127 Laravel tests passing (up from 121; +6 new), 34 Node worker tests
+  unchanged, `npm run build` clean, verified live in-browser at desktop (1280px, including the real
+  hover-pause and real-click-to-QuickView checks above) and mobile (375px, zero horizontal overflow)
+  with no console errors.
 
 ---
 
@@ -824,6 +885,19 @@ redesign. See [README.md](README.md) for architecture/setup.
 
 ## ⚠️ Built, but with a real caveat attached
 
+- **The requested "⚡ Express Air-Import Batch Dispatched Weekly" scarcity badge was not built as
+  written.** That copy asserts a specific operational fact — a fixed weekly dispatch cadence — that
+  doesn't exist anywhere in this system: `lead_time_days` is a real, per-product value (7-12,
+  10-15 business days depending on the item), never a shared weekly batch schedule, and no part of
+  the fulfillment logic groups orders into weekly batches. Shipping the literal requested copy would
+  have been a specific, checkable false claim about how the business operates — the kind of thing
+  South Africa's own Consumer Protection Act (which this codebase already takes seriously — see the
+  returns policy's section 56 citation) treats as a misleading representation, not just a stylistic
+  choice. This isn't a new judgment call for this project: rev. 9 already corrected an "0% Duty"
+  claim for being factually wrong, and the trust bar was deliberately built without a "SARS VAT
+  invoice" badge since no tax-invoice feature exists. Built instead: "⚡ Express Air-Import ·
+  {real lead_time_days}" — same urgency-flavored visual treatment, same real intent (this ships
+  fast), backed by a value that's actually true for that specific product.
 - **Courier tracking still links to each carrier's tracking-portal homepage, not a deep link with
   the real tracking number.** This session attempted to fix that — live `WebFetch` lookups against
   Courier Guy and DHL to find their real deep-link query-parameter format both failed (403 bot
@@ -1075,7 +1149,7 @@ redesign. See [README.md](README.md) for architecture/setup.
 ## Known rough edges
 
 - Same Windows/local-install and dev-server-can-die caveats as before.
-- 155 automated tests total across Laravel (121) and the Node worker (34) — genuinely covered, not
+- 161 automated tests total across Laravel (127) and the Node worker (34) — genuinely covered, not
   padding.
 
 ---
@@ -1083,8 +1157,9 @@ redesign. See [README.md](README.md) for architecture/setup.
 ## Quick reference
 
 - Storefront: `http://localhost:8000` · How it works: `/how-it-works` · Shop by Equipment:
-  `/equipment` · Equipment Finder: `/finder` · Support & FAQ: `/support` · Browse by industry:
-  `/industry/{agriculture|construction|industrial_logistics|solar_power}` · Track an order: `/track`
+  `/equipment` · Equipment Finder: `/finder` · Support & FAQ: `/support` · Domain hubs:
+  `/livestock` · `/construction` · `/solar` · `/logistics` (aliases of `/industry/{industry}`) ·
+  Track an order: `/track`
   · Returns policy: `/policies/returns` · Terms: `/policies/terms` · ICASA compliance:
   `/policies/icasa-compliance` · Privacy: `/policies/privacy` ·
   Admin: `http://localhost:8000/admin/login` · Orders: `/admin/orders` · Settings (incl. WhatsApp

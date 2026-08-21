@@ -55,6 +55,8 @@
         </div>
     </div>
 
+    <x-featured-marquee :products="$marqueeProducts" />
+
     {{-- Shop by application — 3x2 large image cards. Replaces the earlier industry-card
          grid at this position per the exact-spec walkthrough (items 11-12); industry-level
          browsing is still reachable via the header's Equipment mega-menu and /industry/*. --}}

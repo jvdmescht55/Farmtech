@@ -28,7 +28,24 @@ class ProductController extends Controller
             'inStock' => $inStock,
             'facets' => $facets,
             'selectedSpecs' => $selectedSpecs,
+            'crossDomain' => $this->crossDomainPicks($category->industry()),
         ]);
+    }
+
+    /**
+     * Real popular products (same trending/units-sold ranking used
+     * elsewhere) from every OTHER industry — never a fabricated "buyers also
+     * bought" claim, just genuinely popular items a category page's own
+     * industry wouldn't otherwise surface.
+     */
+    private function crossDomainPicks(Industry $excluding, int $limit = 4)
+    {
+        return Product::storefrontVisible()
+            ->whereNotIn('category', array_map(fn (ProductCategory $c) => $c->value, $excluding->categories()))
+            ->trending()
+            ->with(['thumbnail', 'complianceAudit', 'specs'])
+            ->limit($limit)
+            ->get();
     }
 
     public function industry(Industry $industry, Request $request)

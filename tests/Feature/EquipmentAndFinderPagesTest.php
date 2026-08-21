@@ -15,12 +15,12 @@ class EquipmentAndFinderPagesTest extends TestCase
         $response = $this->get(route('equipment.index'));
 
         $response->assertOk();
-        $response->assertSee('Agriculture');
-        $response->assertSee('Construction');
-        $response->assertSee('Industrial & Logistics');
-        $response->assertSee('Solar Power');
-        $response->assertSee('Livestock Scales &amp; Load Cells', false);
-        $response->assertSee('Solar Electric Fence Energizers');
+        $response->assertSee('Livestock Management');
+        $response->assertSee('Site &amp; Construction', false);
+        $response->assertSee('Fleet &amp; Asset Logistics', false);
+        $response->assertSee('Solar &amp; Water Infrastructure', false);
+        $response->assertSee('Scale Indicators &amp; Platform Kits', false);
+        $response->assertSee('Solar Electric Fencing');
     }
 
     public function test_finder_page_renders_with_real_industry_goal_data(): void

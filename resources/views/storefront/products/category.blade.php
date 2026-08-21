@@ -66,4 +66,18 @@
             {{ $products->links() }}
         </div>
     </div>
+
+    @if ($crossDomain->isNotEmpty())
+        <section class="bg-canvas border-t border-border py-14">
+            <div class="max-w-7xl mx-auto px-4">
+                <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-2">Also Sourced by Commercial Buyers</p>
+                <h2 class="font-display font-bold text-xl text-charcoal mb-6">Popular equipment from other domains</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    @foreach ($crossDomain as $i => $product)
+                        @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
 @endsection

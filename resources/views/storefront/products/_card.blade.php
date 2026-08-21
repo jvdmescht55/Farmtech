@@ -80,11 +80,11 @@
         @endif
 
         <p class="mt-2 font-mono font-bold text-lg text-charcoal pointer-events-none">{{ $roundedPrice }}</p>
-        <p class="text-[11px] text-ink-muted -mt-0.5 pointer-events-none">VAT included &middot; Delivered to South Africa</p>
+        <p class="text-[11px] font-semibold text-mint-dark -mt-0.5 pointer-events-none">All-In Landed Pricing &middot; R0 Extra At Door</p>
 
         <div class="mt-2.5 space-y-1 text-[11px] text-ink-secondary pointer-events-none">
-            <p class="flex items-center gap-1.5"><span class="text-mint-dark">✓</span> Import costs included</p>
-            <p class="flex items-center gap-1.5">🚚 {{ $product->lead_time_days }}</p>
+            <p class="flex items-center gap-1.5"><span class="text-mint-dark">✓</span> VAT &amp; duty included</p>
+            <p class="flex items-center gap-1.5">⚡ Express Air-Import &middot; {{ $product->lead_time_days }}</p>
         </div>
 
         <div class="mt-auto pt-3 flex items-center justify-between gap-2 pointer-events-none">

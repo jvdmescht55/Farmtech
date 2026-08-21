@@ -34,7 +34,7 @@
 
     <div class="max-w-7xl mx-auto px-4 py-10">
         @include('storefront.products._filter-panel', [
-            'targetUrl' => route('industry.show', $industry),
+            'targetUrl' => url()->current(),
             'products' => $products, 'sort' => $sort, 'inStock' => $inStock,
             'facets' => $facets, 'selectedSpecs' => $selectedSpecs,
         ])

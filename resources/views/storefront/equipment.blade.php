@@ -13,7 +13,7 @@
             <section class="mt-10">
                 <div class="flex items-baseline justify-between gap-4 mb-4">
                     <h2 class="font-display font-bold text-lg text-brand-900">{{ $industry->label() }}</h2>
-                    <a href="{{ route('industry.show', $industry) }}" class="text-sm font-semibold text-mint-dark hover:text-mint-darker transition flex-shrink-0">View all {{ $industry->label() }} &rarr;</a>
+                    <a href="{{ route('domain.'.$industry->domainSlug()) }}" class="text-sm font-semibold text-mint-dark hover:text-mint-darker transition flex-shrink-0">View all {{ $industry->label() }} &rarr;</a>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     @foreach ($industry->categories() as $category)

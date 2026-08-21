@@ -23,7 +23,7 @@
             <p class="font-display font-semibold text-white text-sm uppercase tracking-wide mb-3">Equipment</p>
             <ul class="text-sm space-y-2 leading-relaxed">
                 @foreach (\App\Enums\Industry::cases() as $footerIndustry)
-                    <li><a href="{{ route('industry.show', $footerIndustry) }}" class="hover:text-mint-light transition">{{ $footerIndustry->label() }}</a></li>
+                    <li><a href="{{ route('domain.'.$footerIndustry->domainSlug()) }}" class="hover:text-mint-light transition">{{ $footerIndustry->label() }}</a></li>
                 @endforeach
                 <li><a href="{{ route('equipment.index') }}" class="hover:text-mint-light transition">Shop by Equipment</a></li>
                 <li><a href="{{ route('finder.index') }}" class="hover:text-mint-light transition">Equipment Finder</a></li>

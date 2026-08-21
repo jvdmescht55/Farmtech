@@ -28,7 +28,7 @@ class Applications
     public static function url(array $application): string
     {
         return $application['target'] instanceof Industry
-            ? route('industry.show', $application['target'])
+            ? route('domain.'.$application['target']->domainSlug())
             : route('category.show', $application['target']);
     }
 

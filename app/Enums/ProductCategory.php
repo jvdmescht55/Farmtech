@@ -51,21 +51,21 @@ enum ProductCategory: string
     public function label(): string
     {
         return match ($this) {
-            self::Scales => 'Livestock Scales & Load Cells',
-            self::Ultrasound => 'Veterinary Ultrasound Scanners',
-            self::Rfid => 'RFID Readers & Ear Tagging',
+            self::Scales => 'Scale Indicators & Platform Kits',
+            self::Ultrasound => 'Veterinary Pregnancy Ultrasound',
+            self::Rfid => 'RFID Tags & Stick Readers',
             self::SmartIrrigation => 'Smart Irrigation Controllers',
             self::Accessories => 'Probes & Accessories',
-            self::LaserLevels => 'Rotary Laser Levels',
+            self::LaserLevels => 'Rotary Laser Levels & Detectors',
             self::MoistureMeters => 'Concrete Moisture Meters',
             self::RebarDetectors => 'Rebar Detectors & Cover Meters',
             self::Theodolites => 'Digital Theodolites',
             self::PlatformScales => 'Crane & Platform Scale Indicators',
-            self::FleetTrackers => 'Fleet GPS / OBD Trackers',
-            self::IndustrialRfid => 'Industrial RFID Gate Scanners',
-            self::SolarPumps => 'Solar Borehole Pumps',
-            self::MpptControllers => 'MPPT Inverter Controllers',
-            self::Fencing => 'Solar Electric Fence Energizers',
+            self::FleetTrackers => 'Real-Time GPS/OBD Trackers',
+            self::IndustrialRfid => 'Industrial RFID Fixed Gate Scanners',
+            self::SolarPumps => 'Submersible Borehole Pumps',
+            self::MpptControllers => 'MPPT Digital Inverter Regulators',
+            self::Fencing => 'Solar Electric Fencing',
         };
     }
 

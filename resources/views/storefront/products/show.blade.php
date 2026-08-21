@@ -89,6 +89,16 @@
                     </div>
                     <p class="text-xs text-ink-secondary font-mono mt-1">Duty {{ $dutyPct }}% + VAT {{ $vatPct }}% already included — nothing extra on delivery</p>
 
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-mint-dark bg-mint/10 rounded-full px-3 py-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            All-In Landed Pricing &middot; R0 Extra At Door
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-alert-dark bg-alert/10 rounded-full px-3 py-1.5">
+                            ⚡ Express Air-Import &middot; {{ $product->lead_time_days }}
+                        </span>
+                    </div>
+
                     <div class="mt-3 text-sm flex items-center gap-2 flex-wrap">
                         @if ($product->stock_status === 'in_stock')
                             <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>In Stock</span>

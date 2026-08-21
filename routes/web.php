@@ -34,6 +34,16 @@ Route::get('/search', [SearchController::class, 'index'])->name('search.index')-
 Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest')->middleware('throttle:search');
 Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
 Route::get('/industry/{industry}', [ProductController::class, 'industry'])->name('industry.show');
+
+// Short "Domain hub" URLs for the 4 industries — same real controller/view as
+// /industry/{industry}, just a friendlier path. The industry route parameter
+// keeps its stable backing value (agriculture/construction/etc.); only the
+// display label and this URL alias changed for the new domain naming.
+foreach (\App\Enums\Industry::cases() as $domainIndustry) {
+    Route::get('/'.$domainIndustry->domainSlug(), [ProductController::class, 'industry'])
+        ->defaults('industry', $domainIndustry->value)
+        ->name('domain.'.$domainIndustry->domainSlug());
+}
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/compare', [CompareController::class, 'data'])->name('compare.data')->middleware('throttle:search');
 Route::get('/equipment', [EquipmentController::class, 'index'])->name('equipment.index');

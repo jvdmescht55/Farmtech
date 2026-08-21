@@ -56,7 +56,7 @@
                          class="absolute left-0 top-full mt-2 w-[640px] max-w-[90vw] card !rounded-xl shadow-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
                         @foreach (\App\Enums\Industry::cases() as $navIndustry)
                             <div>
-                                <a href="{{ route('industry.show', $navIndustry) }}" @click="categoriesOpen = false"
+                                <a href="{{ route('domain.'.$navIndustry->domainSlug()) }}" @click="categoriesOpen = false"
                                    class="block px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-ink-muted hover:text-mint-dark transition">{{ $navIndustry->label() }}</a>
                                 @foreach ($navIndustry->categories() as $navCategory)
                                     <a href="{{ route('category.show', $navCategory) }}" @click="categoriesOpen = false"

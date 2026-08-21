@@ -19,10 +19,21 @@ enum Industry: string
     public function label(): string
     {
         return match ($this) {
-            self::Agriculture => 'Agriculture',
-            self::Construction => 'Construction',
-            self::IndustrialLogistics => 'Industrial & Logistics',
-            self::SolarPower => 'Solar Power',
+            self::Agriculture => 'Livestock Management',
+            self::Construction => 'Site & Construction',
+            self::IndustrialLogistics => 'Fleet & Asset Logistics',
+            self::SolarPower => 'Solar & Water Infrastructure',
+        };
+    }
+
+    /** Short URL segment for the domain hub route (e.g. /livestock) — separate from the DB-backing value, which stays stable for stored data. */
+    public function domainSlug(): string
+    {
+        return match ($this) {
+            self::Agriculture => 'livestock',
+            self::Construction => 'construction',
+            self::IndustrialLogistics => 'logistics',
+            self::SolarPower => 'solar',
         };
     }
 
