@@ -48,7 +48,7 @@
 
                 <div class="relative hidden md:block">
                     <button type="button" @click="categoriesOpen = !categoriesOpen" @click.outside="categoriesOpen = false"
-                            class="flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition">
+                            class="flex items-center gap-1.5 text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition">
                         Equipment
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform" :class="categoriesOpen && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
@@ -57,10 +57,10 @@
                         @foreach (\App\Enums\Industry::cases() as $navIndustry)
                             <div>
                                 <a href="{{ route('industry.show', $navIndustry) }}" @click="categoriesOpen = false"
-                                   class="block px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-slate-400 hover:text-mint-dark transition">{{ $navIndustry->label() }}</a>
+                                   class="block px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-ink-muted hover:text-mint-dark transition">{{ $navIndustry->label() }}</a>
                                 @foreach ($navIndustry->categories() as $navCategory)
                                     <a href="{{ route('category.show', $navCategory) }}" @click="categoriesOpen = false"
-                                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-mint/10 text-slate-700 hover:text-brand-900 transition group">
+                                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-mint/10 text-charcoal hover:text-brand-900 transition group">
                                         <span class="w-7 h-7 rounded-lg bg-brand-900/5 text-brand-900 flex items-center justify-center group-hover:bg-mint/15 group-hover:text-mint-dark transition flex-shrink-0">
                                             <x-category-icon :icon="$navCategory->icon()" class="w-3.5 h-3.5" />
                                         </span>
@@ -69,24 +69,29 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        <div class="col-span-2 sm:col-span-4 border-t border-border mt-2 pt-2 flex items-center justify-between">
+                            <a href="{{ route('equipment.index') }}" @click="categoriesOpen = false" class="text-sm font-semibold text-mint-dark hover:text-mint-darker transition">Browse full catalogue &rarr;</a>
+                            <a href="{{ route('finder.index') }}" @click="categoriesOpen = false" class="text-sm font-semibold text-charcoal hover:text-brand-900 transition">Not sure? Try the Equipment Finder</a>
+                        </div>
                     </div>
                 </div>
 
-                <a href="{{ route('home') }}#shop-by-application" class="hidden md:inline-block text-sm font-semibold text-slate-700 hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition">Solutions</a>
-                <a href="{{ route('how-it-works') }}" class="hidden md:inline-block text-sm font-semibold text-slate-700 hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition">How it works</a>
+                <a href="{{ route('home') }}#shop-by-application" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition">Solutions</a>
+                <a href="{{ route('how-it-works') }}" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition">How it works</a>
 
                 <div class="relative hidden md:block">
                     <button type="button" @click="supportOpen = !supportOpen" @click.outside="supportOpen = false"
-                            class="flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition">
+                            class="flex items-center gap-1.5 text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition">
                         Support
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform" :class="supportOpen && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div x-show="supportOpen" x-transition x-cloak
                          class="absolute left-0 top-full mt-2 w-56 card !rounded-xl shadow-xl p-1.5">
-                        <a href="{{ route('track.index') }}" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-slate-700 hover:text-brand-900 transition">Track your order</a>
-                        <a href="mailto:support@farmtech.co.za" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-slate-700 hover:text-brand-900 transition">Email support</a>
+                        <a href="{{ route('support.index') }}" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-charcoal hover:text-brand-900 transition">Help &amp; FAQ</a>
+                        <a href="{{ route('track.index') }}" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-charcoal hover:text-brand-900 transition">Track your order</a>
+                        <a href="mailto:support@farmtech.co.za" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-charcoal hover:text-brand-900 transition">Email support</a>
                         @if ($whatsappUrl ?? null)
-                            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-slate-700 hover:text-brand-900 transition">WhatsApp us</a>
+                            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="block px-3 py-2.5 rounded-lg hover:bg-mint/10 text-sm text-charcoal hover:text-brand-900 transition">WhatsApp us</a>
                         @endif
                     </div>
                 </div>
@@ -98,7 +103,7 @@
                             <input type="search" name="q" x-model="q" @input.debounce.300ms="suggest()" autocomplete="off"
                                    placeholder="Search equipment, models &amp; specs…"
                                    class="w-full border border-border bg-white rounded-full pl-5 pr-11 py-2.5 text-sm text-center focus:text-left focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint transition">
-                            <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-mint-dark hover:bg-mint/10 transition">
+                            <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-mint-dark hover:bg-mint/10 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             </button>
                         </div>
@@ -109,13 +114,13 @@
                          class="absolute left-0 right-0 top-full mt-2 card !rounded-xl shadow-xl overflow-hidden max-h-[70vh] overflow-y-auto">
                         <template x-if="products.length > 0">
                             <div class="py-2">
-                                <p class="px-4 pt-1 pb-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-400">Products</p>
+                                <p class="px-4 pt-1 pb-1.5 text-[10px] font-mono uppercase tracking-widest text-ink-muted">Products</p>
                                 <template x-for="item in products" :key="item.url">
                                     <a :href="item.url" class="flex items-center gap-3 px-4 py-2.5 hover:bg-mint/5 transition">
-                                        <img :src="item.image" x-show="item.image" x-on:error="item.image = null" class="w-9 h-9 rounded-lg object-cover bg-slate-100 flex-shrink-0" alt="">
+                                        <img :src="item.image" x-show="item.image" x-on:error="item.image = null" class="w-9 h-9 rounded-lg object-cover bg-canvas flex-shrink-0" alt="">
                                         <div class="min-w-0">
-                                            <p class="text-sm font-medium text-slate-800 truncate" x-text="item.title"></p>
-                                            <p class="text-xs text-slate-500" x-text="item.category + ' · R' + item.price"></p>
+                                            <p class="text-sm font-medium text-charcoal truncate" x-text="item.title"></p>
+                                            <p class="text-xs text-ink-secondary" x-text="item.category + ' · R' + item.price"></p>
                                         </div>
                                     </a>
                                 </template>
@@ -123,17 +128,17 @@
                         </template>
                         <template x-if="categories.length > 0">
                             <div class="py-2 border-t border-border">
-                                <p class="px-4 pt-1 pb-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-400">Categories</p>
+                                <p class="px-4 pt-1 pb-1.5 text-[10px] font-mono uppercase tracking-widest text-ink-muted">Categories</p>
                                 <template x-for="item in categories" :key="item.url">
-                                    <a :href="item.url" class="block px-4 py-2 text-sm text-slate-700 hover:bg-mint/5 hover:text-brand-900 transition" x-text="item.label"></a>
+                                    <a :href="item.url" class="block px-4 py-2 text-sm text-charcoal hover:bg-mint/5 hover:text-brand-900 transition" x-text="item.label"></a>
                                 </template>
                             </div>
                         </template>
                         <template x-if="applications.length > 0">
                             <div class="py-2 border-t border-border">
-                                <p class="px-4 pt-1 pb-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-400">Applications</p>
+                                <p class="px-4 pt-1 pb-1.5 text-[10px] font-mono uppercase tracking-widest text-ink-muted">Applications</p>
                                 <template x-for="item in applications" :key="item.url">
-                                    <a :href="item.url" class="block px-4 py-2 text-sm text-slate-700 hover:bg-mint/5 hover:text-brand-900 transition" x-text="item.label"></a>
+                                    <a :href="item.url" class="block px-4 py-2 text-sm text-charcoal hover:bg-mint/5 hover:text-brand-900 transition" x-text="item.label"></a>
                                 </template>
                             </div>
                         </template>
@@ -157,10 +162,10 @@
             <nav class="flex md:hidden items-center gap-5 text-sm font-semibold pb-3 -mt-1 overflow-x-auto">
                 @foreach (\App\Enums\Industry::cases() as $navIndustry)
                     @foreach ($navIndustry->categories() as $navCategory)
-                        <a href="{{ route('category.show', $navCategory) }}" class="text-slate-600 hover:text-mint-dark transition whitespace-nowrap">{{ $navCategory->shortLabel() }}</a>
+                        <a href="{{ route('category.show', $navCategory) }}" class="text-ink-secondary hover:text-mint-dark transition whitespace-nowrap">{{ $navCategory->shortLabel() }}</a>
                     @endforeach
                     @if (!$loop->last)
-                        <span class="text-slate-300 flex-shrink-0" aria-hidden="true">|</span>
+                        <span class="text-ink-muted flex-shrink-0" aria-hidden="true">|</span>
                     @endif
                 @endforeach
             </nav>
@@ -202,7 +207,7 @@
         <div @click.stop class="card !rounded-xl max-w-sm w-full p-6" x-transition.scale.origin.center>
             <div class="flex items-start justify-between gap-3 mb-3">
                 <h3 class="font-display font-bold text-lg text-charcoal">What does Farmtech Verified mean?</h3>
-                <button type="button" @click="$store.verifiedModal.open = false" aria-label="Close" class="flex-shrink-0 text-slate-400 hover:text-charcoal transition">
+                <button type="button" @click="$store.verifiedModal.open = false" aria-label="Close" class="flex-shrink-0 text-ink-muted hover:text-charcoal transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
@@ -212,7 +217,7 @@
                 <li class="flex gap-2"><span class="text-mint-dark flex-shrink-0">✓</span> Specifications reviewed</li>
                 <li class="flex gap-2"><span class="text-mint-dark flex-shrink-0">✓</span> Import requirements assessed where applicable</li>
             </ul>
-            <p class="text-xs text-slate-400 mt-4 pt-4 border-t border-border">AI-assisted supplier and product verification, with human review before anything is approved for sale.</p>
+            <p class="text-xs text-ink-muted mt-4 pt-4 border-t border-border">AI-assisted supplier and product verification, with human review before anything is approved for sale.</p>
         </div>
     </div>
 
@@ -222,7 +227,7 @@
          class="fixed inset-0 z-50 bg-brand-950/60 flex items-center justify-center p-4" @click="$store.quickView.close()">
         <template x-if="$store.quickView.product">
             <div @click.stop class="card !rounded-xl max-w-lg w-full overflow-hidden" x-transition.scale.origin.center>
-                <div class="relative aspect-[16/10] bg-slate-50">
+                <div class="relative aspect-[16/10] bg-canvas">
                     <img :src="$store.quickView.product.image" x-show="$store.quickView.product.image"
                          x-on:error="$store.quickView.product.image = null" class="w-full h-full object-contain p-6" alt="">
                     <div x-show="!$store.quickView.product.image" class="absolute inset-0 flex items-center justify-center text-ink-muted text-sm">
@@ -257,7 +262,7 @@
          class="fixed bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-border rounded-full shadow-lg pl-2 pr-1.5 py-1.5 flex items-center gap-3 max-w-[92vw]">
         <div class="flex items-center -space-x-2 flex-shrink-0">
             <template x-for="item in $store.compare.items" :key="item.id">
-                <div class="w-9 h-9 rounded-full border-2 border-white bg-slate-100 overflow-hidden flex-shrink-0">
+                <div class="w-9 h-9 rounded-full border-2 border-white bg-canvas overflow-hidden flex-shrink-0">
                     <img :src="item.image" x-show="item.image" x-on:error="item.image = null" class="w-full h-full object-cover" alt="">
                 </div>
             </template>
@@ -270,7 +275,7 @@
             Compare now
         </button>
         <button type="button" @click="$store.compare.clear()" aria-label="Clear compare selection"
-                class="w-8 h-8 rounded-full flex items-center justify-center text-ink-muted hover:text-charcoal hover:bg-slate-100 transition flex-shrink-0">
+                class="w-8 h-8 rounded-full flex items-center justify-center text-ink-muted hover:text-charcoal hover:bg-canvas transition flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
     </div>
@@ -283,7 +288,7 @@
              class="fixed inset-y-0 right-0 z-50 w-full sm:w-[90vw] lg:w-[75vw] max-w-4xl bg-white shadow-2xl overflow-y-auto">
             <div class="sticky top-0 bg-white border-b border-border px-5 py-4 flex items-center justify-between z-10">
                 <h2 class="font-display font-bold text-lg text-charcoal">Compare equipment</h2>
-                <button type="button" @click="$store.compare.closeDrawer()" aria-label="Close" class="w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-charcoal hover:bg-slate-100 transition">
+                <button type="button" @click="$store.compare.closeDrawer()" aria-label="Close" class="w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-charcoal hover:bg-canvas transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
@@ -306,7 +311,7 @@
                                 <th class="text-left align-bottom pb-3 pr-4 w-40 flex-shrink-0"></th>
                                 <template x-for="product in $store.compare.data?.products ?? []" :key="product.id">
                                     <th class="align-bottom pb-3 px-3 min-w-[180px] text-left">
-                                        <div class="w-full aspect-square bg-slate-50 border border-border rounded-lg overflow-hidden mb-2">
+                                        <div class="w-full aspect-square bg-canvas border border-border rounded-lg overflow-hidden mb-2">
                                             <img :src="product.image" x-show="product.image" x-on:error="product.image = null" class="w-full h-full object-contain p-3" alt="">
                                         </div>
                                         <a :href="product.url" class="font-semibold text-charcoal hover:text-mint-dark transition line-clamp-2" x-text="product.title"></a>

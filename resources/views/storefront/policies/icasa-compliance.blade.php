@@ -6,7 +6,7 @@
     <div class="max-w-3xl mx-auto px-4 py-16 prose prose-slate prose-headings:font-display max-w-none">
         <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-1 not-prose">Legal &amp; Compliance</p>
         <h1 class="font-display font-bold text-2xl sm:text-3xl text-brand-900 mb-1 not-prose">ICASA &amp; ISO Compliance</h1>
-        <p class="text-sm text-slate-500 mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
+        <p class="text-sm text-ink-secondary mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
 
         <p>Certain radio-emitting and electronic products sold in South Africa require regulatory compliance under ICASA and related standards. Not every product on Farmtech is subject to the same requirements — this page explains what applies to what, and every product page shows the specific checks recorded for that item.</p>
 

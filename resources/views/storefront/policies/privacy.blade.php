@@ -6,7 +6,7 @@
     <div class="max-w-3xl mx-auto px-4 py-16 prose prose-slate prose-headings:font-display max-w-none">
         <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-1 not-prose">Legal &amp; Compliance</p>
         <h1 class="font-display font-bold text-2xl sm:text-3xl text-charcoal mb-1 not-prose">Privacy Policy</h1>
-        <p class="text-sm text-slate-500 mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
+        <p class="text-sm text-ink-secondary mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
 
         <p>This policy explains what personal information Farmtech collects when you use this site, and what it's used for.</p>
 
@@ -31,7 +31,7 @@
         <h2>Your Rights</h2>
         <p>You can ask what personal information we hold about you, or ask us to correct or delete it, by emailing <a href="mailto:support@farmtech.co.za">support@farmtech.co.za</a>.</p>
 
-        <hr class="not-prose my-8 border-slate-200">
+        <hr class="not-prose my-8 border-border">
         <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
             <p class="font-semibold mb-1">For the operator to complete before this page goes live:</p>
             <p>Registered entity name: <strong>[Company Registration Pending]</strong> · Data protection contact/officer, if applicable under POPIA: <strong>[To be added]</strong></p>

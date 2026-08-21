@@ -114,6 +114,12 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    /** Real, admin-curated "Frequently Bought Together" companions — never inferred. */
+    public function bundleCompanions()
+    {
+        return $this->belongsToMany(Product::class, 'product_bundle_items', 'product_id', 'companion_product_id');
+    }
+
     public function scopeStatus(Builder $query, string $status): Builder
     {
         return $query->where('status', $status);

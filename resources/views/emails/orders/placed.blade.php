@@ -8,11 +8,11 @@ confirmed, and again when it ships.
 | Item | Qty | Price |
 |:-----|:---:|------:|
 @foreach ($order->items as $item)
-| {{ $item->title_snapshot }} | {{ $item->quantity }} | R{{ number_format((float) $item->line_total_zar, 2) }} |
+| {{ $item->title_snapshot }} | {{ $item->quantity }} | R{{ number_format((float) $item->line_total_zar, 0, '', ' ') }} |
 @endforeach
 @endcomponent
 
-**Total (incl. SA import duty & 15% VAT): R{{ number_format((float) $order->total_zar, 2) }}**
+**Total (incl. SA import duty & 15% VAT): R{{ number_format((float) $order->total_zar, 0, '', ' ') }}**
 
 Nothing extra to pay on delivery — duties and VAT are already included above.
 

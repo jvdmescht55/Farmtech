@@ -34,7 +34,7 @@
     $toneClasses = [
         'green' => 'bg-emerald-50 border-emerald-200 text-emerald-800',
         'amber' => 'bg-precision/10 border-precision/30 text-precision-dark',
-        'slate' => 'bg-slate-100 border-slate-200 text-slate-600',
+        'slate' => 'bg-canvas border-border text-ink-secondary',
     ];
 @endphp
 

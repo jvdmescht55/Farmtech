@@ -3,13 +3,13 @@
 @section('title', 'How Farmtech Works — Sourcing, Import & Delivery')
 
 @section('content')
-    <div class="bg-canvas border-b border-slate-200">
+    <div class="bg-canvas border-b border-border">
         <div class="max-w-4xl mx-auto px-4 py-16 text-center">
             <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">How It Works</p>
             <h1 class="font-display font-extrabold text-3xl sm:text-4xl text-charcoal leading-tight mb-4">
                 Global equipment. Local confidence.
             </h1>
-            <p class="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto">
+            <p class="text-ink-secondary text-lg leading-relaxed max-w-2xl mx-auto">
                 We verify suppliers, check product specifications and handle the import process —
                 so you know exactly what you're buying and exactly what you'll pay.
             </p>
@@ -29,7 +29,7 @@
                     <span class="font-mono text-3xl sm:text-4xl font-bold text-mint/40 flex-shrink-0">{{ $step['n'] }}</span>
                     <div>
                         <h2 class="font-display font-bold text-xl text-charcoal mb-1.5">{{ $step['title'] }}</h2>
-                        <p class="text-slate-600 leading-relaxed">{{ $step['body'] }}</p>
+                        <p class="text-ink-secondary leading-relaxed">{{ $step['body'] }}</p>
                     </div>
                 </div>
             @endforeach
@@ -58,7 +58,7 @@
     {{-- Why Farmtech --}}
     <div class="max-w-5xl mx-auto px-4 py-20">
         <h2 class="font-display font-bold text-2xl text-charcoal text-center mb-2">Why buy through Farmtech?</h2>
-        <p class="text-slate-600 text-center max-w-xl mx-auto mb-12">AI-assisted supplier and product verification, with a fixed set of checks every listing has to pass — not a marketing claim, a process.</p>
+        <p class="text-ink-secondary text-center max-w-xl mx-auto mb-12">AI-assisted supplier and product verification, with a fixed set of checks every listing has to pass — not a marketing claim, a process.</p>
         <div class="grid sm:grid-cols-2 gap-x-10 gap-y-10">
             @foreach ([
                 ['n' => '01', 'title' => 'Supplier verified', 'body' => 'Listings from suppliers with a short trading history, no verified-account status, or no trade assurance are flagged before anything goes live.'],
@@ -69,7 +69,7 @@
                 <div>
                     <span class="font-mono text-sm text-mint-dark font-bold">{{ $item['n'] }}</span>
                     <h3 class="font-display font-bold text-lg text-charcoal mt-1 mb-1.5">{{ $item['title'] }}</h3>
-                    <p class="text-slate-600 leading-relaxed text-sm">{{ $item['body'] }}</p>
+                    <p class="text-ink-secondary leading-relaxed text-sm">{{ $item['body'] }}</p>
                 </div>
             @endforeach
         </div>

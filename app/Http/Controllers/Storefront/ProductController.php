@@ -113,7 +113,9 @@ class ProductController extends Controller
     {
         abort_unless($product->status === 'approved' && $product->is_active, 404);
 
-        $product->load(['images', 'specs', 'complianceAudit']);
+        $product->load(['images', 'specs', 'complianceAudit', 'bundleCompanions' => function ($query) {
+            $query->storefrontVisible()->with(['thumbnail', 'complianceAudit', 'specs']);
+        }]);
 
         $related = Product::storefrontVisible()
             ->category($product->category->value)
@@ -121,6 +123,22 @@ class ProductController extends Controller
             ->with(['thumbnail', 'complianceAudit', 'specs'])
             ->limit(4)
             ->get();
+
+        // Same-category alone often has fewer than 4 real products — real
+        // parent-industry items fill the rest rather than showing a half-
+        // empty grid, never a different product's category faked as this one.
+        if ($related->count() < 4) {
+            $needed = 4 - $related->count();
+            $industryFill = Product::storefrontVisible()
+                ->industry($product->category->industry())
+                ->where('id', '!=', $product->id)
+                ->whereNotIn('id', $related->pluck('id'))
+                ->with(['thumbnail', 'complianceAudit', 'specs'])
+                ->limit($needed)
+                ->get();
+
+            $related = $related->concat($industryFill);
+        }
 
         return view('storefront.products.show', [
             'product' => $product,

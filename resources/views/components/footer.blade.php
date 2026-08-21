@@ -3,12 +3,12 @@
     $whatsappUrl = $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null;
 @endphp
 
-<footer class="bg-brand-950 text-slate-300">
+<footer class="bg-brand-950 text-ink-muted">
     <div class="max-w-7xl mx-auto px-4 py-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
         {{-- Column 1: Brand & Assurance --}}
         <div>
             <p class="font-display font-bold text-lg text-white mb-2">Farm<span class="text-mint">tech</span></p>
-            <p class="text-sm leading-relaxed text-slate-400">Professional agricultural &amp; industrial equipment, sourced globally and delivered locally.</p>
+            <p class="text-sm leading-relaxed text-ink-muted">Professional agricultural &amp; industrial equipment, sourced globally and delivered locally.</p>
             @if ($whatsappUrl)
                 <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener"
                    class="inline-flex items-center gap-2 mt-4 bg-white/10 border border-white/15 hover:bg-white/15 rounded-full px-3.5 py-2 text-xs font-semibold text-white transition">
@@ -25,6 +25,8 @@
                 @foreach (\App\Enums\Industry::cases() as $footerIndustry)
                     <li><a href="{{ route('industry.show', $footerIndustry) }}" class="hover:text-mint-light transition">{{ $footerIndustry->label() }}</a></li>
                 @endforeach
+                <li><a href="{{ route('equipment.index') }}" class="hover:text-mint-light transition">Shop by Equipment</a></li>
+                <li><a href="{{ route('finder.index') }}" class="hover:text-mint-light transition">Equipment Finder</a></li>
             </ul>
         </div>
 
@@ -32,10 +34,11 @@
         <div>
             <p class="font-display font-semibold text-white text-sm uppercase tracking-wide mb-3">Support</p>
             <ul class="text-sm space-y-2 leading-relaxed">
+                <li><a href="{{ route('support.index') }}" class="hover:text-mint-light transition">Help &amp; FAQ</a></li>
                 <li><a href="{{ route('track.index') }}" class="hover:text-mint-light transition">Track order</a></li>
                 <li><a href="{{ route('policies.terms') }}#delivery" class="hover:text-mint-light transition">Delivery</a></li>
                 <li><a href="{{ route('policies.returns') }}" class="hover:text-mint-light transition">Returns &amp; warranty</a></li>
-                <li><a href="mailto:support@farmtech.co.za" class="hover:text-mint-light transition">Contact</a></li>
+                <li><a href="{{ route('support.index') }}" class="hover:text-mint-light transition">Contact</a></li>
             </ul>
         </div>
 
@@ -52,10 +55,10 @@
         </div>
     </div>
     <div class="border-t border-white/10">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ink-secondary">
             <p>&copy; {{ date('Y') }} Farmtech</p>
-            <details class="text-slate-500">
-                <summary class="cursor-pointer hover:text-slate-300 transition list-none">Photo credits</summary>
+            <details class="text-ink-secondary">
+                <summary class="cursor-pointer hover:text-ink-muted transition list-none">Photo credits</summary>
                 <ul class="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-1 text-left">
                     @foreach (\App\Enums\ProductCategory::cases() as $creditCategory)
                         @php($img = $creditCategory->image())

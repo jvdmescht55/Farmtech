@@ -9,7 +9,7 @@
         <div class="bg-white border rounded-xl p-6 text-left">
             <div class="flex justify-between text-sm mb-2">
                 <span class="text-gray-500">Order Total</span>
-                <span class="font-semibold">R{{ number_format($order->total_zar, 2) }}</span>
+                <span class="font-semibold">R{{ number_format($order->total_zar, 0, '', ' ') }}</span>
             </div>
             <div class="flex justify-between text-sm">
                 <span class="text-gray-500">Status</span>

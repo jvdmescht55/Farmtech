@@ -41,7 +41,7 @@ class ProductController extends Controller
     /** Product review panel: specs/compliance sidebar + financial breakdown. */
     public function show(Product $product)
     {
-        $product->load(['specs', 'images', 'complianceAudit']);
+        $product->load(['specs', 'images', 'complianceAudit', 'bundleCompanions']);
 
         $calculator = $this->calculator();
         $usdZarRate = \App\Models\ExchangeRate::latestRate('USDZAR') ?? 18.50;
@@ -94,17 +94,31 @@ class ProductController extends Controller
             'allow_backorder' => ['sometimes', 'boolean'],
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
             'included_items' => ['nullable', 'string', 'max:2000'],
+            'bundle_skus' => ['nullable', 'string', 'max:255'],
         ]);
 
         $validated['allow_backorder'] = $request->boolean('allow_backorder');
 
         // One item per line in the textarea, stored as a real JSON array —
-        // blank lines dropped, nothing invented when the field is left empty.
-        $validated['included_items'] = $validated['included_items']
+        // blank lines dropped, nothing invented when the field is left empty
+        // or omitted entirely (a partial API PATCH may not send it at all).
+        $validated['included_items'] = ! empty($validated['included_items'] ?? null)
             ? array_values(array_filter(array_map('trim', explode("\n", $validated['included_items']))))
             : null;
 
+        $bundleSkus = array_values(array_filter(array_map('trim', explode(',', $validated['bundle_skus'] ?? ''))));
+        unset($validated['bundle_skus']);
+
         $product->update($validated);
+
+        // Real companion products only — unrecognized SKUs are silently
+        // dropped rather than erroring, since a typo shouldn't block saving
+        // the rest of the form. Capped at 2, self-reference excluded.
+        $companionIds = Product::whereIn('sku', $bundleSkus)
+            ->where('id', '!=', $product->id)
+            ->limit(2)
+            ->pluck('id');
+        $product->bundleCompanions()->sync($companionIds);
 
         return back()->with('status', 'Product updated.');
     }

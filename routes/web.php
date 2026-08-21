@@ -11,12 +11,15 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CompareController;
+use App\Http\Controllers\Storefront\EquipmentController;
+use App\Http\Controllers\Storefront\FinderController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\PaymentWebhookController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\HowItWorksController;
 use App\Http\Controllers\Storefront\PolicyController;
 use App\Http\Controllers\Storefront\SearchController;
+use App\Http\Controllers\Storefront\SupportController;
 use App\Http\Controllers\Storefront\TrackOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +36,8 @@ Route::get('/category/{category}', [ProductController::class, 'category'])->name
 Route::get('/industry/{industry}', [ProductController::class, 'industry'])->name('industry.show');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/compare', [CompareController::class, 'data'])->name('compare.data')->middleware('throttle:search');
+Route::get('/equipment', [EquipmentController::class, 'index'])->name('equipment.index');
+Route::get('/finder', [FinderController::class, 'index'])->name('finder.index');
 
 Route::middleware('throttle:cart')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -50,6 +55,9 @@ Route::get('/how-it-works', [HowItWorksController::class, 'index'])->name('how-i
 
 Route::get('/track', [TrackOrderController::class, 'index'])->name('track.index');
 Route::post('/track', [TrackOrderController::class, 'show'])->name('track.show')->middleware('throttle:track');
+
+Route::get('/support', [SupportController::class, 'index'])->name('support.index');
+Route::post('/support', [SupportController::class, 'store'])->name('support.store')->middleware('throttle:support');
 
 Route::get('/policies/returns', [PolicyController::class, 'returns'])->name('policies.returns');
 Route::get('/policies/terms', [PolicyController::class, 'terms'])->name('policies.terms');

@@ -19,7 +19,7 @@ class NewOrderAdminAlertMailable extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "New paid order — {$this->order->order_number} (R".number_format((float) $this->order->total_zar, 2).')',
+            subject: "New paid order — {$this->order->order_number} (R".number_format((float) $this->order->total_zar, 0, '', ' ').')',
         );
     }
 

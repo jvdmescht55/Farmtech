@@ -10,14 +10,17 @@ use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
+    private const SORTS = ['newest', 'price_asc', 'price_desc', 'popularity'];
+
     public function index(Request $request)
     {
         $query = trim((string) $request->query('q', ''));
+        $sort = in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : 'newest';
 
         $products = collect();
 
         if ($query !== '') {
-            $products = Product::storefrontVisible()
+            $productsQuery = Product::storefrontVisible()
                 ->with(['thumbnail', 'complianceAudit', 'specs'])
                 ->where(function ($q) use ($query) {
                     $q->where('title', 'like', "%{$query}%")
@@ -31,15 +34,22 @@ class SearchController extends Controller
                             $specQuery->where('spec_value', 'like', "%{$query}%")
                                 ->orWhere('spec_key', 'like', "%{$query}%");
                         });
-                })
-                ->latest()
-                ->paginate(12)
-                ->withQueryString();
+                });
+
+            match ($sort) {
+                'price_asc' => $productsQuery->orderBy('retail_price_zar'),
+                'price_desc' => $productsQuery->orderByDesc('retail_price_zar'),
+                'popularity' => $productsQuery->withSum('orderItems as units_sold', 'quantity')->orderByDesc('units_sold')->orderByDesc('created_at'),
+                default => $productsQuery->latest(),
+            };
+
+            $products = $productsQuery->paginate(12)->withQueryString();
         }
 
         return view('storefront.search', [
             'query' => $query,
             'products' => $products,
+            'sort' => $sort,
         ]);
     }
 
@@ -72,7 +82,7 @@ class SearchController extends Controller
             ->map(fn (Product $product) => [
                 'title' => $product->title,
                 'category' => $product->category_label,
-                'price' => number_format((float) $product->retail_price_zar, 2),
+                'price' => number_format((float) $product->retail_price_zar, 0, '', ' '),
                 'url' => route('products.show', $product),
                 'image' => $product->thumbnail?->url,
             ]);

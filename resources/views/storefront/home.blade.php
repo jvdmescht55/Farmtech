@@ -87,12 +87,12 @@
 
     {{-- Popular equipment — real units-sold data, given its own proper section rather than a bolted-on strip --}}
     @if ($trending->isNotEmpty())
-        <section class="bg-canvas border-y border-slate-200 py-20 sm:py-24">
+        <section class="bg-canvas border-y border-border py-20 sm:py-24">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="max-w-2xl mb-10">
                     <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Popular Equipment</p>
                     <h2 class="font-display font-bold text-3xl text-charcoal mb-2">Equipment South African buyers are choosing</h2>
-                    <p class="text-slate-600">Ranked by real units sold — not a promoted placement.</p>
+                    <p class="text-ink-secondary">Ranked by real units sold — not a promoted placement.</p>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
                     @foreach ($trending as $i => $product)
@@ -119,7 +119,7 @@
                 <div>
                     <span class="font-mono text-sm text-mint-dark font-bold">{{ $item['n'] }}</span>
                     <h3 class="font-display font-bold text-lg text-charcoal mt-1.5 mb-1.5">{{ $item['title'] }}</h3>
-                    <p class="text-slate-600 leading-relaxed text-sm">{{ $item['body'] }}</p>
+                    <p class="text-ink-secondary leading-relaxed text-sm">{{ $item['body'] }}</p>
                 </div>
             @endforeach
         </div>
@@ -230,15 +230,15 @@
         <section class="mb-20 sm:mb-24">
             <div class="flex items-baseline justify-between mb-6">
                 <h2 class="font-display font-bold text-2xl sm:text-3xl text-charcoal">Latest Equipment</h2>
-                <span class="text-xs text-slate-500 font-mono">{{ $featured->count() }} listed</span>
+                <span class="text-xs text-ink-secondary font-mono">{{ $featured->count() }} listed</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                 @forelse ($featured as $i => $product)
                     @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
                 @empty
-                    <div class="col-span-full border border-dashed border-slate-300 rounded-2xl p-10 text-center">
+                    <div class="col-span-full border border-dashed border-border rounded-xl p-10 text-center">
                         <p class="text-charcoal font-semibold">No products published yet.</p>
-                        <p class="text-slate-600 text-sm mt-1">Check back soon — new listings go through compliance checks before they appear here.</p>
+                        <p class="text-ink-secondary text-sm mt-1">Check back soon — new listings go through compliance checks before they appear here.</p>
                     </div>
                 @endforelse
             </div>

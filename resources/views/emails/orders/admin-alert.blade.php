@@ -1,13 +1,13 @@
 @component('mail::message')
 # New paid order — {{ $order->order_number }}
 
-**{{ $order->customer_name }}** ({{ $order->email }}, {{ $order->phone }}) — R{{ number_format((float) $order->total_zar, 2) }} via {{ ucfirst($order->payment_gateway ?? 'unknown gateway') }}
+**{{ $order->customer_name }}** ({{ $order->email }}, {{ $order->phone }}) — R{{ number_format((float) $order->total_zar, 0, '', ' ') }} via {{ ucfirst($order->payment_gateway ?? 'unknown gateway') }}
 
 @component('mail::table')
 | Item | SKU | Qty | Line Total |
 |:-----|:----|:---:|-----------:|
 @foreach ($order->items as $item)
-| {{ $item->title_snapshot }} | {{ $item->product?->sku ?? '—' }} | {{ $item->quantity }} | R{{ number_format((float) $item->line_total_zar, 2) }} |
+| {{ $item->title_snapshot }} | {{ $item->product?->sku ?? '—' }} | {{ $item->quantity }} | R{{ number_format((float) $item->line_total_zar, 0, '', ' ') }} |
 @endforeach
 @endcomponent
 

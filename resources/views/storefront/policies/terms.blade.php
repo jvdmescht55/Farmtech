@@ -6,7 +6,7 @@
     <div class="max-w-3xl mx-auto px-4 py-16 prose prose-slate prose-headings:font-display max-w-none">
         <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-1 not-prose">Legal &amp; Compliance</p>
         <h1 class="font-display font-bold text-2xl sm:text-3xl text-brand-900 mb-1 not-prose">Terms of Sale</h1>
-        <p class="text-sm text-slate-500 mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
+        <p class="text-sm text-ink-secondary mb-8 not-prose">Last updated {{ now()->format('j F Y') }}</p>
 
         <h2>1. Who You're Buying From</h2>
         <p>Farmtech ("we", "us") sells commercial and industrial equipment imported from overseas suppliers to buyers in South Africa. By placing an order on this site, you agree to these terms.</p>
@@ -32,7 +32,7 @@
         <h2>8. Governing Law</h2>
         <p>These terms are governed by the laws of the Republic of South Africa.</p>
 
-        <hr class="not-prose my-8 border-slate-200">
+        <hr class="not-prose my-8 border-border">
         <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
             <p class="font-semibold mb-1">For the operator to complete before this page goes live:</p>
             <p>Registered entity name: <strong>[Company Registration Pending]</strong> · Company registration number: <strong>[To be added]</strong> · Registered address: <strong>[To be added]</strong></p>

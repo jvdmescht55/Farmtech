@@ -1,9 +1,48 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 13 — P1 PDP overhaul: collapsible spec accordion, a real Equipment
-Manifest field, a consolidated mobile purchase bar, a Quick View modal and up-to-3 Compare drawer
-for catalog cards, and a token sweep of the admin review panel / modals / checkout layout).
-What changed since rev. 12: the PDP's spec groups (already real, pipeline-assigned `spec_group`
+Last updated: 2026-08-21 (rev. 14 — production-readiness pass: a full "Shop by Equipment" catalogue
+page, a 3-step Equipment Finder wizard, a Support/FAQ page with a real contact form, real
+"Frequently Bought Together" bundles, a sitewide legacy-token and price-rounding sweep, a locked-
+token pagination view, sort-label standardization (including adding sort to search), real DB
+indexing, and an honest audit of mail/courier/CI readiness — see [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
+for the concrete go-live checklist this pass produced).
+What changed since rev. 13: this was requested as "execute the complete remaining scope... to bring
+Farmtech to 100% production readiness," a genuinely enormous ask covering roughly 20 distinct
+sub-features across catalog browsing, design-token consistency, new interactive tools, and
+operational infrastructure. Delivered in full: **Shop by Equipment** (`/equipment`, all 15 real
+categories grouped under all 4 real industries, new 16:10 `<x-category-tile>` component with a live
+onerror fallback to the category's own blueprint icon — same three-state principle as
+`<x-product-image>`, not a new pattern); **Equipment Finder** (`/finder`, a real 3-step
+industry→goal→results wizard built entirely from `Industry`/`ProductCategory` enum data, ending in a
+link to the existing, already-tested `/category` page rather than a second product-listing
+implementation); **Support & FAQ** (`/support`, an accordion of facts already established elsewhere
+on the site — CPA return window, VAT/duty-inclusive pricing, vetting process — plus a real contact
+form that emails `config('farmtech.admin_notification_email')` via a new `SupportRequestMailable`,
+not a stub); **Frequently Bought Together** (a genuinely new `product_bundle_items` table, admin-
+curated via up to 2 SKUs per product — never an inferred/analytics suggestion, since this catalog
+has no real repeat-purchase history to infer one from — hidden entirely on a product's page until an
+admin actually sets one); a **sitewide sweep** of `text-slate-*`/`bg-slate-*`/`border-slate-*`/
+`rounded-2xl` (166 occurrences across 21 files) to the locked `text-charcoal`/`text-ink-secondary`/
+`text-ink-muted`/`bg-canvas`/`border-border`/`rounded-xl` tokens, and of every customer-facing
+2-decimal ZAR price (cart, checkout, PDP, order-confirmation emails, the trending strip, search
+typeahead) to the already-established whole-rand format; a **locked-token pagination view**
+(`vendor/pagination/farmtech.blade.php`, numeric buttons + arrows, set as the app default) replacing
+Laravel's unstyled default on every paginated grid; **sort-label standardization** ("Newest
+Arrivals"/"Most Popular") plus **adding sort to search results**, which had none before; a **real
+DB-indexing pass** (not just a checklist suggestion — see §3 of the production checklist) after
+finding `products(status,is_active)`, `product_specs(spec_key)`, and both `orders` filter columns had
+no supporting index; and an **honest operational audit** of mail (all 5 Mailables proven to compile
+via a new render-test), courier tracking (deep-linking with the real tracking number was attempted
+via live lookups against Courier Guy and DHL, both blocked by bot protection — left as the existing
+safe homepage-link behavior rather than guessing an unverified URL format, exactly per this
+service's own standing principle), and CI (workflow re-verified to still mirror local commands; a
+real GitHub Actions run remains something this sandbox cannot perform). **One real bug found and
+fixed by this pass's own new tests, not by manual QA**: `AdminProductController::update()` crashed
+with a 500 on `Undefined array key "included_items"` whenever that field was absent from the
+request entirely (never triggered by the real browser form, which always submits it, but a genuine
+latent bug for any direct API-style PATCH) — found by `ProductBundleUpdateTest`, fixed with a
+null-coalesce instead of an assumed-present array key.
+What changed since rev. 12 (rev. 13's own summary): the PDP's spec groups (already real, pipeline-assigned `spec_group`
 values — no renaming needed) became a collapsible accordion instead of a flat always-open list; a
 new "What's Included" tab shows a real, admin-entered Equipment Manifest (a genuinely new
 `products.included_items` JSON column, nullable — most existing products have never had this
@@ -86,6 +125,107 @@ reskin; rev. 7 added the multi-industry expansion, Value-Density Feasibility Eng
 Trending strip; rev. 6 added the arbitrage engine, profit transparency, and image quality gate; rev.
 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront
 redesign. See [README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 14)
+
+- **Shop by Equipment (`/equipment`)** — all 15 real categories under all 4 real industries, each a
+  16:10 `<x-category-tile>` with a live `onerror` fallback to the category's own blueprint icon on a
+  dot-grid (reusing `<x-product-image-fallback>`, not a new component). Linked from the header
+  mega-menu, footer, and the Equipment Finder's own dead-end. Verified live: real Wikimedia photo
+  URLs load, `getBoundingClientRect()` confirms the actual rendered aspect ratio is 16:10. 2 new
+  tests (`EquipmentAndFinderPagesTest`).
+- **Equipment Finder (`/finder`)** — a real 3-step wizard (industry → goal → results), built from
+  `Industry::cases()`/`->categories()` with each category's own real `label()`/`description()` as the
+  "goal" copy, never invented marketing text. Step 3 links straight into the existing, already-tested
+  `/category/{category}` page — no second product-listing implementation. Verified live end-to-end
+  via the real `@click` handler path (industry → 5 real Agriculture goals → "Livestock Scales & Load
+  Cells" → confirmed the "See equipment" link resolves to the real `/category/scales` URL). **One
+  false alarm caught during verification, not a real bug**: state updates appeared stuck for several
+  checks in a row because this sandbox's Browser pane wasn't actively displayed/foregrounded, and
+  Alpine's `x-transition` depends on real CSS-transition-completion events that don't fire on a
+  non-composited tab — confirmed by fronting the tab and waiting 1s, after which the same state
+  update rendered correctly. Documented so a future session doesn't re-diagnose the same non-issue.
+- **Support & FAQ (`/support`)** — an accordion of facts already established elsewhere on the site
+  (CPA §56 14-day return window, VAT/duty-inclusive pricing, the AI-assisted vetting process, real
+  courier names), the existing WhatsApp-enquiry pattern (hidden when unconfigured, same as
+  elsewhere), and a real contact form. Submitting sends a genuine email
+  (`SupportRequestMailable` → `config('farmtech.admin_notification_email')`, reply-to set to the
+  sender) rather than just flashing a success message with nothing behind it — proven by
+  `SupportControllerTest` asserting the real Mailable is dispatched with the submitted data, not just
+  that the response redirects. Rate-limited (10/hour/IP, same bucket size as the other write-y
+  storefront forms).
+- **Frequently Bought Together — real, admin-curated bundles, never inferred.** New
+  `product_bundle_items` table (`Product::bundleCompanions()`, a self-referencing `belongsToMany`).
+  Admin quick-edit gained a "up to 2 SKUs, comma-separated" field; unrecognized SKUs are silently
+  dropped (a typo shouldn't block saving the rest of the form) and a product can never bundle itself.
+  The PDP section is hidden entirely — not a fallback-message tab like the Equipment Manifest —
+  until an admin actually sets companions for that specific product. 3 new tests
+  (`ProductBundleUpdateTest`) cover valid-SKU sync, silent-drop of bad SKUs, and the self-bundle
+  guard.
+- **Related Hardware & Add-Ons — real industry fallback, not a half-empty grid.** Renamed from "You
+  Might Also Need" per this session's ask. When the same category has fewer than 4 other real
+  products (common on a young catalog), real products from the parent `Industry` fill the rest —
+  verified live on the only Scales product in the dev DB (0 same-category matches → 2 real
+  Agriculture-industry products shown, a Construction product correctly never appears). 2 new tests
+  (`RelatedProductsFallbackTest`).
+- **Sitewide legacy-token sweep — 166 occurrences across 21 files, done.** Every `text-slate-*` →
+  `text-charcoal`/`text-ink-secondary`/`text-ink-muted` (by shade — 700-900 primary, 500-600
+  secondary, 300-400 muted), every `bg-slate-*` → `bg-canvas`/`bg-border`, every `border-slate-*` →
+  `border-border`, every `rounded-2xl` → `rounded-xl` (the locked 12px radius). Verified zero
+  remaining matches sitewide after the sweep (`grep` across `resources/views` returns nothing).
+- **Sitewide price rounding — every customer-facing 2-decimal ZAR price found and fixed.** Cart,
+  checkout (line items, subtotal, total, the "Place Order — R4 590" button), PDP (both the price
+  card and the mobile sticky bar), the trending strip, the header search typeahead, and both order
+  emails (`emails/orders/placed.blade.php`, `emails/orders/admin-alert.blade.php` — including the
+  admin alert's own subject line in `NewOrderAdminAlertMailable`) now all match the whole-rand format
+  already established on product cards. Admin-only price displays (financial breakdown, admin order
+  list) deliberately left at 2 decimals — not customer-facing, and precision matters more than
+  polish for internal financial review. Verified live: a real cart→checkout flow shows "R4 590"
+  consistently across every line.
+- **Locked-token pagination.** New `resources/views/vendor/pagination/farmtech.blade.php` (numeric
+  buttons, active state in solid mint, prev/next arrow buttons, all on `border-border`/`rounded-full`)
+  registered as the app-wide default via `Paginator::defaultView()` — replaces Laravel's unstyled
+  default on every paginated grid (`/category/*`, `/industry/*`, `/search`) with zero per-view
+  changes needed.
+- **Sort-label standardization + search sort (search had none before).** "Newest" → "Newest
+  Arrivals", "Popularity" → "Most Popular" in the shared filter panel (category/industry pages).
+  `SearchController` gained the same 4-option sort (previously hardcoded to `->latest()` with no
+  control at all) via the identical match-statement logic already used for category/industry
+  sorting, not a parallel implementation.
+- **Real database indexing, not just a checklist line.** New migration adds `products(status,
+  is_active)` (the exact pair `scopeStorefrontVisible()` filters on — the pre-existing
+  `(status, category)` index didn't cover it), `product_specs(spec_key)` (used directly in
+  category-filter `whereHas()` calls and the facet builder's `GROUP BY`, previously unindexed), and
+  `orders(status)`/`orders(payment_status)` (previously the only index on `orders` was the
+  `order_number` unique constraint). Checked `Schema::getIndexes()` against real table state before
+  writing this, not guessed.
+- **Mail infrastructure — verified, not just configured.** `config('mail')` already defaulted to
+  the `log` driver with a clean fallback; `.env.example` now documents the exact Postmark and Resend
+  SMTP settings (both work through the existing generic `smtp` mailer, no code change). All 5 real
+  Mailables proven to compile via a new `MailableRenderTest` (`->render()` on each, asserting real
+  content appears) — this is what actually caught the `included_items` bug above, since the bundle
+  admin-update test exercised the same code path with a differently-shaped request.
+- **Courier tracking — honestly audited, not silently left alone.** Attempted live verification of
+  Courier Guy's and DHL's real tracking-deep-link query-parameter format via `WebFetch`; both
+  returned bot-protection failures (403 from Courier Guy, connection reset from DHL) rather than
+  usable content. Left the existing homepage-link behavior exactly as it was rather than guessing an
+  unverified parameter — see `CourierTrackingLinks`'s own standing comment on why a wrong guess is
+  worse than today's safe behavior. Documented as a real open item in
+  [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md), not silently dropped.
+- **CI re-verified.** `.github/workflows/ci.yml` re-read in full and confirmed to still mirror the
+  exact local commands used throughout this session (`composer install` → `key:generate` → `npm ci
+  && npm run build` → `php artisan test`; worker: `npm ci && npm test`), and all three lockfiles
+  (`composer.lock`, `package-lock.json`, `worker/package-lock.json`) exist for `npm ci`/`composer
+  install --no-interaction` to work. A real GitHub Actions run remains unverifiable in this sandbox
+  (no runner available) — unchanged limitation, restated honestly rather than silently assumed fixed.
+- **Full regression check**: 121 Laravel tests passing (up from 99; +22 new, across 6 new test
+  files), 34 Node worker tests unchanged, `npm run build` clean, verified live in-browser at desktop
+  (1280px) with zero console errors across every new/changed page (`/equipment`, `/finder`,
+  `/support`, cart, checkout, admin product review) — the two 419 console entries seen during manual
+  admin-login testing were confirmed (via `read_network_requests`) to be leftover stale-token
+  artifacts from my own repeated login attempts, not something the real page load triggers.
 
 ---
 
@@ -684,6 +824,23 @@ redesign. See [README.md](README.md) for architecture/setup.
 
 ## ⚠️ Built, but with a real caveat attached
 
+- **Courier tracking still links to each carrier's tracking-portal homepage, not a deep link with
+  the real tracking number.** This session attempted to fix that — live `WebFetch` lookups against
+  Courier Guy and DHL to find their real deep-link query-parameter format both failed (403 bot
+  block, connection reset) rather than returning usable content. Implementing a guessed parameter
+  was deliberately avoided (see `CourierTrackingLinks`'s own comment on why a wrong guess is worse
+  than today's safe link), so this remains open — needs either a manual one-time human lookup of
+  each real format, or a proper courier API integration instead of URL construction. See
+  [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) §6.
+- **Transactional email is proven to compile, not proven to deliver.** All 5 Mailables render real
+  content without error (`MailableRenderTest`), and `.env.example` now documents the exact
+  Postmark/Resend SMTP settings — but no real send has been verified against an actual inbox, since
+  this environment has no real credentials for either provider. `MAIL_MAILER` still defaults to
+  `log`.
+- **A real GitHub Actions run remains unverified.** `.github/workflows/ci.yml` was re-read this
+  session and still structurally mirrors every command that's been run locally throughout this
+  project (confirmed all three lockfiles exist for `npm ci`/`composer install` to work), but this
+  sandbox has no Actions runner — unchanged from every earlier revision's note on this.
 - **The "Farmtech Verified" badge click was verified correct via direct Alpine-store/DOM
   inspection, not via a fully successful automated click-simulation.** The sandbox's browser
   automation tool couldn't reliably deliver a real click event to the small (91×13.5px) badge
@@ -859,7 +1016,9 @@ redesign. See [README.md](README.md) for architecture/setup.
    current binary Admin/Staff split.
 6. Live courier *integration* (auto-fetched status/ETA) is still unbuilt — rev. 8 added a link to
    the carrier's own tracking page once the admin enters `courier_name`/`tracking_number` by hand,
-   which is real progress but not the same as an API integration.
+   which is real progress but not the same as an API integration. Rev. 14 attempted to at least
+   deep-link the tracking number into that page and couldn't verify a real URL format (bot-blocked
+   lookups) — see caveats above.
 7. Real registered-company details (name, CIPC number, physical address) for the three legal pages
    — currently bracketed placeholders, deliberately not invented (see caveats above).
 8. A real WhatsApp number in `/admin/settings` — the CTA is fully built and tested but hidden until
@@ -876,17 +1035,17 @@ redesign. See [README.md](README.md) for architecture/setup.
     the new 1000×1000 normalization pipeline — existing entries are untouched real images, just not
     yet re-processed through the new pipeline path to see the consistent-canvas treatment applied
     to them specifically (new listings sourced going forward get it automatically).
-13. Sitewide border-radius reduction and a formal typography-scale system (Tier 1 items not reached
-    this pass — see caveats above).
-14. Removing cents from displayed prices sitewide (Tier 1, not reached — see caveats above).
-15. Everything in the brief's Tier 2/3: a **Compare** tool for side-by-side spec comparison, an
-    **Equipment Finder** recommendation flow ("tell us what you're trying to achieve"), **product
-    bundles** ("Complete Livestock Weighing Kit"), **customer reviews** (deliberately not faked —
-    needs real customer feedback to exist first), **downloadable technical documents** (PDF
-    datasheets/manuals/certificates — none exist to link to), **supplier provenance display**
-    (location/years operating/manufacturer — not currently stored per product), **buying guides /
-    educational content**, **recently-viewed** and **"you may also need" cross-sell**, and a
-    dedicated mobile-first redesign beyond what already works responsively. None of this is silently
+13. A formal typography-scale abstraction (Tier 1 item not reached — border-radius is now largely
+    done via the rev. 14 `rounded-2xl` → `rounded-xl` sweep, and the rev. 14 slate-token sweep
+    covers the color half of "Sitewide border-radius reduction and typography-scale system"; a
+    named type-scale system itself — e.g. `text-h1`/`text-body` utility aliases — is still unbuilt).
+14. ~~Removing cents from displayed prices sitewide~~ — **done in rev. 14**, see that section above.
+15. Remaining Tier 2/3 items: **customer reviews** (deliberately not faked — needs real customer
+    feedback to exist first), **downloadable technical documents** (PDF datasheets/manuals/
+    certificates — none exist to link to), **supplier provenance display** (location/years
+    operating/manufacturer — not currently stored per product), **buying guides / educational
+    content**, and **recently-viewed** browsing history. (~~Compare tool~~, ~~Equipment Finder~~, and
+    ~~product bundles~~ shipped in rev. 13/14 — see those sections above.) None of this is silently
     dropped — it's the scope you explicitly deferred when you picked "Tier 1 + advanced
     filters/search" over the full 72-point brief.
 
@@ -916,19 +1075,21 @@ redesign. See [README.md](README.md) for architecture/setup.
 ## Known rough edges
 
 - Same Windows/local-install and dev-server-can-die caveats as before.
-- 141 automated tests total across Laravel (107) and the Node worker (34) — genuinely covered, not
+- 155 automated tests total across Laravel (121) and the Node worker (34) — genuinely covered, not
   padding.
 
 ---
 
 ## Quick reference
 
-- Storefront: `http://localhost:8000` · How it works: `/how-it-works` · Browse by industry:
+- Storefront: `http://localhost:8000` · How it works: `/how-it-works` · Shop by Equipment:
+  `/equipment` · Equipment Finder: `/finder` · Support & FAQ: `/support` · Browse by industry:
   `/industry/{agriculture|construction|industrial_logistics|solar_power}` · Track an order: `/track`
   · Returns policy: `/policies/returns` · Terms: `/policies/terms` · ICASA compliance:
   `/policies/icasa-compliance` · Privacy: `/policies/privacy` ·
   Admin: `http://localhost:8000/admin/login` · Orders: `/admin/orders` · Settings (incl. WhatsApp
   number): `/admin/settings` · Your Profile: `/admin/profile` · Users: `/admin/users`
+- Production go-live checklist: [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
 - Run the Laravel test suite: `php artisan test`
 - Run worker tests: `cd worker && npm test`
 - Build frontend assets: `npm run build`

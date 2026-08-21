@@ -70,14 +70,14 @@
                 <label class="flex items-center gap-3 border border-border rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
                     <input type="radio" name="payment_gateway" value="yoco" class="accent-mint"> Yoco (Card)
                 </label>
-                <p class="text-xs text-slate-500 flex items-center gap-1.5 pt-1">
+                <p class="text-xs text-ink-secondary flex items-center gap-1.5 pt-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
                     Card and bank details are handled directly by your chosen provider — Farmtech never sees or stores them.
                 </p>
             </fieldset>
 
             <button type="submit" class="w-full bg-mint hover:bg-mint-dark text-white font-semibold px-8 py-3 rounded-full transition">
-                Place Order — R{{ number_format($subtotal, 2) }}
+                Place Order — R{{ number_format($subtotal, 0, '', ' ') }}
             </button>
         </form>
 
@@ -87,15 +87,15 @@
                 @foreach ($items as $item)
                     <li class="flex justify-between gap-3">
                         <span class="line-clamp-1">{{ $item['product']->title }} &times; {{ $item['quantity'] }}</span>
-                        <span class="font-mono flex-shrink-0">R{{ number_format($item['line_total'], 2) }}</span>
+                        <span class="font-mono flex-shrink-0">R{{ number_format($item['line_total'], 0, '', ' ') }}</span>
                     </li>
                 @endforeach
             </ul>
             <div class="border-t border-border mt-4 pt-4 flex justify-between font-bold text-brand-900">
                 <span>Total</span>
-                <span class="font-mono">R{{ number_format($subtotal, 2) }}</span>
+                <span class="font-mono">R{{ number_format($subtotal, 0, '', ' ') }}</span>
             </div>
-            <p class="text-xs text-slate-500 mt-2">Includes SA import duty &amp; 15% VAT. Nothing extra on delivery.</p>
+            <p class="text-xs text-ink-secondary mt-2">Includes SA import duty &amp; 15% VAT. Nothing extra on delivery.</p>
         </div>
     </div>
   </div>

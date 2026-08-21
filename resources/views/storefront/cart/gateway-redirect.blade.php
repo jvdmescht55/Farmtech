@@ -5,7 +5,7 @@
 @section('content')
     <div class="max-w-md mx-auto text-center py-16">
         <h1 class="text-xl font-bold mb-2">Redirecting you to your payment provider…</h1>
-        <p class="text-gray-500 mb-6">Order {{ $order->order_number }} — R{{ number_format($order->total_zar, 2) }}</p>
+        <p class="text-gray-500 mb-6">Order {{ $order->order_number }} — R{{ number_format($order->total_zar, 0, '', ' ') }}</p>
 
         <form id="gateway-form" action="{{ $handoff['action_url'] }}" method="{{ $handoff['method'] === 'REDIRECT' ? 'GET' : 'POST' }}">
             @foreach ($handoff['fields'] as $key => $value)

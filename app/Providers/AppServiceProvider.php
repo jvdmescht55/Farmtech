@@ -13,6 +13,7 @@ use App\Services\Cart;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -37,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.force_https')) {
             URL::forceScheme('https');
         }
+
+        Paginator::defaultView('vendor.pagination.farmtech');
 
         View::composer('layouts.storefront', function ($view) {
             $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
@@ -84,5 +87,9 @@ class AppServiceProvider extends ServiceProvider
         // Order lookup is a two-field guess surface (order_number + email) —
         // same bucket size as cart/checkout, keyed by IP same as the others.
         RateLimiter::for('track', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
+
+        // Support form sends a real email per submission — same bucket size
+        // as the other write-y storefront forms, to stop it being spammed.
+        RateLimiter::for('support', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
     }
 }

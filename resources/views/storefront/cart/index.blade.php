@@ -15,14 +15,14 @@
             <div class="card divide-y divide-border">
                 @foreach ($items as $item)
                     <div class="flex items-center gap-4 p-4">
-                        <div class="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <div class="w-16 h-16 bg-canvas rounded-lg overflow-hidden flex-shrink-0">
                             @if ($item['product']->thumbnail)
                                 <img src="{{ $item['product']->thumbnail->url }}" class="object-cover w-full h-full" alt="" onerror="this.remove()">
                             @endif
                         </div>
                         <div class="flex-1 min-w-0">
                             <a href="{{ route('products.show', $item['product']) }}" class="font-semibold text-sm text-brand-900 hover:text-mint-dark transition line-clamp-1">{{ $item['product']->title }}</a>
-                            <p class="text-sm text-slate-600 font-mono">R{{ number_format($item['product']->retail_price_zar, 2) }} each</p>
+                            <p class="text-sm text-ink-secondary font-mono">R{{ number_format($item['product']->retail_price_zar, 0, '', ' ') }} each</p>
                         </div>
                         <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="flex items-center gap-2">
                             @csrf
@@ -30,7 +30,7 @@
                             <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="w-16 border border-border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-mint/30">
                             <button type="submit" class="text-xs font-semibold text-mint-dark hover:underline">Update</button>
                         </form>
-                        <p class="font-mono font-semibold w-28 text-right">R{{ number_format($item['line_total'], 2) }}</p>
+                        <p class="font-mono font-semibold w-28 text-right">R{{ number_format($item['line_total'], 0, '', ' ') }}</p>
                         <form action="{{ route('cart.remove', $item['product']) }}" method="POST">
                             @csrf
                             @method('DELETE')
@@ -40,12 +40,12 @@
                 @endforeach
             </div>
 
-            <div class="mt-6 bg-brand-900 text-white rounded-2xl px-6 py-4 flex justify-between items-center">
+            <div class="mt-6 bg-brand-900 text-white rounded-xl px-6 py-4 flex justify-between items-center">
                 <div>
-                    <p class="text-sm text-slate-300">Subtotal (incl. duty &amp; 15% VAT)</p>
-                    <p class="text-xs text-slate-400">Nothing extra to pay on delivery.</p>
+                    <p class="text-sm text-ink-muted">Subtotal (incl. duty &amp; 15% VAT)</p>
+                    <p class="text-xs text-ink-muted">Nothing extra to pay on delivery.</p>
                 </div>
-                <span class="text-2xl font-mono font-bold">R{{ number_format($subtotal, 2) }}</span>
+                <span class="text-2xl font-mono font-bold">R{{ number_format($subtotal, 0, '', ' ') }}</span>
             </div>
 
             <div class="mt-4 flex justify-end">
