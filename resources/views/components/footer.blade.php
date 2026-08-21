@@ -16,6 +16,16 @@
                     WhatsApp Farmtech
                 </a>
             @endif
+
+            {{-- Real configured checkout gateways only — no third-party card-network trademarks, since displaying Visa/Mastercard marks implies a brand relationship this site doesn't have. --}}
+            <div class="mt-5">
+                <p class="text-[10px] uppercase tracking-wide text-ink-muted/70 mb-1.5">Secure checkout via</p>
+                <div class="flex flex-wrap gap-1.5">
+                    @foreach (['PayFast', 'Ozow', 'Yoco'] as $gateway)
+                        <span class="text-[11px] font-medium text-ink-muted bg-white/5 border border-white/10 rounded px-2 py-1">{{ $gateway }}</span>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
         {{-- Column 2: Equipment (industries — secondary nav; the mega-menu, not the footer, is the real discovery surface) --}}
@@ -55,9 +65,17 @@
         </div>
     </div>
     <div class="border-t border-white/10">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ink-secondary">
-            <p>&copy; {{ date('Y') }} Farmtech</p>
-            <details class="text-ink-secondary">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] text-ink-muted/70">
+                <span>&copy; {{ date('Y') }} Farmtech</span>
+                <span aria-hidden="true">&middot;</span>
+                <a href="{{ route('policies.terms') }}" class="hover:text-ink-muted transition">Terms</a>
+                <span aria-hidden="true">&middot;</span>
+                <a href="{{ route('policies.privacy') }}" class="hover:text-ink-muted transition">Privacy</a>
+                <span aria-hidden="true">&middot;</span>
+                <a href="{{ route('policies.returns') }}" class="hover:text-ink-muted transition">Returns</a>
+            </div>
+            <details class="text-[12px] text-ink-muted/70">
                 <summary class="cursor-pointer hover:text-ink-muted transition list-none">Photo credits</summary>
                 <ul class="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-1 text-left">
                     @foreach (\App\Enums\ProductCategory::cases() as $creditCategory)

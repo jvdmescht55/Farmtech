@@ -39,6 +39,7 @@
                 }
             },
         }"
+        @keydown.window="if (($event.ctrlKey || $event.metaKey) && $event.key === 'k') { $event.preventDefault(); $refs.searchInput.focus(); }"
         class="glass-header sticky top-0 z-40 bg-white md:h-[76px] md:flex md:items-center">
         <div class="max-w-7xl mx-auto px-4 w-full">
             <div class="flex items-center gap-2 py-3 md:py-0">
@@ -76,8 +77,8 @@
                     </div>
                 </div>
 
-                <a href="{{ route('home') }}#shop-by-application" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition">Solutions</a>
-                <a href="{{ route('how-it-works') }}" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition">How it works</a>
+                <a href="{{ route('home') }}#shop-by-application" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 border-transparent">Solutions</a>
+                <a href="{{ route('how-it-works') }}" class="hidden md:inline-block text-sm font-semibold px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 {{ request()->routeIs('how-it-works') ? 'text-brand-900 border-mint' : 'text-charcoal hover:text-brand-900 border-transparent' }}">How it works</a>
 
                 <div class="relative hidden md:block">
                     <button type="button" @click="supportOpen = !supportOpen" @click.outside="supportOpen = false"
@@ -100,9 +101,10 @@
                 <div class="flex-1 max-w-2xl mx-auto relative hidden sm:block" @click.outside="products = []; categories = []; applications = []">
                     <form action="{{ route('search.index') }}" method="GET">
                         <div class="relative w-full">
-                            <input type="search" name="q" x-model="q" @input.debounce.300ms="suggest()" autocomplete="off"
+                            <input type="search" name="q" x-model="q" x-ref="searchInput" @input.debounce.300ms="suggest()" autocomplete="off"
                                    placeholder="Search equipment, models &amp; specs…"
-                                   class="w-full border border-border bg-white rounded-full pl-5 pr-11 py-2.5 text-sm text-center focus:text-left focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint transition">
+                                   class="w-full border border-border bg-white rounded-full pl-5 pr-20 py-2.5 text-sm text-center focus:text-left focus:outline-none focus:ring-2 focus:ring-mint/40 focus:border-mint transition">
+                            <kbd x-show="!q" x-cloak class="hidden lg:flex absolute right-11 top-1/2 -translate-y-1/2 items-center gap-0.5 text-[10px] font-mono text-ink-muted bg-canvas border border-border rounded px-1.5 py-0.5 pointer-events-none">Ctrl K</kbd>
                             <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-mint-dark hover:bg-mint/10 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             </button>
@@ -144,6 +146,8 @@
                         </template>
                     </div>
                 </div>
+
+                <span class="hidden lg:inline-flex items-center gap-1 text-xs font-medium text-ink-muted flex-shrink-0 ml-2" title="Farmtech ships within South Africa, priced in South African Rand">🇿🇦 ZAR (R)</span>
 
                 <a href="{{ route('cart.index') }}" class="relative flex-shrink-0 flex items-center gap-1.5 text-sm font-semibold text-brand-900 hover:text-mint-dark transition group ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6"/></svg>

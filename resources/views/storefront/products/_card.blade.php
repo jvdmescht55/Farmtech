@@ -65,38 +65,29 @@
         <div class="flex items-center justify-between gap-1.5 mb-2">
             <span class="inline-block text-[9px] font-semibold uppercase tracking-wide text-mint-dark bg-mint/10 rounded px-1.5 py-0.5 truncate pointer-events-none">{{ $product->category->industry()->badgeLabel() }}</span>
             @if ($complianceLabel)
-                <button type="button" @click="$store.verifiedModal.open = true"
-                        class="relative z-10 inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-700 hover:text-emerald-800 flex-shrink-0 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {{ $complianceLabel }}
+                <button type="button" @click="$store.verifiedModal.open = true" title="{{ $complianceLabel }} — see what this means"
+                        class="relative z-10 inline-flex items-center gap-1 text-ink-muted hover:text-emerald-700 flex-shrink-0 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span class="text-[9px] font-medium">{{ $complianceLabel }}</span>
                 </button>
             @endif
         </div>
 
         <h3 class="font-display font-semibold text-sm line-clamp-2 text-charcoal pointer-events-none">{{ $product->title }}</h3>
 
-        @if ($keySpec)
-            <p class="text-xs font-mono text-ink-secondary mt-1 pointer-events-none">{{ $keySpec->spec_value }}</p>
-        @endif
-
         <p class="mt-2 font-mono font-bold text-lg text-charcoal pointer-events-none">{{ $roundedPrice }}</p>
-        <p class="text-[11px] font-semibold text-mint-dark -mt-0.5 pointer-events-none">All-In Landed Pricing &middot; R0 Extra At Door</p>
+        <p class="text-[11px] text-ink-secondary -mt-0.5 pointer-events-none">All-in pricing &middot; {{ $product->lead_time_days }} delivery</p>
 
-        <div class="mt-2.5 space-y-1 text-[11px] text-ink-secondary pointer-events-none">
-            <p class="flex items-center gap-1.5"><span class="text-mint-dark">✓</span> VAT &amp; duty included</p>
-            <p class="flex items-center gap-1.5">⚡ Express Air-Import &middot; {{ $product->lead_time_days }}</p>
-        </div>
-
-        <div class="mt-auto pt-3 flex items-center justify-between gap-2 pointer-events-none">
-            <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold {{ $product->stock_status === 'in_stock' ? 'text-emerald-700' : 'text-precision-dark' }}">
+        <div class="mt-auto pt-3 flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold {{ $product->stock_status === 'in_stock' ? 'text-emerald-700' : 'text-precision-dark' }} pointer-events-none">
                 <span class="relative flex w-1.5 h-1.5">
                     <span class="animate-ping absolute inline-flex w-full h-full rounded-full opacity-75 {{ $product->stock_status === 'in_stock' ? 'bg-mint' : 'bg-precision' }}"></span>
                     <span class="relative inline-flex rounded-full w-1.5 h-1.5 {{ $product->stock_status === 'in_stock' ? 'bg-mint' : 'bg-precision' }}"></span>
                 </span>
                 {{ $product->stock_status === 'in_stock' ? 'In Stock' : 'Express Air Import' }}
             </span>
-            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-mint-dark group-hover:text-mint-darker group-hover:gap-1.5 transition-all">
-                View equipment
+            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-charcoal border border-border rounded-full px-3 py-1.5 group-hover:border-mint/50 group-hover:text-mint-dark group-hover:gap-1.5 transition-all pointer-events-none">
+                View
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </span>
         </div>

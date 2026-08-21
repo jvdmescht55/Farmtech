@@ -18,9 +18,8 @@ class FeaturedMarqueeTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk();
-        $response->assertSee('Featured Innovation &amp; Tech', false);
+        $response->assertSee('Featured Equipment');
         $response->assertSee('Marquee Test Scale');
-        $response->assertSee('VAT &amp; Express Delivery Included', false);
     }
 
     public function test_marquee_is_hidden_when_there_are_no_approved_products(): void
@@ -28,6 +27,6 @@ class FeaturedMarqueeTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk();
-        $response->assertDontSee('Featured Innovation &amp; Tech', false);
+        $response->assertDontSee('Featured Equipment');
     }
 }

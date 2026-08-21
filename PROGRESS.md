@@ -1,6 +1,18 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-21 (rev. 16 — fixed a real PDP mobile-overflow bug, plus a stale-dev-server
+Last updated: 2026-08-21 (rev. 17 — a full storefront design-polish pass responding to a 24-item
+critique: merged two redundant homepage process sections into one, decluttered product cards down
+to badge/title/price/stock, shrank the homepage marquee from a full card grid to a compact pill
+ticker, softened category-card image scrims, integrated the "Your Price" widget into a real section
+instead of a floating card, added header nav active-states and a real Ctrl+K search shortcut, and
+restyled the footer's legal row and payment-gateway list. **Also fixed a real, non-cosmetic bug the
+critique surfaced correctly under the "Lorem Ipsum" heading**: 3 literal test-debugging products
+(`temporibus minima in eos` etc., created via `tinker` during rev. 16's own bug investigation and
+never cleaned up) were live on the storefront — deactivated via the app's own reject-state update,
+not a raw delete. **Two requested fixes were deliberately not built as literally specified** —
+fabricated official third-party trust marks (ICASA/NRCS/ISO seal graphics, Visa/Mastercard logos)
+this site isn't certified to display — see rev. 17's own notes below for what was built instead.)
+What changed since rev. 15 (rev. 16's own summary): fixed a real PDP mobile-overflow bug, plus a stale-dev-server
 asset-loading issue that could make the whole site look unstyled/broken depending on how it's
 viewed. Root cause of the layout bug turned out to be different from what was suspected — see rev.
 16's own notes below for the actual diagnosis, since it wasn't the hardcoded-max-width/unbalanced-
@@ -143,6 +155,66 @@ reskin; rev. 7 added the multi-industry expansion, Value-Density Feasibility Eng
 Trending strip; rev. 6 added the arbitrage engine, profit transparency, and image quality gate; rev.
 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront
 redesign. See [README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 17)
+
+- **A real data bug, found and fixed via the "Lorem Ipsum" critique item.** 3 products titled
+  `temporibus minima in eos`, `eos deserunt ut quia`, and `quis quod similique porro` were live and
+  storefront-visible. These weren't seeded demo data — they were literal `Product::factory()`
+  test-debugging rows created via `tinker` during rev. 16's own bug investigation and never cleaned
+  up. Deactivated via `status='rejected', is_active=false` (the app's own real moderation state
+  change, same as the admin reject flow) rather than a raw `DELETE` — a raw delete was attempted
+  first and correctly blocked by this session's own safety classifier as permanent data deletion;
+  the reversible status update was the right call anyway, not just the available one. Storefront now
+  shows exactly its 4 real remaining products.
+- **Redundant process sections merged.** "Why buy through Farmtech?" (4 steps) and "How Farmtech
+  Works" (5 steps) told overlapping stories back to back. Replaced with one real 4-step sequence
+  (Select verified equipment → See your complete price → We handle customs clearance → Delivered to
+  your gate) combining both narratives, styled with circular step-number badges instead of plain
+  text numerals.
+- **Product cards decluttered** to exactly what the critique asked for — category badge, title,
+  price, stock/delivery pill — removing the key-spec line and collapsing three separate pricing/
+  import lines into one ("All-in pricing · 7-12 business days delivery"). The compliance badge
+  (Farmtech Verified/Checked) is now an icon-led, muted-color chip with a native tooltip instead of
+  a bold green pill, and "View equipment" became a real bordered button instead of a bare text link.
+  Verified live: a real card now reads exactly `Solar Tech | Farmtech Checked | [title] | R6 353 |
+  All-in pricing · 7-12 business days delivery | In Stock | View`.
+- **Homepage marquee shrunk from a full mini-product-card grid to a compact pill ticker** — small
+  circular thumbnail + title + price in a rounded pill, roughly a third the height and visual weight
+  of the rev. 15 version. Section heading softened from "Featured Innovation & Tech" (loud, mint-
+  colored) to a quieter muted "Featured Equipment" label. Real click-to-Quick-View and hover-to-pause
+  behavior unchanged, both re-verified live.
+- **Category card image scrim fixed and legibility improved.** The gradient overlay now covers only
+  the bottom ~45% of the card (was covering the full card top-to-bottom) so the actual photo is
+  visible instead of mostly washed out in dark green; added text-shadow to the title/description for
+  contrast against varied photo backgrounds regardless of scrim coverage; "Explore" became a real
+  frosted-glass pill button with the arrow translating on hover instead of a plain text link.
+- **The "Your Price" import-cost widget is now a real page section, not a floating card.** Was a
+  bordered card sitting alone with large margins in a bare `<div>` between two unrelated blocks —
+  now a full-width section with its own white background and standard section padding, matching
+  every other section on the page, immediately followed by "Latest Equipment" at the same rhythm.
+  This also closes the "excessive white space in the bottom feed" gap, which was really two stacked
+  margins (the card's own `my-24` plus the following section's `mb-24`) rather than a padding-scale
+  problem needing a system-wide rework.
+- **Header nav gets a real active-state indicator** (a mint bottom border on "How it works" when
+  `request()->routeIs('how-it-works')` is true) and **a real Ctrl+K / Cmd+K shortcut** that focuses
+  the search input from anywhere on the page, with a visible `Ctrl K` hint inside the search bar
+  (desktop only, hidden once you start typing). The cart button and search-bar contrast the critique
+  described as broken were already correct on inspection — a minimal icon+badge cart and a bordered,
+  focus-ringed search input — so neither was touched.
+- **Footer**: added a real "Secure checkout via" row listing the 3 actually-configured gateways
+  (PayFast, Ozow, Yoco) as plain text chips — deliberately not Visa/Mastercard trademark logos, see
+  the caveat below. Restyled the copyright/legal row as a single dot-separated line
+  (`© 2026 Farmtech · Terms · Privacy · Returns`) instead of unstyled default text. Added a real,
+  honest `🇿🇦 ZAR (R)` currency indicator to the sticky header (visible once scrolled past the
+  utility bar, which is the only place that context existed before) — not a fake multi-currency
+  selector, since this is genuinely a ZAR-only, South-Africa-only storefront.
+- **Full regression check**: 129 Laravel tests passing (unchanged from rev. 16 — `FeaturedMarqueeTest`
+  updated in place for the new marquee copy, no new test files needed since these were markup/copy
+  changes to already-tested pages), 34 Node worker tests unchanged, `npm run build` clean, verified
+  live in-browser at desktop (1280px) and mobile (375px, zero overflow) with no new console errors.
 
 ---
 
@@ -928,6 +1000,39 @@ redesign. See [README.md](README.md) for architecture/setup.
 ---
 
 ## ⚠️ Built, but with a real caveat attached
+
+- **"Missing Trust Seals" — did not add official ICASA/NRCS/ISO badge graphics.** The request asked
+  for "official monochrome compliance badges" for ICASA, NRCS, and ISO. Farmtech isn't a certifying
+  body and displaying those organizations' official marks would assert a certification/licensing
+  relationship that doesn't exist — a real, checkable false claim, not a style choice. What's
+  already live (`<x-compliance-badges>`) is honest and arguably stronger: real, product-specific,
+  data-driven chips ("ICASA Type Approved", "ISO 11784/11785 Compliant") that only appear when the
+  pipeline actually verified that exact claim for that exact product — never a fixed "always show 4"
+  trust-badge row. Left as-is.
+- **"Missing Payment Icons" — did not add Visa/Mastercard/EFT logo graphics.** Same reasoning: this
+  site isn't a card network merchant with a brand-usage agreement for those trademarks. The footer
+  now lists the 3 gateways actually wired into checkout (PayFast, Ozow, Yoco) as plain text, which is
+  what's real and accurate — Visa/Mastercard acceptance happens indirectly through those providers,
+  not something Farmtech can claim to display a direct relationship with.
+- **Category-card photography was not re-sourced.** The critique is fair that the 6 application-card
+  images vary in lighting/framing/grain — but this has been re-investigated multiple times across
+  earlier revisions (rev. 8, rev. 9) with the same honest conclusion each time: Wikimedia Commons, a
+  general-purpose freely-licensed photo library, doesn't have consistent studio-grade B2B equipment
+  photography for this specific niche. "Standardize using high-end studio-isolated renderings" needs
+  either purchased stock photography or real supplier photos — a sourcing/budget decision, not
+  something another Commons search or a code change fixes.
+- **No newsletter/report signup was added to the footer.** A real, working signup needs a real
+  destination (a subscriber table, an email-service integration, unsubscribe handling) — building a
+  form that doesn't actually go anywhere would be exactly the kind of dead UI this project has
+  avoided everywhere else. Left off rather than half-built; a real follow-up item if wanted.
+- **No sitewide green-desaturation pass.** The critique's "overuse of high-saturation lime green"
+  point has some truth to it, but the color system itself (`tailwind.config.js`) is the rev. 11
+  **locked** design-token palette — deep forest green + mint accent, deliberately chosen and applied
+  consistently across dozens of already-shipped, already-tested views. This pass reduced *where*
+  bright mint gets used on the specific surfaces the critique named (product-card CTA now
+  charcoal-bordered, not filled mint; verified badge muted, not a bold green pill) without touching
+  the underlying palette itself — a full brand-color change is a bigger decision than a design-polish
+  pass should make unilaterally.
 
 - **The requested "⚡ Express Air-Import Batch Dispatched Weekly" scarcity badge was not built as
   written.** That copy asserts a specific operational fact — a fixed weekly dispatch cadence — that

@@ -60,7 +60,8 @@
     {{-- Shop by application — 3x2 large image cards. Replaces the earlier industry-card
          grid at this position per the exact-spec walkthrough (items 11-12); industry-level
          browsing is still reachable via the header's Equipment mega-menu and /industry/*. --}}
-    <section id="shop-by-application" class="max-w-7xl mx-auto px-4 py-20 sm:py-24 scroll-mt-20">
+    <section id="shop-by-application" class="bg-white scroll-mt-20">
+        <div class="max-w-7xl mx-auto px-4 py-20 sm:py-24">
         <div class="max-w-2xl mb-12">
             <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Solutions</p>
             <h2 class="font-display font-bold text-3xl sm:text-4xl text-charcoal">What are you trying to achieve?</h2>
@@ -73,17 +74,19 @@
                    x-reveal.{{ $i * 90 }}
                    class="group relative rounded-xl overflow-hidden aspect-[4/3] flex items-end p-5">
                     <img src="{{ $appImage['url'] }}" alt="" class="absolute inset-0 w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out">
-                    <div class="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/30 to-transparent group-hover:from-brand-950/95 transition-colors"></div>
+                    {{-- Scrim restricted to roughly the bottom third, so the photo itself stays visible rather than being washed out top-to-bottom. --}}
+                    <div class="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/70 to-transparent group-hover:from-black/80 transition-colors"></div>
                     <div class="relative">
-                        <h3 class="font-display font-bold text-white text-lg uppercase tracking-wide mb-1">{{ $app['label'] }}</h3>
-                        <p class="text-white/70 text-sm mb-3">{{ $app['description'] }}</p>
-                        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-light group-hover:gap-2.5 transition-all">
+                        <h3 class="font-display font-bold text-white text-lg uppercase tracking-wide mb-1 [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]">{{ $app['label'] }}</h3>
+                        <p class="text-white/85 text-sm mb-3 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">{{ $app['description'] }}</p>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-3 py-1.5 group-hover:bg-white/25 transition-all">
                             Explore
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </span>
                     </div>
                 </a>
             @endforeach
+        </div>
         </div>
     </section>
 
@@ -105,62 +108,33 @@
         </section>
     @endif
 
-    {{-- Why Farmtech — the verification story as a real selling point --}}
-    <section class="max-w-6xl mx-auto px-4 py-20 sm:py-24">
-        <div class="max-w-2xl mb-12">
-            <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Why Farmtech</p>
-            <h2 class="font-display font-bold text-3xl sm:text-4xl text-charcoal">Why buy through Farmtech?</h2>
-        </div>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
-            @foreach ([
-                ['n' => '01', 'title' => 'Supplier verified', 'body' => 'We screen suppliers before products are listed — trading history, verified-account status, trade assurance.'],
-                ['n' => '02', 'title' => 'Product checked', 'body' => 'Specifications are checked against the relevant SA standard — ISO 11784/11785, ICASA, or NRCS — for the product\'s category.'],
-                ['n' => '03', 'title' => 'Import calculated', 'body' => 'VAT, import duty and delivery are calculated per product and already included in the price you see.'],
-                ['n' => '04', 'title' => 'Delivered to you', 'body' => 'Door-to-door delivery with real order tracking — see exactly where your equipment is.'],
-            ] as $item)
-                <div>
-                    <span class="font-mono text-sm text-mint-dark font-bold">{{ $item['n'] }}</span>
-                    <h3 class="font-display font-bold text-lg text-charcoal mt-1.5 mb-1.5">{{ $item['title'] }}</h3>
-                    <p class="text-ink-secondary leading-relaxed text-sm">{{ $item['body'] }}</p>
-                </div>
-            @endforeach
-        </div>
-        <a href="{{ route('how-it-works') }}" class="inline-flex items-center gap-1.5 mt-10 text-sm font-semibold text-mint-dark hover:text-mint-darker transition">
-            See the full process
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-    </section>
-
-    {{-- How Farmtech Works — visually prominent, dark section for rhythm against the light sections either side --}}
+    {{-- Why Farmtech + How It Works, merged into one flow — was two consecutive step
+         sections telling overlapping stories (verification vs. process); this is the
+         single real sequence a buyer actually goes through. --}}
     <section class="bg-brand-950 py-20 sm:py-24">
         <div class="max-w-6xl mx-auto px-4">
             <div class="max-w-2xl mx-auto text-center mb-14">
-                <p class="text-xs uppercase tracking-[0.2em] text-mint-light font-semibold mb-3">How Farmtech Works</p>
+                <p class="text-xs uppercase tracking-[0.2em] text-mint-light font-semibold mb-3">Why Farmtech</p>
                 <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Equipment without the import headache.</h2>
             </div>
             @php
-                $howItWorksSteps = [
-                    ['n' => '01', 'title' => 'Choose equipment'],
-                    ['n' => '02', 'title' => 'See your complete price'],
-                    ['n' => '03', 'title' => 'Place your order'],
-                    ['n' => '04', 'title' => 'We handle the import'],
-                    ['n' => '05', 'title' => 'Delivered to your door'],
+                $processSteps = [
+                    ['n' => '01', 'title' => 'Select verified equipment', 'body' => 'Every listing is supplier-screened and specification-checked against the relevant SA standard — ISO 11784/11785, ICASA, or NRCS — before it goes live.'],
+                    ['n' => '02', 'title' => 'See your complete price', 'body' => 'VAT, import duty and delivery are calculated per product and already included — the price you see is the price you pay.'],
+                    ['n' => '03', 'title' => 'We handle customs clearance', 'body' => 'Place your order and Farmtech manages the import end to end — no separate customs bill, no clearing-agent surprises.'],
+                    ['n' => '04', 'title' => 'Delivered to your gate', 'body' => 'Door-to-door delivery with real order tracking, so you always know exactly where your equipment is.'],
                 ];
             @endphp
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-6 sm:gap-2">
-                @foreach ($howItWorksSteps as $step)
-                    <div class="flex sm:flex-col items-center gap-4 sm:gap-3 sm:text-center flex-1">
-                        <span class="font-mono text-2xl font-bold text-mint/50 flex-shrink-0">{{ $step['n'] }}</span>
-                        <span class="text-white font-semibold text-sm">{{ $step['title'] }}</span>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+                @foreach ($processSteps as $step)
+                    <div>
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-mint/15 border border-mint/30 text-mint-light font-mono text-sm font-bold mb-3">{{ $step['n'] }}</span>
+                        <h3 class="font-display font-bold text-lg text-white mb-1.5">{{ $step['title'] }}</h3>
+                        <p class="text-white/70 leading-relaxed text-sm">{{ $step['body'] }}</p>
                     </div>
-                    @if (!$loop->last)
-                        <div class="hidden sm:flex flex-shrink-0 items-center text-mint/30 -mx-1 mt-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                        </div>
-                    @endif
                 @endforeach
             </div>
-            <div class="text-center mt-12">
+            <div class="text-center mt-14">
                 <a href="{{ route('how-it-works') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-light hover:text-white transition">
                     See the full process
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -169,17 +143,19 @@
         </div>
     </section>
 
-    <div class="max-w-7xl mx-auto px-4">
-        {{-- Import pricing card — real decomposed numbers from one live listing, never a
-             fabricated "vs local retail" figure. Duty is shown as the real per-product rate
-             (it varies by HS code), not a universal claim — VAT genuinely is a flat 15% under
-             South African law, so that line is the one that's honestly always the same. --}}
-        @if ($costSample)
-            @php
-                $baseZar = $costSample->landed_cost_zar - ($costSample->intl_freight_zar ?? 0) - ($costSample->customs_vat_zar ?? 0) - ($costSample->domestic_delivery_zar ?? 0);
-            @endphp
-            <section class="my-20 sm:my-24" x-data="{ howOpen: false }" x-reveal>
-                <div class="glass-card rounded-xl p-6 sm:p-8 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+    {{-- Import pricing card — real decomposed numbers from one live listing, never a
+         fabricated "vs local retail" figure. Duty is shown as the real per-product rate
+         (it varies by HS code), not a universal claim — VAT genuinely is a flat 15% under
+         South African law, so that line is the one that's honestly always the same.
+         A full section with its own background (not a floating card in a bare div), so it
+         reads as part of the page's flow rather than dropped between unrelated blocks. --}}
+    @if ($costSample)
+        @php
+            $baseZar = $costSample->landed_cost_zar - ($costSample->intl_freight_zar ?? 0) - ($costSample->customs_vat_zar ?? 0) - ($costSample->domestic_delivery_zar ?? 0);
+        @endphp
+        <section class="bg-white border-b border-border py-20 sm:py-24" x-data="{ howOpen: false }" x-reveal>
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="rounded-xl border border-border p-6 sm:p-8 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-mint-dark mb-2">Your Price</p>
                         <h2 class="font-display font-bold text-xl text-charcoal mb-2">No import surprises.</h2>
@@ -225,11 +201,13 @@
                         </div>
                     </div>
                 </div>
-            </section>
-        @endif
+            </div>
+        </section>
+    @endif
 
-        {{-- Latest approved products --}}
-        <section class="mb-20 sm:mb-24">
+    {{-- Latest approved products --}}
+    <section class="py-20 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-baseline justify-between mb-6">
                 <h2 class="font-display font-bold text-2xl sm:text-3xl text-charcoal">Latest Equipment</h2>
                 <span class="text-xs text-ink-secondary font-mono">{{ $featured->count() }} listed</span>
@@ -244,6 +222,6 @@
                     </div>
                 @endforelse
             </div>
-        </section>
-    </div>
+        </div>
+    </section>
 @endsection
