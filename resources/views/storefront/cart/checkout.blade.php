@@ -10,42 +10,42 @@
         <form action="{{ route('checkout.store') }}" method="POST" class="md:col-span-2 space-y-6">
             @csrf
 
-            <fieldset class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+            <fieldset class="bg-white border border-border rounded-xl p-6 space-y-4">
                 <legend class="font-semibold px-1">Contact Details</legend>
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Full Name</label>
-                        <input type="text" name="customer_name" value="{{ old('customer_name') }}" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                        <input type="text" name="customer_name" value="{{ old('customer_name') }}" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Email</label>
-                        <input type="email" name="email" value="{{ old('email') }}" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                        <input type="email" name="email" value="{{ old('email') }}" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Cellphone</label>
-                        <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="082 123 4567" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                        <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="082 123 4567" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                     </div>
                 </div>
             </fieldset>
 
-            <fieldset class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+            <fieldset class="bg-white border border-border rounded-xl p-6 space-y-4">
                 <legend class="font-semibold px-1">Delivery Address</legend>
                 <div>
                     <label class="block text-sm font-medium mb-1">Address Line 1</label>
-                    <input type="text" name="address_line1" value="{{ old('address_line1') }}" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                    <input type="text" name="address_line1" value="{{ old('address_line1') }}" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Address Line 2 (optional)</label>
-                    <input type="text" name="address_line2" value="{{ old('address_line2') }}" class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                    <input type="text" name="address_line2" value="{{ old('address_line2') }}" class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                 </div>
                 <div class="grid md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">City / Town</label>
-                        <input type="text" name="city" value="{{ old('city') }}" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                        <input type="text" name="city" value="{{ old('city') }}" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Province</label>
-                        <select name="province" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                        <select name="province" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                             <option value="">Select province</option>
                             @foreach ($provinces as $province)
                                 <option value="{{ $province }}" @selected(old('province') === $province)>{{ $province }}</option>
@@ -54,20 +54,20 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Postal Code</label>
-                        <input type="text" name="postal_code" value="{{ old('postal_code') }}" maxlength="4" pattern="[0-9]{4}" required class="w-full border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
+                        <input type="text" name="postal_code" value="{{ old('postal_code') }}" maxlength="4" pattern="[0-9]{4}" required class="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint/30">
                     </div>
                 </div>
             </fieldset>
 
-            <fieldset class="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
+            <fieldset class="bg-white border border-border rounded-xl p-6 space-y-3">
                 <legend class="font-semibold px-1">Payment Method</legend>
-                <label class="flex items-center gap-3 border border-slate-200 rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
+                <label class="flex items-center gap-3 border border-border rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
                     <input type="radio" name="payment_gateway" value="payfast" required class="accent-mint"> PayFast
                 </label>
-                <label class="flex items-center gap-3 border border-slate-200 rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
+                <label class="flex items-center gap-3 border border-border rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
                     <input type="radio" name="payment_gateway" value="ozow" class="accent-mint"> Ozow (Instant EFT)
                 </label>
-                <label class="flex items-center gap-3 border border-slate-200 rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
+                <label class="flex items-center gap-3 border border-border rounded-md px-4 py-3 cursor-pointer hover:border-mint/50 transition has-[:checked]:border-mint has-[:checked]:bg-mint/5">
                     <input type="radio" name="payment_gateway" value="yoco" class="accent-mint"> Yoco (Card)
                 </label>
                 <p class="text-xs text-slate-500 flex items-center gap-1.5 pt-1">
@@ -81,7 +81,7 @@
             </button>
         </form>
 
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 h-fit shadow-sm">
+        <div class="bg-white border border-border rounded-xl p-6 h-fit shadow-sm">
             <h2 class="font-display font-semibold mb-4 text-brand-900">Order Summary</h2>
             <ul class="space-y-2 text-sm">
                 @foreach ($items as $item)
@@ -91,7 +91,7 @@
                     </li>
                 @endforeach
             </ul>
-            <div class="border-t border-slate-200 mt-4 pt-4 flex justify-between font-bold text-brand-900">
+            <div class="border-t border-border mt-4 pt-4 flex justify-between font-bold text-brand-900">
                 <span>Total</span>
                 <span class="font-mono">R{{ number_format($subtotal, 2) }}</span>
             </div>

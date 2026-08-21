@@ -215,5 +215,121 @@
             <p class="text-xs text-slate-400 mt-4 pt-4 border-t border-border">AI-assisted supplier and product verification, with human review before anything is approved for sale.</p>
         </div>
     </div>
+
+    {{-- Quick View — one shared modal, opened from any catalog card with its own already-rendered data. --}}
+    <div x-data x-show="$store.quickView.open" x-cloak x-transition.opacity
+         @keydown.escape.window="$store.quickView.close()"
+         class="fixed inset-0 z-50 bg-brand-950/60 flex items-center justify-center p-4" @click="$store.quickView.close()">
+        <template x-if="$store.quickView.product">
+            <div @click.stop class="card !rounded-xl max-w-lg w-full overflow-hidden" x-transition.scale.origin.center>
+                <div class="relative aspect-[16/10] bg-slate-50">
+                    <img :src="$store.quickView.product.image" x-show="$store.quickView.product.image"
+                         x-on:error="$store.quickView.product.image = null" class="w-full h-full object-contain p-6" alt="">
+                    <div x-show="!$store.quickView.product.image" class="absolute inset-0 flex items-center justify-center text-ink-muted text-sm">
+                        No image available
+                    </div>
+                    <button type="button" @click="$store.quickView.close()" aria-label="Close"
+                            class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-ink-secondary hover:text-charcoal transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <span class="inline-block text-[10px] font-semibold uppercase tracking-wide text-mint-dark bg-mint/10 rounded px-2 py-0.5" x-text="$store.quickView.product.category"></span>
+                    <p class="font-display font-bold text-lg text-charcoal mt-2" x-text="$store.quickView.product.title"></p>
+                    <p x-show="$store.quickView.product.keySpec" class="text-sm font-mono text-ink-secondary mt-1" x-text="$store.quickView.product.keySpec"></p>
+                    <p class="font-mono text-2xl font-bold text-charcoal mt-3" x-text="'R' + $store.quickView.product.price"></p>
+                    <p class="text-xs text-ink-muted">VAT included &middot; Delivered to South Africa</p>
+                    <div class="mt-4 flex gap-2">
+                        <a :href="$store.quickView.product.url" class="flex-1 text-center bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition">View full details</a>
+                        <button type="button" @click="$store.compare.toggle($store.quickView.product)"
+                                :class="$store.compare.has($store.quickView.product.id) ? 'bg-mint/10 border-mint text-mint-dark' : 'border-border text-ink-secondary hover:border-mint/40'"
+                                class="border px-4 py-2.5 rounded-full text-sm font-semibold transition whitespace-nowrap">
+                            <span x-text="$store.compare.has($store.quickView.product.id) ? 'Added ✓' : 'Compare'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    {{-- Floating compare bar — appears once 1+ products are selected, persists across pages. --}}
+    <div x-data x-show="$store.compare.items.length > 0" x-cloak x-transition
+         class="fixed bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-border rounded-full shadow-lg pl-2 pr-1.5 py-1.5 flex items-center gap-3 max-w-[92vw]">
+        <div class="flex items-center -space-x-2 flex-shrink-0">
+            <template x-for="item in $store.compare.items" :key="item.id">
+                <div class="w-9 h-9 rounded-full border-2 border-white bg-slate-100 overflow-hidden flex-shrink-0">
+                    <img :src="item.image" x-show="item.image" x-on:error="item.image = null" class="w-full h-full object-cover" alt="">
+                </div>
+            </template>
+        </div>
+        <span class="text-sm font-semibold text-charcoal whitespace-nowrap" x-text="$store.compare.items.length + ' selected'"></span>
+        <button type="button" @click="$store.compare.openDrawer()"
+                :disabled="$store.compare.items.length < 2"
+                :class="$store.compare.items.length < 2 ? 'bg-mint/40 cursor-not-allowed' : 'bg-mint hover:bg-mint-dark'"
+                class="text-white text-sm font-semibold px-4 py-2 rounded-full transition whitespace-nowrap">
+            Compare now
+        </button>
+        <button type="button" @click="$store.compare.clear()" aria-label="Clear compare selection"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-ink-muted hover:text-charcoal hover:bg-slate-100 transition flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+
+    {{-- Compare drawer — slides in from the right, fetches real spec data for the selected products when opened. --}}
+    <div x-data x-show="$store.compare.open" x-cloak x-transition.opacity
+         @keydown.escape.window="$store.compare.closeDrawer()"
+         class="fixed inset-0 z-50 bg-brand-950/60" @click="$store.compare.closeDrawer()">
+        <div @click.stop x-show="$store.compare.open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+             class="fixed inset-y-0 right-0 z-50 w-full sm:w-[90vw] lg:w-[75vw] max-w-4xl bg-white shadow-2xl overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-border px-5 py-4 flex items-center justify-between z-10">
+                <h2 class="font-display font-bold text-lg text-charcoal">Compare equipment</h2>
+                <button type="button" @click="$store.compare.closeDrawer()" aria-label="Close" class="w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-charcoal hover:bg-slate-100 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="p-5">
+                <div x-show="$store.compare.loading" class="py-16 text-center text-ink-muted text-sm">Loading comparison…</div>
+
+                <div x-show="!$store.compare.loading && $store.compare.items.length < 2" class="py-16 text-center text-ink-muted text-sm">
+                    Add at least 2 items to compare — use the compare button on any product card.
+                </div>
+
+                <div x-show="!$store.compare.loading && $store.compare.items.length >= 2 && $store.compare.data && $store.compare.data.products.length < 2" class="py-16 text-center text-ink-muted text-sm">
+                    One or more selected items are no longer available to compare.
+                </div>
+
+                <div x-show="!$store.compare.loading && $store.compare.data && $store.compare.data.products.length >= 2" class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="text-left align-bottom pb-3 pr-4 w-40 flex-shrink-0"></th>
+                                <template x-for="product in $store.compare.data?.products ?? []" :key="product.id">
+                                    <th class="align-bottom pb-3 px-3 min-w-[180px] text-left">
+                                        <div class="w-full aspect-square bg-slate-50 border border-border rounded-lg overflow-hidden mb-2">
+                                            <img :src="product.image" x-show="product.image" x-on:error="product.image = null" class="w-full h-full object-contain p-3" alt="">
+                                        </div>
+                                        <a :href="product.url" class="font-semibold text-charcoal hover:text-mint-dark transition line-clamp-2" x-text="product.title"></a>
+                                        <p class="font-mono font-bold text-charcoal mt-1" x-text="'R' + product.price"></p>
+                                        <button type="button" @click="$store.compare.remove(product.id)" class="text-xs text-ink-muted hover:text-error transition mt-1">Remove</button>
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="key in $store.compare.data?.specKeys ?? []" :key="key">
+                                <tr class="border-t border-border">
+                                    <td class="py-2.5 pr-4 font-medium text-ink-secondary align-top" x-text="key"></td>
+                                    <template x-for="product in $store.compare.data?.products ?? []" :key="product.id + key">
+                                        <td class="py-2.5 px-3 font-mono text-charcoal align-top" x-text="product.specs[key] ?? '—'"></td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

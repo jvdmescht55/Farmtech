@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\SourceController as AdminSourceController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\CompareController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\PaymentWebhookController;
 use App\Http\Controllers\Storefront\ProductController;
@@ -31,6 +32,7 @@ Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('searc
 Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
 Route::get('/industry/{industry}', [ProductController::class, 'industry'])->name('industry.show');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/compare', [CompareController::class, 'data'])->name('compare.data')->middleware('throttle:search');
 
 Route::middleware('throttle:cart')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

@@ -145,19 +145,25 @@
 
                 {{-- Tabbed spec matrix --}}
                 <div x-data="{ tab: 'specs' }" class="mt-8">
-                    <div class="flex gap-1 border-b border-slate-200 overflow-x-auto">
+                    <div class="flex gap-1 border-b border-border overflow-x-auto">
                         <button type="button" @click="tab = 'specs'" :class="tab === 'specs' ? 'border-mint text-brand-900' : 'border-transparent text-slate-500 hover:text-slate-700'" class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition">Specifications</button>
+                        <button type="button" @click="tab = 'included'" :class="tab === 'included' ? 'border-mint text-brand-900' : 'border-transparent text-slate-500 hover:text-slate-700'" class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition">What's Included</button>
                         <button type="button" @click="tab = 'compliance'" :class="tab === 'compliance' ? 'border-mint text-brand-900' : 'border-transparent text-slate-500 hover:text-slate-700'" class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition">ISO Compliance &amp; ICASA</button>
                         <button type="button" @click="tab = 'delivery'" :class="tab === 'delivery' ? 'border-mint text-brand-900' : 'border-transparent text-slate-500 hover:text-slate-700'" class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition">Delivery &amp; Warranty</button>
                     </div>
 
                     <div x-show="tab === 'specs'" x-cloak class="pt-5">
                         @if ($product->specs->isNotEmpty())
-                            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white divide-y divide-slate-200">
+                            <div x-data="{ openGroups: @js($product->specs->groupBy('spec_group')->keys()->mapWithKeys(fn ($g) => [$g => true])) }"
+                                 class="border border-border rounded-xl overflow-hidden bg-white divide-y divide-border">
                                 @foreach ($product->specs->groupBy('spec_group') as $group => $specs)
                                     <div>
-                                        <p class="text-xs font-semibold text-mint-dark uppercase tracking-widest px-4 pt-3 pb-1">{{ $group }}</p>
-                                        <table class="w-full text-sm">
+                                        <button type="button" @click="openGroups['{{ $group }}'] = !openGroups['{{ $group }}']"
+                                                class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-mint/5 transition">
+                                            <span class="text-xs font-semibold text-mint-dark uppercase tracking-widest">{{ $group }}</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-ink-muted transition-transform" :class="openGroups['{{ $group }}'] ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
+                                        <table x-show="openGroups['{{ $group }}']" x-transition class="w-full text-sm">
                                             <tbody>
                                                 @foreach ($specs as $spec)
                                                     <tr class="{{ $spec->is_highlight ? 'bg-mint/5' : '' }}">
@@ -173,6 +179,21 @@
                         @else
                             <p class="text-sm text-slate-500">No detailed specifications recorded for this listing.</p>
                         @endif
+                    </div>
+
+                    <div x-show="tab === 'included'" x-cloak class="pt-5">
+                        <div class="border border-border rounded-xl bg-white p-5">
+                            @if (!empty($product->included_items))
+                                <p class="text-xs font-semibold text-brand-900 uppercase tracking-wide mb-3">Equipment Manifest — what's in the box</p>
+                                <ul class="space-y-2 text-sm text-slate-700">
+                                    @foreach ($product->included_items as $item)
+                                        <li class="flex gap-2"><span class="text-mint-dark flex-shrink-0">✓</span> {{ $item }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p class="text-sm text-slate-500">Box contents haven't been confirmed for this specific listing yet — contact <a href="mailto:support@farmtech.co.za" class="text-mint-dark hover:underline">support@farmtech.co.za</a> with the SKU ({{ $product->sku }}) before ordering if this matters for your use case.</p>
+                            @endif
+                        </div>
                     </div>
 
                     <div x-show="tab === 'compliance'" x-cloak class="pt-5">
@@ -245,29 +266,30 @@
         </section>
     @endif
 
-    {{-- Floating WhatsApp specialist CTA --}}
+    {{-- Desktop floating WhatsApp specialist CTA — mobile gets it inline in the sticky purchase bar below instead. --}}
     @if ($whatsappUrl)
         <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="Chat with an equipment specialist on WhatsApp"
            class="hidden lg:flex fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-lg items-center justify-center transition hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
         </a>
-        {{-- Mobile: above the sticky add-to-cart bar rather than overlapping it --}}
-        <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="Chat with an equipment specialist on WhatsApp"
-           class="lg:hidden fixed {{ $product->isOutOfStock() ? 'bottom-6' : 'bottom-20' }} right-4 z-40 w-12 h-12 rounded-full bg-emerald-500 shadow-lg flex items-center justify-center transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
-        </a>
     @endif
 
-    {{-- Mobile sticky add-to-cart bar --}}
-    @if (!$product->isOutOfStock())
-        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-            <div class="min-w-0">
-                <p class="font-mono font-bold text-brand-900 text-lg leading-none">R{{ number_format($product->retail_price_zar, 2) }}</p>
-                <p class="text-[11px] text-slate-500 mt-0.5 truncate">{{ $product->title }}</p>
-            </div>
-            <button type="submit" form="add-to-cart-form" class="flex-shrink-0 ml-auto bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
+    {{-- Mobile sticky purchase bar — price + WhatsApp enquiry + Add to Cart together, so a buyer never has to hunt for either action. --}}
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-border px-4 py-3 flex items-center gap-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+        <div class="min-w-0 flex-1">
+            <p class="font-mono font-bold text-brand-900 text-lg leading-none">R{{ number_format($product->retail_price_zar, 2) }}</p>
+            <p class="text-[11px] text-slate-500 mt-0.5 truncate">{{ $product->title }}</p>
+        </div>
+        @if ($whatsappUrl)
+            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="Chat with an equipment specialist on WhatsApp"
+               class="flex-shrink-0 w-11 h-11 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-sm flex items-center justify-center transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+            </a>
+        @endif
+        @if (!$product->isOutOfStock())
+            <button type="submit" form="add-to-cart-form" class="flex-shrink-0 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
                 Add to Cart
             </button>
-        </div>
-    @endif
+        @endif
+    </div>
 @endsection

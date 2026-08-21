@@ -13,7 +13,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sku', 'title', 'slug', 'category', 'short_description', 'description_html',
+        'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'included_items',
         'original_price_usd', 'est_weight_kg', 'hs_code', 'customs_duty_rate', 'vat_rate',
         'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
@@ -24,6 +24,7 @@ class Product extends Model
     protected function casts(): array
     {
         return [
+            'included_items' => 'array',
             'original_price_usd' => 'decimal:2',
             'est_weight_kg' => 'decimal:3',
             'customs_duty_rate' => 'decimal:4',

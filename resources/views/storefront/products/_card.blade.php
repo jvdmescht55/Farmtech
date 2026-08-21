@@ -15,6 +15,19 @@
     $keySpec = $product->specs->firstWhere('is_highlight', true) ?? $product->specs->first();
 
     $roundedPrice = 'R'.number_format($product->retail_price_zar, 0, '', ' ');
+
+    // Snapshot for Quick View / Compare — Alpine reads this client-side, so
+    // it's the same real, already-fetched data the card renders, not a
+    // second query when the buttons are clicked.
+    $quickViewPayload = [
+        'id' => $product->id,
+        'title' => $product->title,
+        'category' => $product->category->industry()->badgeLabel(),
+        'keySpec' => $keySpec?->spec_value,
+        'price' => number_format((float) $product->retail_price_zar, 0, '', ' '),
+        'image' => $product->thumbnail?->url,
+        'url' => route('products.show', $product),
+    ];
 @endphp
 
 {{--
@@ -32,6 +45,20 @@
 
     <div class="px-3 pt-3 relative pointer-events-none">
         <x-product-image :product="$product" class="group-hover:scale-[1.03] transition-transform duration-500" />
+
+        <div class="absolute top-2 right-2 z-10 flex flex-col gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity pointer-events-auto">
+            <button type="button" @click.stop="$store.quickView.show(@js($quickViewPayload))"
+                    aria-label="Quick view {{ $product->title }}"
+                    class="w-8 h-8 rounded-full bg-white/95 border border-border shadow-sm flex items-center justify-center text-ink-secondary hover:text-brand-900 hover:border-mint/40 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button type="button" @click.stop="$store.compare.toggle(@js($quickViewPayload))"
+                     :class="$store.compare.has({{ $product->id }}) ? 'bg-mint text-white border-mint' : 'bg-white/95 text-ink-secondary border-border hover:text-brand-900 hover:border-mint/40'"
+                    aria-label="Add {{ $product->title }} to compare"
+                    class="w-8 h-8 rounded-full border shadow-sm flex items-center justify-center transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="7" width="8" height="14" rx="1"/></svg>
+            </button>
+        </div>
     </div>
 
     <div class="p-4 pt-3 flex flex-col flex-1 relative">

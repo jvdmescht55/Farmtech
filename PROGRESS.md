@@ -1,8 +1,29 @@
 # Farmtech — Progress & Outstanding Work
 
-Last updated: 2026-08-20 (rev. 12 — P0 fixes from the exact-spec's own priority list: broken-image
-handling, product card redesign, "Farmtech Verified" rename, publish-time image gate, a real
-homepage "How Farmtech Works" section, and a decomposed import-pricing card).
+Last updated: 2026-08-20 (rev. 13 — P1 PDP overhaul: collapsible spec accordion, a real Equipment
+Manifest field, a consolidated mobile purchase bar, a Quick View modal and up-to-3 Compare drawer
+for catalog cards, and a token sweep of the admin review panel / modals / checkout layout).
+What changed since rev. 12: the PDP's spec groups (already real, pipeline-assigned `spec_group`
+values — no renaming needed) became a collapsible accordion instead of a flat always-open list; a
+new "What's Included" tab shows a real, admin-entered Equipment Manifest (a genuinely new
+`products.included_items` JSON column, nullable — most existing products have never had this
+recorded, so the tab honestly says so rather than inventing box contents) alongside the existing
+Specifications/Compliance/Delivery tabs; the mobile sticky bar now carries price, a WhatsApp
+enquiry button, and Add to Cart together instead of a separate floating WhatsApp button that could
+overlap it. Catalog cards (`_card.blade.php`) gained two hover-revealed (always-visible below `lg:`)
+buttons: Quick View opens a shared modal with the card's own already-rendered data (no second
+fetch), and Compare adds the product to a localStorage-persisted, up-to-3 selection with a floating
+"N selected · Compare now" bar that opens a slide-over drawer fetching real spec data for the
+selected products from a new `GET /compare` endpoint, aligned by shared `spec_key` with missing
+values left blank rather than invented. Swept `rounded-2xl`/`border-slate-*` to the locked
+`.card`/`border-border` tokens across the admin product review panel, the trending-strip and PDP
+Quick View modals, and the cart/checkout pages, per this session's explicit ask — the admin panel's
+own "kept visually simpler on purpose" design note in `tailwind.config.js` was about not adopting
+storefront flourishes, not about the border/radius tokens themselves, so this doesn't reverse that
+decision. **One real bug found and fixed during live verification**: the new floating compare bar
+(`bottom-4`) overlapped the PDP's mobile sticky purchase bar when both were visible at once — fixed
+by raising the compare bar to `bottom-20` on mobile (`lg:bottom-4` on desktop, where no PDP sticky
+bar exists to collide with).
 What changed since rev. 11: rev. 11 implemented items 1-12 of the exact-spec message (design system,
 header, hero, application cards) but items 13+ were never received — this session's follow-up
 message supplied the rest (through item 86) and asked to continue with the remaining 🔴 P0 items
@@ -65,6 +86,65 @@ reskin; rev. 7 added the multi-industry expansion, Value-Density Feasibility Eng
 Trending strip; rev. 6 added the arbitrage engine, profit transparency, and image quality gate; rev.
 5 added the scraper webhook; rev. 4 covered RBAC, rate limiting, S3 storage, CI, and the storefront
 redesign. See [README.md](README.md) for architecture/setup.
+
+---
+
+## ✅ Working and verified (this session, rev. 13)
+
+- **Collapsible spec accordion.** The Specifications tab's existing real `spec_group` sections
+  (Frequency & Compliance, Power & Battery, etc. — pipeline-assigned per product, never renamed)
+  now expand/collapse independently via Alpine, defaulting open. Verified live: toggling one group
+  hides only that group's rows while the rest stay open.
+- **Real Equipment Manifest, not fabricated box contents.** New `products.included_items` (JSON,
+  nullable) column, an admin quick-edit textarea (one item per line, blank lines dropped, empty
+  input stores `null`), and a new "What's Included" PDP tab. A product with real manifest data shows
+  it as a checklist; one without shows an honest "haven't been confirmed for this specific listing"
+  message with the SKU and a support contact — never an invented parts list. 4 new tests
+  (`ProductManifestUpdateTest`) cover the round-trip and both PDP states.
+- **Consolidated mobile purchase bar.** The sticky bottom bar (price + title) now also carries a
+  WhatsApp enquiry icon-button and Add to Cart together, replacing a separate floating WhatsApp
+  button that only worked because it was manually offset to sit above the cart bar. Desktop keeps
+  its own larger floating WhatsApp button (`lg:` only), unchanged.
+- **Quick View — one shared modal, no second fetch.** Every catalog card (`_card.blade.php`) gained
+  a Quick View button (always visible below `lg:`, hover-revealed at `lg:`+) that opens a shared
+  Alpine-store-driven modal using the card's own already-rendered data (title/price/key
+  spec/image/category) — verified live via the store (`Alpine.store('quickView').product` matches
+  the real clicked product) and confirmed on-screen via `elementFromPoint`, since this sandbox's
+  click-simulation tool couldn't reliably deliver a real click to the small (32×32px) button — the
+  same documented testing-environment limitation as rev. 12's verified-badge button, not a code
+  defect (direct `dispatchEvent` and store inspection both confirm correct wiring).
+- **Compare — up to 3 products, real matching-spec-key alignment, persisted across pages.** A
+  Compare button on every card toggles a localStorage-backed selection (max 3, with a toast if a
+  4th is attempted); a floating "N selected · Compare now" bar appears once 1+ are selected and
+  opens a slide-over drawer. The drawer fetches real spec data for the selected products from a new
+  `GET /compare?ids=` endpoint (`CompareController`), which aligns rows by shared `spec_key`
+  (most-shared-first) and leaves a cell blank rather than inventing a value a product doesn't have.
+  4 new tests (`CompareControllerTest`) cover real spec alignment, the "not invented for the other
+  product" case, the 3-item cap, and storefront-visibility filtering. Verified live end-to-end:
+  toggled 2 real products, confirmed the `GET /compare?ids=7,1` request and its JSON body, and
+  confirmed via `getBoundingClientRect`/`elementFromPoint` that the drawer renders on top of the
+  page with the right content (the `computer` screenshot tool intermittently lagged a frame behind
+  live DOM state during this session — a capture-pipeline quirk, not a rendering bug; verified past
+  it with direct DOM inspection each time).
+- **Real bug found and fixed during live verification**: the new floating compare bar and the PDP's
+  existing mobile sticky purchase bar both anchor to the bottom of the screen — with both visible at
+  once (a real scenario: comparing items, then opening one), they visually overlapped. Fixed by
+  raising the compare bar to `bottom-20` on mobile screens specifically (`lg:bottom-4` on desktop,
+  where the PDP sticky bar doesn't exist to collide with).
+- **Token sweep, scoped to what was asked**: the admin product review panel's three white
+  panels/form now use `.card` (12px radius, `border-[#DCE5E0]`) instead of ad hoc `border rounded-xl`
+  — the panel's other controls (badges, buttons, inputs) were deliberately left on their existing
+  simpler styling, since the admin's "kept visually simpler on purpose" note in `tailwind.config.js`
+  is about not importing storefront flourishes wholesale, not about which border-color token gets
+  used. The trending-strip and PDP-area Quick View/Compare modals, and the cart + checkout pages,
+  had their `rounded-2xl`/`border-slate-*` occurrences swept to `rounded-xl`/`border-border`. The
+  wider sitewide slate-utility sweep (body text colors, non-modal cards elsewhere) remains the
+  explicitly-deferred item it already was in rev. 11's caveats — not touched this pass.
+- **Full regression check**: 107 Laravel tests passing (up from 99; +8 new), 34 Node worker tests
+  unchanged, `npm run build` clean, verified live in-browser at desktop (1280px) and mobile (375px):
+  PDP spec accordion, What's Included tab (both real-data and honest-fallback states), consolidated
+  mobile purchase bar, Quick View modal, Compare toggle/drawer, admin review panel, and cart/checkout
+  pages all checked with no console errors beyond the pre-existing offline-Google-Fonts warning.
 
 ---
 
@@ -619,9 +699,13 @@ redesign. See [README.md](README.md) for architecture/setup.
   treatment already built in rev. 11); the "Shop by Equipment" traditional-catalogue section
   (item 13, entirely new, not built); category image 16:10 standardization (item 14, deferred since
   it's really in service of item 13); Featured Category treatment (item 15); Quick View/Compare
-  (items 25-27); Best For / Not Ideal For (items 28-29); the full product-page redesign (item 42);
-  grouped specifications, technical documents, warranty block, related equipment, bundles (items
-  45-49); sidebar/dynamic category filters beyond what already exists (items 50-52); sort-label and
+  (items 25-27, a general-purpose version shipped in rev. 13 — see rev. 13's own notes above; not
+  checked against every exact item 25-27 sizing/copy detail since that part of the original spec
+  message text isn't in this session's context); Best For / Not Ideal For (items 28-29); the full
+  product-page redesign (item 42) beyond the spec-accordion/manifest/sticky-bar pieces rev. 13
+  delivered; technical documents, warranty block, related equipment, bundles (items 45-49, minus the
+  manifest piece rev. 13 covered); sidebar/dynamic category filters beyond what already exists
+  (items 50-52); sort-label and
   pagination polish (items 55-57); the footer rebuild to the exact new column structure + mobile
   accordion (items 58-61); cart drawer, checkout stages, order-tracking visual (items 62-66);
   Support/Contact pages (items 67-68); reviews (item 70, still deliberately not faked); real farm
@@ -832,7 +916,7 @@ redesign. See [README.md](README.md) for architecture/setup.
 ## Known rough edges
 
 - Same Windows/local-install and dev-server-can-die caveats as before.
-- 133 automated tests total across Laravel (99) and the Node worker (34) — genuinely covered, not
+- 141 automated tests total across Laravel (107) and the Node worker (34) — genuinely covered, not
   padding.
 
 ---

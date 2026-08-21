@@ -93,9 +93,16 @@ class ProductController extends Controller
             'stock_quantity' => ['nullable', 'integer'],
             'allow_backorder' => ['sometimes', 'boolean'],
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
+            'included_items' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $validated['allow_backorder'] = $request->boolean('allow_backorder');
+
+        // One item per line in the textarea, stored as a real JSON array —
+        // blank lines dropped, nothing invented when the field is left empty.
+        $validated['included_items'] = $validated['included_items']
+            ? array_values(array_filter(array_map('trim', explode("\n", $validated['included_items']))))
+            : null;
 
         $product->update($validated);
 

@@ -72,13 +72,13 @@
         {{-- Quick View modal --}}
         <div x-show="quickView" x-cloak x-transition.opacity @keydown.escape.window="quickView = null"
              class="fixed inset-0 z-50 bg-brand-950/60 flex items-center justify-center p-4" @click="quickView = null">
-            <div x-show="quickView" @click.stop class="bg-white border border-slate-200 rounded-2xl max-w-md w-full overflow-hidden" x-transition.scale.origin.center>
+            <div x-show="quickView" @click.stop class="bg-white border border-border rounded-xl max-w-md w-full overflow-hidden" x-transition.scale.origin.center>
                 <template x-if="quickView">
                     <div>
                         <div class="aspect-video bg-slate-100 relative">
                             <img :src="quickView.image" x-show="quickView.image" x-on:error="quickView.image = null" class="w-full h-full object-cover" alt="">
                             <div x-show="!quickView.image" class="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-400" x-html="iconSvgs[quickView.icon]"></div>
-                            <button type="button" @click="quickView = null" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition">
+                            <button type="button" @click="quickView = null" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-slate-600 hover:text-slate-900 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
                         </div>

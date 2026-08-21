@@ -5,7 +5,7 @@
 @section('content')
     <div class="grid lg:grid-cols-3 gap-6">
         {{-- Specs & Compliance Sidebar --}}
-        <div class="bg-white border rounded-xl p-6 h-fit space-y-4">
+        <div class="card p-6 h-fit space-y-4">
             <h2 class="font-semibold">Compliance Sidebar</h2>
 
             @if ($product->status === 'rejected_uncompetitive')
@@ -68,7 +68,7 @@
 
         <div class="lg:col-span-2 space-y-6">
             {{-- Profit Breakdown --}}
-            <div class="bg-white border rounded-xl p-6">
+            <div class="card p-6">
                 <h2 class="font-semibold mb-4">Profit Breakdown</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                     <div>
@@ -134,7 +134,7 @@
             </div>
 
             {{-- Quick Edit --}}
-            <form action="{{ route('admin.products.update', $product) }}" method="POST" class="bg-white border rounded-xl p-6 space-y-4">
+            <form action="{{ route('admin.products.update', $product) }}" method="POST" class="card p-6 space-y-4">
                 @csrf
                 @method('PATCH')
                 <h2 class="font-semibold">Quick Edit</h2>
@@ -145,6 +145,11 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Short Description</label>
                     <textarea name="short_description" rows="2" class="w-full border rounded-md px-3 py-2">{{ $product->short_description }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Equipment Manifest — one item per line</label>
+                    <textarea name="included_items" rows="4" placeholder="e.g. 4-wire load cell probe&#10;12V power adapter&#10;Calibration certificate" class="w-full border rounded-md px-3 py-2 font-mono text-sm">{{ old('included_items', $product->included_items ? implode("\n", $product->included_items) : '') }}</textarea>
+                    <p class="text-xs text-gray-400 mt-1">Shown on the product page's "What's Included" tab. Leave blank if contents aren't confirmed yet — the page will say so honestly rather than guessing.</p>
                 </div>
                 <div class="grid grid-cols-3 gap-4">
                     <div>
