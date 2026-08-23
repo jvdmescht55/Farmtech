@@ -14,11 +14,16 @@ class Product extends Model
 
     protected $fillable = [
         'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'included_items',
+        'compatibility_notes', 'requirements_notes', 'warranty_terms', 'technical_specs_json',
         'original_price_usd', 'est_weight_kg', 'hs_code', 'customs_duty_rate', 'vat_rate',
-        'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar',
+        'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar', 'customs_clearance_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
-        'stock_status', 'lead_time_days', 'status', 'is_active',
+        'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'supplier_last_checked_at',
+        'import_contingency_pct', 'insurance_cost_zar', 'payment_fees_zar',
+        'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'is_active',
         'stock_quantity', 'allow_backorder', 'low_stock_threshold',
+        'verification_tier', 'icasa_status', 'radio_frequency_confirmed', 'datasheet_uploaded',
+        'published_at', 'approved_at',
     ];
 
     protected function casts(): array
@@ -32,14 +37,25 @@ class Product extends Model
             'intl_freight_zar' => 'decimal:2',
             'customs_vat_zar' => 'decimal:2',
             'domestic_delivery_zar' => 'decimal:2',
+            'customs_clearance_zar' => 'decimal:2',
             'landed_cost_zar' => 'decimal:2',
             'retail_price_zar' => 'decimal:2',
+            'supplier_cost_usd' => 'decimal:2',
+            'exchange_rate' => 'decimal:2',
+            'supplier_last_checked_at' => 'datetime',
+            'import_contingency_pct' => 'decimal:2',
+            'insurance_cost_zar' => 'decimal:2',
+            'payment_fees_zar' => 'decimal:2',
             'profit_margin_pct' => 'decimal:2',
             'is_active' => 'boolean',
             'category' => ProductCategory::class,
             'stock_quantity' => 'integer',
             'allow_backorder' => 'boolean',
             'low_stock_threshold' => 'integer',
+            'radio_frequency_confirmed' => 'boolean',
+            'datasheet_uploaded' => 'boolean',
+            'published_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
     }
 

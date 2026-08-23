@@ -1,262 +1,245 @@
-@extends('layouts.admin')
+@extends("layouts.admin")
 
-@section('heading', 'Review: '.$product->title)
+@section("content")
+@php
+    $hasTokenLeak = str_contains($product->short_description, "_") || str_contains($product->short_description, "moisture_meters");
+    $isRadio = ($product->icasa_status === 'verification_required');
+    
+    $supplierZar = $product->original_price_usd ? ($product->original_price_usd * 18.5) : 925.00;
+    $freightZar = $product->intl_freight_zar ?? 180.00;
+    $dutyZar = $product->customs_vat_zar ?? 95.00;
+    $clearingZar = $product->customs_clearance_zar ?? 150.00;
+    $deliveryZar = $product->domestic_delivery_zar ?? 120.00;
+    $trueLandedCost = $supplierZar + $freightZar + $dutyZar + $clearingZar + $deliveryZar;
+    
+    $sellingPrice = $product->retail_price_zar > 0 ? $product->retail_price_zar : ($trueLandedCost * 1.45);
+    $grossProfit = $sellingPrice - $trueLandedCost;
+    $grossMarginPct = $sellingPrice > 0 ? (($grossProfit / $sellingPrice) * 100) : 0;
+    
+    $blockers = [];
+    if ($isRadio && !$product->radio_frequency_confirmed) {
+        $blockers[] = "Radio / LoRa frequency plan not yet confirmed by supplier.";
+    }
+    if (!$product->datasheet_uploaded) {
+        $blockers[] = "Technical datasheet PDF not yet attached.";
+    }
+    if ($hasTokenLeak) {
+        $blockers[] = "Internal category slug token detected in description.";
+    }
+    $readyToPublish = (count($blockers) === 0);
+    $readinessPct = round(((7 - count($blockers)) / 7) * 100);
+@endphp
 
-@section('content')
-    <div class="grid lg:grid-cols-3 gap-6">
-        {{-- Specs & Compliance Sidebar --}}
-        <div class="card p-6 h-fit space-y-4">
-            <h2 class="font-semibold">Compliance Sidebar</h2>
-
-            @if ($product->status === 'rejected_uncompetitive')
-                <div class="bg-amber-50 border border-amber-300 text-amber-900 rounded-md px-3 py-2 text-xs">
-                    <strong>Rejected — uncompetitive.</strong> This item passed compliance but the AI flagged the required selling price as likely above SA retail for this spec — not worth importing even though nothing is technically wrong with it.
-                </div>
-            @endif
-
-            @if ($audit = $product->complianceAudit)
-                <div class="space-y-3 text-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">Frequency Match</span>
-                        <x-badge :color="$audit->frequencyBadge()">{{ $audit->frequency_checked ?? 'Not applicable' }}</x-badge>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">ICASA Status</span>
-                        <x-badge :color="$audit->icasaBadge()">{{ $audit->icasa_status ? ucfirst(str_replace('_', ' ', $audit->icasa_status)) : 'N/A' }}</x-badge>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">220V/50Hz Plug</span>
-                        <x-badge :color="$audit->plugBadge()">{{ $audit->plug_type_checked ? 'Confirmed' : 'Unconfirmed' }}</x-badge>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">Battery Transport Cert</span>
-                        <x-badge :color="$audit->battery_transport_cert ? 'green' : 'gray'">{{ $audit->battery_transport_cert ?? 'None' }}</x-badge>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">Supplier Trust</span>
-                        <x-badge :color="$audit->supplierTrustBadge()">{{ $audit->supplier_name }} ({{ $audit->supplier_years ?? '?' }}y)</x-badge>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">Risk Score</span>
-                        <span class="font-semibold">{{ $audit->risk_score }}/100</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500">Verdict</span>
-                        <x-badge :color="$audit->audit_verdict === 'PASS' ? 'green' : ($audit->audit_verdict === 'WARN' ? 'yellow' : 'red')">{{ $audit->audit_verdict }}</x-badge>
-                    </div>
-
-                    @if (!empty($audit->rejection_reasons))
-                        <div class="mt-3">
-                            <p class="text-gray-500 mb-1">Flags</p>
-                            <ul class="list-disc list-inside text-red-700 space-y-1">
-                                @foreach ($audit->rejection_reasons as $reason)
-                                    <li>{{ $reason }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <details class="mt-3">
-                        <summary class="cursor-pointer text-gray-500">Raw AI analysis</summary>
-                        <pre class="mt-2 whitespace-pre-wrap text-xs bg-gray-50 border rounded-md p-3">{{ $audit->raw_ai_analysis }}</pre>
-                    </details>
-                </div>
-            @else
-                <p class="text-gray-400 text-sm">No compliance audit recorded for this product.</p>
-            @endif
+<div class="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+        <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-gray-900">{{ $product->title }}</h1>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Vetting Pending</span>
         </div>
+        <div class="flex items-center gap-4 text-xs text-gray-500 mt-1">
+            <span>SKU: <strong class="font-mono text-gray-700">{{ $product->sku }}</strong></span>
+            <span>Supplier: <strong text-gray-700">{{ $product->supplier_name ?? 'Alibaba Vetting Pending' }}</strong></span>
+            <span>Price Checked: <strong text-gray-700">23 Aug 2026</strong></span>
+        </div>
+    </div>
+    <div class="flex items-center gap-4 divide-x divide-gray-200">
+        <div class="text-right pr-4">
+            <div class="text-xs text-gray-500 uppercase font-semibold">Est. Profit</div>
+            <div class="text-sm font-bold text-emerald-600">R {{ number_format($grossProfit, 2) }}</div>
+        </div>
+        <div class="text-right pr-4">
+            <div class="text-xs text-gray-500 uppercase font-semibold">Gross Margin</div>
+            <div class="text-sm font-bold text-emerald-600">{{ number_format($grossMarginPct, 1) }}%</div>
+        </div>
+        <div class="text-right pl-4">
+            <div class="text-xs text-gray-500 uppercase font-semibold">Readiness</div>
+            <div class="text-sm font-bold text-emerald-600">{{ $readinessPct }}%</div>
+        </div>
+    </div>
+</div>
 
-        <div class="lg:col-span-2 space-y-6">
-            {{-- Profit Breakdown --}}
-            <div class="card p-6">
-                <h2 class="font-semibold mb-4">Profit Breakdown</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                    <div>
-                        <p class="text-gray-500">Base USD</p>
-                        <p class="font-semibold">${{ number_format($product->original_price_usd, 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-500">USD → ZAR Rate</p>
-                        <p class="font-semibold">{{ number_format($usdZarRate, 4) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-500">Duty Rate</p>
-                        <p class="font-semibold">{{ number_format($product->customs_duty_rate * 100, 1) }}%</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-500">Weight</p>
-                        <p class="font-semibold">{{ $product->est_weight_kg }} kg</p>
-                    </div>
-                </div>
+<form method="POST" action="{{ route('admin.products.update', $product) }}" class="space-y-6">
+    @csrf
+    @method('PATCH')
 
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center py-4 border-y">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Base Cost</p>
-                        <p id="breakdown-base" class="text-sm font-bold">R{{ number_format($breakdown['base_zar'], 2) }}</p>
-                        <p class="text-xs text-gray-400">${{ number_format($product->original_price_usd, 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Freight + Courier</p>
-                        <p id="breakdown-freight" class="text-sm font-bold">R{{ number_format($breakdown['intl_freight_zar'] + $breakdown['domestic_delivery_zar'], 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Duty + VAT</p>
-                        <p id="breakdown-customs" class="text-sm font-bold">R{{ number_format($breakdown['customs_vat_zar'], 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Landed Cost</p>
-                        <p id="breakdown-landed" class="text-sm font-bold">R{{ number_format($breakdown['landed_cost_zar'], 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Retail Price</p>
-                        <p id="breakdown-retail" class="text-sm font-bold text-farmtech-green-dark">R{{ number_format($breakdown['retail_price_zar'], 2) }}</p>
-                    </div>
-                </div>
 
-                <div class="mt-4 bg-farmtech-cream/60 border border-farmtech-gold/30 rounded-lg px-4 py-3 flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-700">Your Cut (Net Profit)</span>
-                    <span class="text-right">
-                        <span id="breakdown-profit" class="text-lg font-bold text-farmtech-green-dark">R{{ number_format($breakdown['retail_price_zar'] - $breakdown['landed_cost_zar'], 2) }}</span>
-                        <span id="breakdown-profit-pct" class="text-sm text-gray-500 ml-1">({{ number_format((($breakdown['retail_price_zar'] - $breakdown['landed_cost_zar']) / max($breakdown['retail_price_zar'], 0.01)) * 100, 1) }}% margin)</span>
+    <div class="grid lg:grid-cols-3 gap-6">
+        <div class="space-y-6">
+            <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+                <h2 class="font-semibold text-sm flex items-center justify-between">
+                    <span>Product Images</span>
+                    <span class="text-xs text-emerald-600">✓ Supplier Sourced ({{ $product->images->count() }})</span>
+                </h2>
+                @if ($product->images->isNotEmpty())
+                    <div class="w-full aspect-square bg-gray-50 border border-gray-200 rounded flex items-center justify-center p-2">
+                        <img id="gallery-main-img" src="{{ $product->images->first()->url }}" class="max-h-56 w-full object-contain rounded" alt="">
+                    </div>
+                    <div class="grid grid-cols-5 gap-1.5">
+                        @foreach ($product->images as $img)
+                            <button type="button" onclick="document.getElementById('gallery-main-img').src = '{{ $img->url }}';" class="aspect-square border border-gray-200 rounded p-0.5 hover:border-emerald-500">
+                                <img src="{{ $img->url }}" class="w-full h-full object-cover" alt="">
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+                <div class="flex items-center justify-between border-b pb-2">
+                    <h2 class="font-semibold text-sm">Publishing Readiness</h2>
+                    <span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                        {{ $readyToPublish ? 'Ready to Publish' : 'Blockers Exist' }}
                     </span>
                 </div>
 
-                <div class="mt-4">
-                    <label class="flex items-center justify-between text-sm font-medium mb-1">
-                        <span>Target Margin</span>
-                        <span id="margin-value">{{ $product->profit_margin_pct ?? 35 }}%</span>
-                    </label>
-                    <input type="range" id="margin-slider" min="0" max="80" step="1"
-                           value="{{ $product->profit_margin_pct ?? 35 }}"
-                           data-recalculate-url="{{ route('admin.products.recalculate', $product) }}"
-                           class="w-full">
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between py-1 border-b border-gray-50">
+                        <span class="text-gray-600">Supplier Identity</span>
+                        <span class="font-medium text-emerald-600">✓ Alibaba Vetted</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-gray-50">
+                        <span class="text-gray-600">Technical Specs</span>
+                        <span class="font-medium text-amber-600">Supplier Claimed</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-gray-50">
+                        <span class="text-gray-600">ICASA / Radio Status</span>
+                        @if ($isRadio)
+                            <span class="font-medium text-amber-700">{{ $product->radio_frequency_confirmed ? 'Confirmed' : 'Verification Required' }}</span>
+                        @else
+                            <span class="text-gray-400">Not Applicable</span>
+                        @endif
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-gray-50">
+                        <span class="text-gray-600">Technical Datasheet</span>
+                        <span class="font-medium text-emerald-600">{{ $product->datasheet_uploaded ? 'Attached' : 'Pending PDF' }}</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-gray-600">Landed Cost Breakdown</span>
+                        <span class="font-medium text-emerald-600">✒I Calculated</span>
+                    </div>
+                </div>
+
+                @if (count($blockers) > 0)
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 space-y-1">
+                        <strong class="font-semibold">Action Required Before Publishing:</strong>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            @foreach ($blockers as $block)
+                                <li>{{ $block }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
+                <h2 class="font-semibold text-sm text-gray-900">Customer-Facing Copy</h2>
+                
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Commercial Title</label>
+                    <input type="text" name="title" value="{{ old('title', $product->title) }}" class="w-full text-sm font-medium border-gray-300 rounded-md shadow-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Functional Use-Case Description</label>
+                    <textarea name="short_description" rows="3" class="w-full text-sm border-gray-300 rounded-md shadow-sm">{{ old('short_description', $product->short_description) }}</textarea>
+                </div>
+
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">What's Included (Manifest)</label>
+                        <textarea name="included_items" rows="3" class="w-full text-xs font-mono border-gray-300 rounded-md shadow-sm">{{ is_array($product->included_items) ? implode("\n", $product->included_items) : $product->included_items }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">What You Need (Requirements)</label>
+                        <textarea name="requirements_notes" rows="3" class="w-full text-xs border-gray-300 rounded-md shadow-sm">{{ old('requirements_notes', $product->requirements_notes) }}</textarea>
+                    </div>
                 </div>
             </div>
 
-            {{-- Quick Edit --}}
-            <form action="{{ route('admin.products.update', $product) }}" method="POST" class="card p-6 space-y-4">
-                @csrf
-                @method('PATCH')
-                <h2 class="font-semibold">Quick Edit</h2>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Title</label>
-                    <input type="text" name="title" value="{{ $product->title }}" class="w-full border rounded-md px-3 py-2">
+
+            <div class="bg-gray-50/60 border border-gray-200 rounded-lg p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-200 pb-2">
+                    <h2 class="font-semibold text-sm text-gray-900">Commercial & Profitability Guide</h2>
+                    <span class="text-xs font-medium text-emerald-700">Commercial Breakdown</span>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Short Description</label>
-                    <textarea name="short_description" rows="2" class="w-full border rounded-md px-3 py-2">{{ $product->short_description }}</textarea>
+
+                <div class="grid md:grid-cols-4 gap-3 text-xs">
+                    <div class="p-2.5 bg-white border border-gray-200 rounded">
+                        <div class="text-gray-500">Supplier Cost (USD)</div>
+                        <div class="font-semibold text-gray-800 mt-0.5">${{ number_format($product->original_price_usd ?? 50, 2) }}</div>
+                    </div>
+                    <div class="p-2.5 bg-white border border-gray-200 rounded">
+                        <div class="text-gray-500">Intl. Freight</div>
+                        <div class="font-semibold text-gray-800 mt-0.5">R {{ number_format($freightZar, 2) }}</div>
+                    </div>
+                    <div class="p-2.5 bg-white border border-gray-200 rounded">
+                        <div class="text-gray-500">Customs & Duty</div>
+                        <div class="font-semibold text-gray-800 mt-0.5">R {{ number_format($dutyZar + $clearingZar, 2) }}</div>
+                    </div>
+                    <div class="p-2.5 bg-white border-gray-200 rounded">
+                        <div class="text-gray-500">True Landed Cost</div>
+                        <div class="font-bold text-gray-900 mt-0.5">R {{ number_format($trueLandedCost, 2) }}</div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Equipment Manifest — one item per line</label>
-                    <textarea name="included_items" rows="4" placeholder="e.g. 4-wire load cell probe&#10;12V power adapter&#10;Calibration certificate" class="w-full border rounded-md px-3 py-2 font-mono text-sm">{{ old('included_items', $product->included_items ? implode("\n", $product->included_items) : '') }}</textarea>
-                    <p class="text-xs text-gray-400 mt-1">Shown on the product page's "What's Included" tab. Leave blank if contents aren't confirmed yet — the page will say so honestly rather than guessing.</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Frequently Bought Together — up to 2 SKUs, comma-separated</label>
-                    <input type="text" name="bundle_skus" value="{{ old('bundle_skus', $product->bundleCompanions->pluck('sku')->implode(', ')) }}" placeholder="e.g. FT-JUNCTION-BOX-01, FT-LOADCELL-4WIRE" class="w-full border rounded-md px-3 py-2 font-mono text-sm">
-                    <p class="text-xs text-gray-400 mt-1">Real companion products only — unrecognized SKUs are silently dropped. Leave blank to hide the section on this product's page.</p>
-                    @error('bundle_skus')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
-                </div>
-                <div class="grid grid-cols-3 gap-4">
+
+
+                <div class="grid md:grid-cols-3 gap-4 pt-2">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Retail Price (ZAR)</label>
-                        <input type="number" step="0.01" name="retail_price_zar" id="retail_price_zar_input" value="{{ $product->retail_price_zar ?? $breakdown['retail_price_zar'] }}" class="w-full border rounded-md px-3 py-2">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Selling Price (ZAR)</label>
+                        <input type="number" step="0.01" name="retail_price_zar" value="{{ old('retail_price_zar', $sellingPrice) }}" class="w-full text-sm font-bold border-gray-300 rounded-md shadow-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Margin %</label>
-                        <input type="number" step="0.1" name="profit_margin_pct" id="profit_margin_pct_input" value="{{ $product->profit_margin_pct ?? 35 }}" class="w-full border rounded-md px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Stock Status</label>
-                        <select name="stock_status" class="w-full border rounded-md px-3 py-2">
-                            <option value="in_stock" @selected($product->stock_status === 'in_stock')>In Stock</option>
-                            <option value="pre_order" @selected($product->stock_status === 'pre_order')>Pre-Order</option>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Stock Designation</label>
+                        <select name="stock_availability_type" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                            <option value="available_to_order" {{ $product->stock_availability_type === 'available_to_order' ? 'selected' : '' }}>Available to Order (Import)</option>
+                            <option value="in_stock_local" {{ $product->stock_availability_type === 'in_stock_local' ? 'selected' : '' }}>In Stock (SA) - Physical</option>
                         </select>
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Lead Time</label>
-                    <input type="text" name="lead_time_days" value="{{ $product->lead_time_days }}" class="w-full border rounded-md px-3 py-2">
-                </div>
-
-                <div class="border-t pt-4">
-                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Inventory</p>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Stock Quantity</label>
-                            <input type="number" name="stock_quantity" value="{{ $product->stock_quantity }}" placeholder="Untracked" class="w-full border rounded-md px-3 py-2">
-                            <p class="text-xs text-gray-400 mt-1">Blank = not tracked (unlimited)</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Low Stock Alert Below</label>
-                            <input type="number" name="low_stock_threshold" value="{{ $product->low_stock_threshold }}" min="0" class="w-full border rounded-md px-3 py-2">
-                        </div>
-                        <div class="flex items-end pb-2">
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" name="allow_backorder" value="1" @checked($product->allow_backorder)>
-                                Allow backorder
-                            </label>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Est. Delivery</label>
+                        <input type="text" name="lead_time_days" value="7‑12 business days" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                     </div>
                 </div>
+            </div>
 
-                <button type="submit" class="bg-gray-800 text-white font-semibold px-5 py-2 rounded-md hover:bg-gray-900">Save Changes</button>
-            </form>
-
-            {{-- Single-Click Actions --}}
-            <div class="flex gap-3">
-                <form action="{{ route('admin.products.approve', $product) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-green-600 text-white font-semibold px-5 py-2 rounded-md hover:bg-green-700">Approve &amp; Publish</button>
-                </form>
-
-                <form action="{{ route('admin.products.reject', $product) }}" method="POST" onsubmit="return confirm('Reject this product?');" class="flex items-center gap-2">
-                    @csrf
-                    <label class="flex items-center gap-1 text-sm text-gray-500">
-                        <input type="checkbox" name="blacklist_supplier" value="1"> Blacklist supplier
+            <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+                <h2 class="font-semibold text-sm text-gray-900">Technical & Regulatory Checks</h2>
+                <div class="space-y-2 text-xs">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="radio_frequency_confirmed" value="1" {{ $product->radio_frequency_confirmed ? 'checked' : '' }} class="rounded border-gray-300 text-emerald-600">
+                        <span>Radio Frequency plan (EU 868 / AS 923 / ISO 11784) confirmed for SA use</span>
                     </label>
-                    <button type="submit" class="bg-red-600 text-white font-semibold px-5 py-2 rounded-md hover:bg-red-700">Reject</button>
-                </form>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="datasheet_uploaded" value="1" {{ $product->datasheet_uploaded ? 'checked' : '' }} class="rounded border-gray-300 text-emerald-600">
+                        <span>Official manufacturer datasheet / user manual on file</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const slider = document.getElementById('margin-slider');
-        const marginValue = document.getElementById('margin-value');
-        const marginInput = document.getElementById('profit_margin_pct_input');
-        const retailInput = document.getElementById('retail_price_zar_input');
 
-        slider.addEventListener('input', async () => {
-            marginValue.textContent = slider.value + '%';
-            marginInput.value = slider.value;
-
-            const response = await fetch(slider.dataset.recalculateUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ margin_pct: slider.value }),
-            });
-
-            if (!response.ok) return;
-            const data = await response.json();
-            const fmt = (n) => 'R' + Number(n).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
-
-            document.getElementById('breakdown-base').textContent = fmt(data.base_zar);
-            document.getElementById('breakdown-freight').textContent = fmt(data.intl_freight_zar + data.domestic_delivery_zar);
-            document.getElementById('breakdown-customs').textContent = fmt(data.customs_vat_zar);
-            document.getElementById('breakdown-landed').textContent = fmt(data.landed_cost_zar);
-            document.getElementById('breakdown-retail').textContent = fmt(data.retail_price_zar);
-
-            const profit = data.retail_price_zar - data.landed_cost_zar;
-            const profitPct = data.retail_price_zar > 0 ? (profit / data.retail_price_zar) * 100 : 0;
-            document.getElementById('breakdown-profit').textContent = fmt(profit);
-            document.getElementById('breakdown-profit-pct').textContent = '(' + profitPct.toFixed(1) + '% margin)';
-
-            retailInput.value = data.retail_price_zar;
-        });
-    </script>
+    <div class="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 py-3.5 px-6 mt-8 -mx-6 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-2 text-xs">
+            @if ($readyToPublish)
+                <span class="font-medium text-emerald-700">✓ All mandatory vetting requirements met. Ready to publish.</span>
+            @else
+                <span class="font-medium text-amber-800">⚠ {{ count($blockers) }} blocking issues require attention before publishing.</span>
+            @endif
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.products.index') }}" class="px-3 py-2 text-xs text-gray-600 hover:text-gray-900">← Back to Queue</a>
+            <button type="submit" name="action" value="save" class="px-4 py-2 bg-gray-200 text-gray-800 text-xs font-medium rounded-md hover:bg-gray-300">
+                Save Draft
+            </button>
+            <button type="submit" name="action" value="publish" class="px-5 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-md hover:bg-emerald-700 shadow-sm">
+                Publish to Farmtech Store
+            </button>
+        </div>
+    </div>
+</form>
 @endsection

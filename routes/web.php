@@ -114,8 +114,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
             Route::get('/products/{product}', [AdminProductController::class, 'show'])->name('products.show');
-            Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
-            Route::post('/products/{product}/recalculate', [AdminProductController::class, 'recalculate'])->name('products.recalculate');
+            Route::match(['post', 'patch', 'put'], '/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
             Route::post('/products/{product}/approve', [AdminProductController::class, 'approve'])->name('products.approve');
             Route::post('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('products.reject');
         });
