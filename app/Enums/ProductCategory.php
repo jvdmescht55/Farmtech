@@ -87,7 +87,7 @@ enum ProductCategory: string
             self::ThermalDiagnostics => 'Thermal Cameras',
             self::PlatformScales => 'Platform Scales',
             self::FleetTrackers => 'Fleet Trackers',
-            self::VehicleAccessories => 'Vehicle Tech',
+            self::VehicleAccessories => 'Hilux Accessories',
             self::FuelMonitoring => 'Fuel Monitors',
             self::IndustrialRfid => 'Industrial RFID',
             self::SolarPumps => 'Solar Pumps',

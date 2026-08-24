@@ -9,15 +9,15 @@ return array (
     'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
     'source_url' => 'https://commons.wikimedia.org/wiki/File:Farms_near_Clarens.jpg',
   ),
-  'scales' => 
+  'scales' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Electronic_Weighing_Scale.jpg/1920px-Electronic_Weighing_Scale.jpg',
-    'credit' => 'Aliva Sahoo',
-    'license' => 'CC BY-SA 4.0',
-    'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:Electronic_Weighing_Scale.jpg',
+    'url' => 'https://images.unsplash.com/photo-1638802444106-881cf2d694ca?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Pablo Arenas / Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
-  'ultrasound' => 
+  'ultrasound' =>
   array (
     'url' => 'https://upload.wikimedia.org/wikipedia/commons/5/5d/USG_Pada_sapi_Bali.jpg',
     'credit' => 'Langgeng Anggitobumi',
@@ -25,13 +25,13 @@ return array (
     'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
     'source_url' => 'https://commons.wikimedia.org/wiki/File:USG_Pada_sapi_Bali.jpg',
   ),
-  'rfid' => 
+  'rfid' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Cattle_ear_tag_%281%29.jpg',
-    'credit' => 'Eliran t',
-    'license' => 'CC BY-SA 4.0',
-    'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:Cattle_ear_tag_(1).jpg',
+    'url' => 'https://images.unsplash.com/photo-1708624328564-cd676d568705?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Julia Fiander / Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
   'accessories' => 
   array (
@@ -49,29 +49,29 @@ return array (
     'license_url' => 'https://creativecommons.org/licenses/by/4.0',
     'source_url' => 'https://commons.wikimedia.org/wiki/File:Electric_fence_energiser_(AM_2017.92.25-1).jpg',
   ),
-  'solar_pumps' => 
+  'solar_pumps' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Solar_powered_borehole.jpg/1280px-Solar_powered_borehole.jpg',
-    'credit' => 'Nzili',
-    'license' => 'CC BY-SA 4.0',
-    'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:Solar_powered_borehole.jpg',
+    'url' => 'https://images.unsplash.com/photo-1723133371535-1412bc2e412e?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Philipp / Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
-  'smart_irrigation' => 
+  'smart_irrigation' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/c/c6/New_water-saving_irrigation_system_tested_at_NAVFAC_EXWC_%288099733341%29.jpg',
-    'credit' => 'NAVFAC',
-    'license' => 'CC BY 2.0',
-    'license_url' => 'https://creativecommons.org/licenses/by/2.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:New_water-saving_irrigation_system_tested_at_NAVFAC_EXWC_(8099733341).jpg',
+    'url' => 'https://images.unsplash.com/photo-1650504799878-e6492e0462b0?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
-  'laser_levels' => 
+  'laser_levels' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/3/31/Construction_laser.jpg',
-    'credit' => 'Jensens',
-    'license' => 'Public Domain',
-    'license_url' => 'https://creativecommons.org/publicdomain/mark/1.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:Construction_laser.jpg',
+    'url' => 'https://images.unsplash.com/photo-1526593740665-f57a5d42dd0a?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
   'moisture_meters' => 
   array (
@@ -105,13 +105,13 @@ return array (
     'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
     'source_url' => 'https://commons.wikimedia.org/wiki/File:Electronic_Weighing_Scale.jpg',
   ),
-  'fleet_trackers' => 
+  'fleet_trackers' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/3/33/DG-Tracker_Smile%2C_GPS_Vehicle_Tracker.jpg',
-    'credit' => 'Nelso',
-    'license' => 'CC BY-SA 4.0',
-    'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:DG-Tracker_Smile,_GPS_Vehicle_Tracker.jpg',
+    'url' => 'https://images.unsplash.com/photo-1621948535633-544972f1b944?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Sandra Tan / Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
   'industrial_rfid' => 
   array (
@@ -145,10 +145,10 @@ return array (
     'license_url' => 'https://unsplash.com/license',
     'source_url' => 'https://unsplash.com',
   ),
-  'vehicle_accessories' => 
+  'vehicle_accessories' =>
   array (
-    'url' => 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-    'credit' => 'Unsplash',
+    'url' => 'https://images.unsplash.com/photo-1631377875413-b1e3e660bfa2?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Cassiano K. Wehr / Unsplash',
     'license' => 'Unsplash License',
     'license_url' => 'https://unsplash.com/license',
     'source_url' => 'https://unsplash.com',
@@ -163,11 +163,11 @@ return array (
   ),
   'thermal_night_vision_optics' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/f/f3/Shakhin_thermal_imaging_scope.jpg',
-    'credit' => 'Vitaly V. Kuzmin',
-    'license' => 'CC BY-SA 4.0',
-    'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:Shakhin_thermal_imaging_scope.jpg',
+    'url' => 'https://images.unsplash.com/photo-1752032061164-ef95902c78bc?auto=format&fit=crop&w=1600&q=80',
+    'credit' => 'Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
   'game_trail_cameras' =>
   array (

@@ -57,9 +57,10 @@
 
     <x-featured-marquee :products="$marqueeProducts" />
 
-    {{-- Shop by application — 3x2 large image cards. Replaces the earlier industry-card
-         grid at this position per the exact-spec walkthrough (items 11-12); industry-level
-         browsing is still reachable via the header's Equipment mega-menu and /industry/*. --}}
+    {{-- Shop by application — large image cards, 3 per row. Replaces the earlier
+         industry-card grid at this position per the exact-spec walkthrough (items
+         11-12); industry-level browsing is still reachable via the header's
+         Equipment mega-menu and /industry/*. --}}
     <section id="shop-by-application" class="bg-white scroll-mt-20">
         <div class="max-w-7xl mx-auto px-4 py-20 sm:py-24">
         <div class="max-w-2xl mb-12">
@@ -73,9 +74,11 @@
                 <a href="{{ \App\Support\Applications::url($app) }}"
                    x-reveal.{{ $i * 90 }}
                    class="group relative rounded-xl overflow-hidden aspect-[4/3] flex items-end p-5">
-                    <img src="{{ $appImage['url'] }}" alt="" class="absolute inset-0 w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out">
-                    {{-- Scrim restricted to roughly the bottom third, so the photo itself stays visible rather than being washed out top-to-bottom. --}}
-                    <div class="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/70 to-transparent group-hover:from-black/80 transition-colors"></div>
+                    <img src="{{ $appImage['url'] }}" alt="{{ $app['label'] }}" class="absolute inset-0 w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out">
+                    {{-- Full-height scrim (darkest at the bottom where the text sits, fading to
+                         nothing at the top) so white text/button stay crisp and readable against
+                         any photo, without fully washing the image out. --}}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/85 transition-colors"></div>
                     <div class="relative">
                         <h3 class="font-display font-bold text-white text-lg uppercase tracking-wide mb-1 [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]">{{ $app['label'] }}</h3>
                         <p class="text-white/85 text-sm mb-3 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">{{ $app['description'] }}</p>

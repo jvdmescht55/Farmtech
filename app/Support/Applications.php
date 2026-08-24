@@ -22,6 +22,8 @@ class Applications
             ['label' => 'Measure on a construction site', 'description' => 'Laser levels and survey equipment', 'icon' => 'laser', 'target' => Industry::Construction],
             ['label' => 'Power remote equipment', 'description' => 'Solar pumps and MPPT controllers', 'icon' => 'solar', 'target' => Industry::SolarPower],
             ['label' => 'Track fleet & industrial assets', 'description' => 'GPS trackers and industrial RFID', 'icon' => 'gps', 'target' => ProductCategory::FleetTrackers],
+            ['label' => 'Hilux accessories', 'description' => 'Dual-battery kits and 4x4 electrical upgrades', 'icon' => 'accessories', 'target' => ProductCategory::VehicleAccessories],
+            ['label' => 'Hunting equipment', 'description' => 'Thermal optics, trail cameras and tracking gear', 'icon' => 'thermal-optic', 'target' => Industry::Hunting],
         ];
     }
 
