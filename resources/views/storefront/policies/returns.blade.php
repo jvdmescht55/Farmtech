@@ -25,11 +25,5 @@
 
         <h2>5. Unresolved Complaints</h2>
         <p>If a return or complaint isn't resolved to your satisfaction through the process above, you may refer it to the National Consumer Commission (NCC), the statutory body responsible for enforcing the Consumer Protection Act in South Africa.</p>
-
-        <hr class="not-prose my-8 border-border">
-        <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
-            <p class="font-semibold mb-1">For the operator to complete before this page goes live:</p>
-            <p>Registered entity name: <strong>[Company Registration Pending]</strong> · Company registration number: <strong>[To be added]</strong> · Registered address: <strong>[To be added]</strong></p>
-        </div>
     </div>
 @endsection

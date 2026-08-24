@@ -18,6 +18,31 @@
 @endphp
 
 @section('content')
+    {{-- Variant selection state, shared by the price card, the add-to-cart form, and the
+         mobile sticky purchase bar (a page-level sibling further down) — wrapping the whole
+         section, not just the info column, so all three stay in sync. No-op for the 274+
+         existing products with no variants: hasVariants is false, selected/currentVariant
+         stay empty/null, displayPrice just falls back to the base retail price. --}}
+    <div x-data="{
+            hasVariants: {{ $product->hasVariants() ? 'true' : 'false' }},
+            variants: @js($product->variants ?? []),
+            optionGroups: @js($product->variantOptionGroups()),
+            selected: @js($product->variants[0]['attributes'] ?? []),
+            basePrice: {{ (float) $product->retail_price_zar }},
+            baseSku: @js($product->sku),
+            variantKey(attrs) {
+                return Object.keys(attrs).sort().map(k => `${k}=${attrs[k]}`).join('|');
+            },
+            get currentVariant() {
+                if (!this.hasVariants) return null;
+                const key = this.variantKey(this.selected);
+                return this.variants.find(v => this.variantKey(v.attributes || {}) === key) || null;
+            },
+            get variantAvailable() { return !this.hasVariants || this.currentVariant !== null; },
+            get displayPrice() { return this.basePrice + (this.currentVariant ? Number(this.currentVariant.price_delta_zar || 0) : 0); },
+            get displaySku() { return this.currentVariant?.sku_suffix ? this.baseSku + '-' + this.currentVariant.sku_suffix : this.baseSku; },
+            fmt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); },
+         }">
     <div class="max-w-7xl mx-auto px-4 py-3 text-xs text-ink-secondary font-mono">
         <a href="{{ route('home') }}" class="hover:text-mint-dark transition">Farmtech</a>
         <span class="mx-1.5">/</span>
@@ -97,10 +122,33 @@
 
                 <div class="mt-6 glass-card rounded-xl p-5">
                     <div class="flex items-baseline gap-2 flex-wrap">
-                        <span class="font-mono text-3xl font-bold text-brand-900">R{{ number_format($product->retail_price_zar, 0, '', ' ') }}</span>
+                        <span class="font-mono text-3xl font-bold text-brand-900" x-text="'R' + fmt(displayPrice)">R{{ number_format($product->retail_price_zar, 0, '', ' ') }}</span>
                         <span class="text-sm text-ink-secondary">incl. duty &amp; {{ $vatPct }}% VAT</span>
                     </div>
                     <p class="text-xs text-ink-secondary font-mono mt-1">Duty {{ $dutyPct }}% + VAT {{ $vatPct }}% already included — nothing extra on delivery</p>
+                    @if ($product->hasVariants())
+                        <p class="text-xs text-ink-muted font-mono mt-1" x-text="'SKU: ' + displaySku"></p>
+
+                        <div class="mt-4 space-y-3 pt-4 border-t border-border">
+                            @foreach ($product->variantOptionGroups() as $optionName => $values)
+                                <div>
+                                    <p class="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-1.5">
+                                        {{ $optionName }}: <span class="font-mono normal-case text-brand-900" x-text="selected['{{ $optionName }}']"></span>
+                                    </p>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($values as $value)
+                                            <button type="button" @click="selected['{{ $optionName }}'] = '{{ $value }}'"
+                                                    :class="selected['{{ $optionName }}'] === '{{ $value }}' ? 'border-mint bg-mint/10 text-brand-900' : 'border-border text-ink-secondary hover:border-mint/50'"
+                                                    class="border rounded-full px-4 py-1.5 text-sm font-medium transition">
+                                                {{ $value }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                            <p x-show="!variantAvailable" x-cloak class="text-xs font-semibold text-alert-dark bg-alert/10 rounded-lg px-3 py-2">This combination isn't available — try a different option.</p>
+                        </div>
+                    @endif
 
                     <div class="mt-3 flex flex-wrap items-center gap-2">
                         <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-mint-dark bg-mint/10 rounded-full px-3 py-1.5">
@@ -139,10 +187,12 @@
                     @else
                         <form id="add-to-cart-form" action="{{ route('cart.add', $product) }}" method="POST" class="mt-5 flex gap-3">
                             @csrf
+                            <input type="hidden" name="variant_key" :value="hasVariants ? variantKey(selected) : ''">
                             <input type="number" name="quantity" value="1" min="1" @if($product->isTracked() && !$product->allow_backorder) max="{{ $product->stock_quantity }}" @endif
                                    class="w-20 border border-border rounded-full px-4 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-mint/30">
-                            <button type="submit"
+                            <button type="submit" :disabled="!variantAvailable"
                                     x-data="{ loading: false }" @click="loading = true"
+                                    :class="!variantAvailable ? 'opacity-50 cursor-not-allowed' : ''"
                                     class="flex-1 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95 flex items-center justify-center gap-2">
                                 <svg x-show="loading" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
                                 <span x-text="loading ? 'Adding…' : 'Add to Cart'"></span>
@@ -334,7 +384,7 @@
     {{-- Mobile sticky purchase bar — price + WhatsApp enquiry + Add to Cart together, so a buyer never has to hunt for either action. --}}
     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-border px-4 py-3 flex items-center gap-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <div class="min-w-0 flex-1">
-            <p class="font-mono font-bold text-brand-900 text-lg leading-none">R{{ number_format($product->retail_price_zar, 0, '', ' ') }}</p>
+            <p class="font-mono font-bold text-brand-900 text-lg leading-none" x-text="'R' + fmt(displayPrice)">R{{ number_format($product->retail_price_zar, 0, '', ' ') }}</p>
             <p class="text-[11px] text-ink-secondary mt-0.5 truncate">{{ $product->title }}</p>
         </div>
         @if ($whatsappUrl)
@@ -344,9 +394,10 @@
             </a>
         @endif
         @if (!$product->isOutOfStock())
-            <button type="submit" form="add-to-cart-form" class="flex-shrink-0 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
+            <button type="submit" form="add-to-cart-form" :disabled="!variantAvailable" :class="!variantAvailable ? 'opacity-50 cursor-not-allowed' : ''" class="flex-shrink-0 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
                 Add to Cart
             </button>
         @endif
+    </div>
     </div>
 @endsection

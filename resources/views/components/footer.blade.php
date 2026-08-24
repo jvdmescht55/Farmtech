@@ -46,7 +46,7 @@
             <ul class="text-sm space-y-2 leading-relaxed">
                 <li><a href="{{ route('support.index') }}" class="hover:text-mint-light transition">Help &amp; FAQ</a></li>
                 <li><a href="{{ route('track.index') }}" class="hover:text-mint-light transition">Track order</a></li>
-                <li><a href="{{ route('policies.terms') }}#delivery" class="hover:text-mint-light transition">Delivery</a></li>
+                <li><a href="{{ route('policies.shipping') }}" class="hover:text-mint-light transition">Shipping &amp; delivery</a></li>
                 <li><a href="{{ route('policies.returns') }}" class="hover:text-mint-light transition">Returns &amp; warranty</a></li>
                 <li><a href="{{ route('support.index') }}" class="hover:text-mint-light transition">Contact</a></li>
             </ul>
@@ -72,6 +72,8 @@
                 <a href="{{ route('policies.terms') }}" class="hover:text-ink-muted transition">Terms</a>
                 <span aria-hidden="true">&middot;</span>
                 <a href="{{ route('policies.privacy') }}" class="hover:text-ink-muted transition">Privacy</a>
+                <span aria-hidden="true">&middot;</span>
+                <a href="{{ route('policies.shipping') }}" class="hover:text-ink-muted transition">Shipping</a>
                 <span aria-hidden="true">&middot;</span>
                 <a href="{{ route('policies.returns') }}" class="hover:text-ink-muted transition">Returns</a>
             </div>

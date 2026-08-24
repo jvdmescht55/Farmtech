@@ -1,13 +1,13 @@
 <?php
 
 return array (
-  'hero_fallback' => 
+  'hero_fallback' =>
   array (
-    'url' => 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Farms_near_Clarens.jpg',
-    'credit' => 'Ossewa',
-    'license' => 'CC BY-SA 4.0',
-    'license_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
-    'source_url' => 'https://commons.wikimedia.org/wiki/File:Farms_near_Clarens.jpg',
+    'url' => 'https://images.unsplash.com/photo-1713952160156-bb59cac789a9?auto=format&fit=crop&w=1800&q=80',
+    'credit' => 'Unsplash',
+    'license' => 'Unsplash License',
+    'license_url' => 'https://unsplash.com/license',
+    'source_url' => 'https://unsplash.com',
   ),
   'scales' =>
   array (

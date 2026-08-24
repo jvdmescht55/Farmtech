@@ -23,17 +23,17 @@
 
                 <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:200ms" class="flex flex-wrap items-center gap-4">
                     <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition-all hover:gap-3">
-                        Explore equipment
+                        Explore Equipment
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </a>
-                    <a href="{{ route('how-it-works') }}" class="inline-flex items-center gap-2 border border-border hover:border-charcoal/30 text-charcoal text-sm font-semibold px-7 py-3.5 rounded-full transition">
-                        How Farmtech works
+                    <a href="{{ route('equipment.index') }}" class="inline-flex items-center gap-2 border border-border hover:border-charcoal/30 text-charcoal text-sm font-semibold px-7 py-3.5 rounded-full transition">
+                        Browse Sourced Hardware
                     </a>
                 </div>
             </div>
 
             <div :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'" style="animation-delay:120ms" class="relative aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[500px] rounded-xl overflow-hidden">
-                <img src="{{ $heroImage['url'] }}" alt="Modern South African farm" class="absolute inset-0 w-full h-full object-cover">
+                <img src="{{ $heroImage['url'] }}" alt="Agricultural drone monitoring crop rows" class="absolute inset-0 w-full h-full object-cover">
             </div>
         </div>
     </section>

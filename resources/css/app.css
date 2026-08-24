@@ -66,8 +66,14 @@
         @apply bg-white border border-border shadow-none;
     }
 
+    /*
+     * The sticky header specifically gets a real frosted-glass treatment
+     * (unlike .glass-card, which stays flat per the rev. 8 note above) —
+     * used in exactly one place (layouts/storefront.blade.php's <header>),
+     * so this doesn't reintroduce glassmorphism anywhere else.
+     */
     .glass-header {
-        @apply bg-white/95 border-b border-border transition-colors duration-300;
+        @apply bg-white/85 backdrop-blur-md border-b border-border transition-colors duration-300;
     }
 
     /*

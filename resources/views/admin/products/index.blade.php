@@ -72,8 +72,14 @@
                         </td>
                         <td class="px-4 py-3">{{ $product->complianceAudit?->risk_score ?? '—' }}</td>
                         <td class="px-4 py-3">R{{ number_format($product->retail_price_zar ?? 0, 2) }}</td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
                             <a href="{{ route('admin.products.show', $product) }}" class="text-farmtech-green font-medium">Review →</a>
+                            @unless (in_array($product->status, ['rejected', 'rejected_uncompetitive']))
+                                <form method="POST" action="{{ route('admin.products.reject', $product) }}" class="inline" onsubmit="return confirm('Reject and discard &quot;{{ addslashes($product->title) }}&quot;?');">
+                                    @csrf
+                                    <button type="submit" class="ml-3 text-red-600 hover:text-red-700 font-medium">Quick Reject</button>
+                                </form>
+                            @endunless
                         </td>
                     </tr>
                 @empty

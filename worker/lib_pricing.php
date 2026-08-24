@@ -110,6 +110,75 @@ function ft_extract_specifications(array $item): array
 }
 
 /**
+ * Buyer-selectable SKU variants (color, wattage, probe type, size, ...)
+ * from Alibaba's per-listing SKU table, into the same shape
+ * App\Models\Product::findVariant()/variantOptionGroups() expect:
+ * [{"attributes": {"Color": "Black", ...}, "sku_suffix": "...", "price_delta_zar": 0.0}, ...].
+ *
+ * CAVEAT: every one of the 240 items in the current scraped_data.json has
+ * an empty detail.skus array — this scrape run never captured populated
+ * SKU/variant data, and no authoritative schema for a populated one was
+ * available to build against. This reads the most plausible shape
+ * (mirroring the confirmed attrName/attrValue convention real
+ * detail.specs rows use, per ft_extract_specifications() above, with a
+ * few fallback key names) and is covered by a synthetic fixture, but is
+ * UNVERIFIED against real populated data. It safely returns [] (no
+ * variants) whenever the shape doesn't match, rather than guessing.
+ */
+function ft_extract_variants(array $item, float $baseUsdPrice, float $exchangeRate, float $weightKg): array
+{
+    $skus = $item['detail']['skus'] ?? [];
+    if (!is_array($skus) || empty($skus)) {
+        return [];
+    }
+
+    $variants = [];
+
+    foreach ($skus as $sku) {
+        $attrRows = $sku['specAttrs'] ?? $sku['skuAttrs'] ?? $sku['attrs'] ?? $sku['props'] ?? [];
+        if (!is_array($attrRows) || empty($attrRows)) {
+            continue;
+        }
+
+        $attributes = [];
+        foreach ($attrRows as $row) {
+            $name = trim((string) ($row['attrName'] ?? $row['name'] ?? $row['propName'] ?? ''));
+            $value = trim((string) ($row['attrValue'] ?? $row['value'] ?? $row['propValue'] ?? ''));
+            if ($name !== '' && $value !== '') {
+                $attributes[$name] = $value;
+            }
+        }
+
+        if (empty($attributes)) {
+            continue;
+        }
+
+        // A per-SKU USD price (if the scrape captured one) is run through
+        // the same costing formula as the base price, so the delta reflects
+        // a real landed-cost/margin difference — never a flat USD-to-ZAR
+        // pass-through, which would understate the actual retail delta.
+        $skuUsdPrice = (float) ($sku['price'] ?? $sku['amountOnSale'] ?? $sku['skuPrice'] ?? 0);
+        $priceDeltaZar = 0.0;
+        if ($skuUsdPrice > 0) {
+            $baseCosting = ft_compute_costing($baseUsdPrice, $weightKg, $exchangeRate);
+            $skuCosting = ft_compute_costing($skuUsdPrice, $weightKg, $exchangeRate);
+            $priceDeltaZar = round($skuCosting['retailPrice'] - $baseCosting['retailPrice'], 2);
+        }
+
+        $skuId = trim((string) ($sku['skuId'] ?? $sku['id'] ?? ''));
+        $skuSuffix = $skuId !== '' ? $skuId : strtoupper(preg_replace('/[^A-Z0-9]+/i', '', implode('', $attributes)));
+
+        $variants[] = [
+            'attributes' => $attributes,
+            'sku_suffix' => $skuSuffix,
+            'price_delta_zar' => $priceDeltaZar,
+        ];
+    }
+
+    return $variants;
+}
+
+/**
  * Case-insensitive lookup against a lower-cased index of the specifications
  * map, trying each candidate key in order and returning the first match.
  * Supplier attribute-table key casing/wording is inconsistent across

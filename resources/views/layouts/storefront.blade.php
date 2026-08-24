@@ -16,7 +16,7 @@
     {{-- Utility bar — slides down once per tab session on first load --}}
     <div :class="$store.intro.alreadyPlayed ? '' : 'animate-slide-down-in'"
          class="bg-brand-900 text-white/90 text-[11px] sm:text-xs text-center py-2 px-4 font-medium tracking-wide">
-        <span class="hidden sm:inline">🇿🇦 South African delivery &amp; support&nbsp;·&nbsp;Prices in ZAR&nbsp;·&nbsp;VAT included&nbsp;·&nbsp;</span><a href="{{ route('track.index') }}" class="underline decoration-white/30 hover:decoration-white transition">Track order</a>
+        <span class="hidden sm:inline">🇿🇦 South African Agricultural &amp; Industrial Tech Supply&nbsp;·&nbsp;100% Secure Checkout&nbsp;·&nbsp;Vetted Hardware&nbsp;·&nbsp;</span><a href="{{ route('track.index') }}" class="underline decoration-white/30 hover:decoration-white transition">Track order</a>
     </div>
 
     <header

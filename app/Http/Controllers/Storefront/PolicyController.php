@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 
 class PolicyController extends Controller
 {
+    public function shipping()
+    {
+        return view('storefront.policies.shipping');
+    }
+
     public function returns()
     {
         return view('storefront.policies.returns');

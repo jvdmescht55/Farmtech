@@ -69,6 +69,7 @@ Route::post('/track', [TrackOrderController::class, 'show'])->name('track.show')
 Route::get('/support', [SupportController::class, 'index'])->name('support.index');
 Route::post('/support', [SupportController::class, 'store'])->name('support.store')->middleware('throttle:support');
 
+Route::get('/policies/shipping', [PolicyController::class, 'shipping'])->name('policies.shipping');
 Route::get('/policies/returns', [PolicyController::class, 'returns'])->name('policies.returns');
 Route::get('/policies/terms', [PolicyController::class, 'terms'])->name('policies.terms');
 Route::get('/policies/icasa-compliance', [PolicyController::class, 'icasaCompliance'])->name('policies.icasa');

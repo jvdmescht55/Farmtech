@@ -15,7 +15,7 @@ class Product extends Model
     protected $fillable = [
         'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'included_items',
         'compatibility_notes', 'requirements_notes', 'warranty_terms',
-        'specifications', 'key_features', 'brand_name', 'model_number', 'warranty_period',
+        'specifications', 'key_features', 'variants', 'brand_name', 'model_number', 'warranty_period',
         'original_price_usd', 'est_weight_kg', 'gross_weight_kg', 'package_dimensions', 'hs_code', 'customs_duty_rate', 'vat_rate',
         'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar', 'customs_clearance_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
@@ -33,6 +33,7 @@ class Product extends Model
             'included_items' => 'array',
             'specifications' => 'array',
             'key_features' => 'array',
+            'variants' => 'array',
             'original_price_usd' => 'decimal:2',
             'est_weight_kg' => 'decimal:3',
             'gross_weight_kg' => 'decimal:3',
@@ -107,6 +108,75 @@ class Product extends Model
     public function specs()
     {
         return $this->hasMany(ProductSpec::class)->orderBy('spec_group')->orderBy('id');
+    }
+
+    public function hasVariants(): bool
+    {
+        return !empty($this->variants);
+    }
+
+    /**
+     * Deterministic key for a variant's attribute combination — sorted by
+     * attribute name so {"Power":"50W","Color":"Black"} and
+     * {"Color":"Black","Power":"50W"} produce the same key. Must match the
+     * JS `variantKey()` helper in products/show.blade.php exactly, since
+     * the cart/add-to-cart form is keyed on this same string from both
+     * sides (server-rendered PHP and the client-side Alpine selector).
+     */
+    public static function variantKey(array $attributes): string
+    {
+        ksort($attributes);
+
+        $parts = [];
+        foreach ($attributes as $name => $value) {
+            $parts[] = "{$name}={$value}";
+        }
+
+        return implode('|', $parts);
+    }
+
+    /**
+     * Option groups derived from the variants array for the storefront
+     * selector UI — e.g. {"Color": ["Black", "White"], "Power": ["50W", "100W"]}.
+     * Order preserved (first-seen), not alphabetical, so the admin's
+     * scrape-order intent survives into the UI.
+     */
+    public function variantOptionGroups(): array
+    {
+        $groups = [];
+
+        foreach ($this->variants ?? [] as $variant) {
+            foreach (($variant['attributes'] ?? []) as $name => $value) {
+                $groups[$name] ??= [];
+                if (!in_array($value, $groups[$name], true)) {
+                    $groups[$name][] = $value;
+                }
+            }
+        }
+
+        return $groups;
+    }
+
+    /** The variant row (attributes/sku_suffix/price_delta_zar) matching a given attribute selection, if any. */
+    public function findVariant(array $attributes): ?array
+    {
+        return $this->findVariantByKey(static::variantKey($attributes));
+    }
+
+    /** Same lookup as findVariant(), but from an already-computed variantKey() string (e.g. from a cart line). */
+    public function findVariantByKey(string $key): ?array
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        foreach ($this->variants ?? [] as $variant) {
+            if (static::variantKey($variant['attributes'] ?? []) === $key) {
+                return $variant;
+            }
+        }
+
+        return null;
     }
 
     public function highlightSpecs()

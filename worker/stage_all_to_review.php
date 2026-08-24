@@ -79,6 +79,7 @@ foreach ($items as $index => $item) {
     $identity = ft_extract_identity($specifications);
     $packageDimensions = ft_extract_package_dimensions($item);
     $sourceUrl = ft_extract_source_url($item);
+    $variants = ft_extract_variants($item, $usdPrice, $exchangeRate, $weightKg);
 
     // SKU/slug are derived from the RAW title, unchanged — this is the
     // identity key updateOrCreate matches on, so cleaning it here would
@@ -171,6 +172,7 @@ foreach ($items as $index => $item) {
             'warranty_period' => $identity['warranty_period'],
             'gross_weight_kg' => $weightKg,
             'package_dimensions' => $packageDimensions,
+            'variants' => !empty($variants) ? $variants : null,
         ])
     );
 

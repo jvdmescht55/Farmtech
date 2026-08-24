@@ -15,7 +15,7 @@
         <p>Every price shown on a Farmtech product page is <strong>all-inclusive</strong>: South African import duty (rate varies by product's HS code) and 15% VAT are already folded into the price you see. There is no separate customs bill, clearing-agent invoice, or import paperwork for you to handle after checkout — Farmtech's landed-cost pipeline calculates and absorbs those costs before the item is ever listed for sale. What you pay at checkout is the full price, with nothing extra due on delivery.</p>
 
         <h2 id="delivery">3. Delivery</h2>
-        <p>Orders ship via Direct Express air freight, door to door, with a typical lead time of <strong>7–12 business days</strong> from payment confirmation (10–15 business days for larger/specialist items, shown on the specific product's page). Customs clearance is handled entirely by Farmtech as part of the price you paid — you will not be contacted by SARS or a courier for an additional payment before delivery. You can check real-time order status any time at <a href="{{ route('track.index') }}">Track Your Order</a>.</p>
+        <p>Orders ship via Direct Express air freight, door to door, with a typical lead time of <strong>7–12 business days</strong> from payment confirmation (10–15 business days for larger/specialist items, shown on the specific product's page). See our <a href="{{ route('policies.shipping') }}">Shipping &amp; Import Policy</a> for the full delivery, customs-handling, and order-tracking process.</p>
 
         <h2>4. Payment</h2>
         <p>Payments are processed by PayFast, Ozow (Instant EFT), or Yoco. Farmtech never stores your card or banking details — they are handled entirely by the payment provider.</p>
@@ -31,11 +31,5 @@
 
         <h2>8. Governing Law</h2>
         <p>These terms are governed by the laws of the Republic of South Africa.</p>
-
-        <hr class="not-prose my-8 border-border">
-        <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
-            <p class="font-semibold mb-1">For the operator to complete before this page goes live:</p>
-            <p>Registered entity name: <strong>[Company Registration Pending]</strong> · Company registration number: <strong>[To be added]</strong> · Registered address: <strong>[To be added]</strong></p>
-        </div>
     </div>
 @endsection

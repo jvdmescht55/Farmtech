@@ -86,7 +86,12 @@
             <ul class="space-y-2 text-sm">
                 @foreach ($items as $item)
                     <li class="flex justify-between gap-3">
-                        <span class="line-clamp-1">{{ $item['product']->title }} &times; {{ $item['quantity'] }}</span>
+                        <span class="min-w-0">
+                            <span class="line-clamp-1 block">{{ $item['product']->title }} &times; {{ $item['quantity'] }}</span>
+                            @if ($item['variant'])
+                                <span class="block text-xs text-ink-secondary font-mono">{{ collect($item['variant']['attributes'] ?? [])->map(fn ($v, $k) => "{$k}: {$v}")->implode(' · ') }}</span>
+                            @endif
+                        </span>
                         <span class="font-mono flex-shrink-0">R{{ number_format($item['line_total'], 0, '', ' ') }}</span>
                     </li>
                 @endforeach
