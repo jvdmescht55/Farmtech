@@ -67,7 +67,11 @@ export async function downloadAndOptimizeImages(imageUrls, { uploadDir, sku, fet
                 await writeFile(path.join(destDir, filename), finalBuffer);
             }
 
-            results.push({ original_url: url, local_path: filename });
+            // "products/" prefix matches the local disk convention
+            // ProductImage::getUrlAttribute() expects (asset('storage/' .
+            // local_path), i.e. storage/app/public/products/<filename>) —
+            // same convention the PHP staging pipeline uses.
+            results.push({ original_url: url, local_path: `products/${filename}` });
         } catch (err) {
             console.warn(`  [image] skipped ${url}: ${err.message}`);
         }

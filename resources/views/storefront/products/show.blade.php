@@ -51,14 +51,19 @@
                     @endif
                 </div>
                 @if ($product->images->count() > 1)
-                    <div class="grid grid-cols-5 gap-2">
+                    <div x-data="{ showAll: false }" class="grid grid-cols-5 gap-2">
                         @foreach ($product->images as $i => $image)
-                            <button type="button" @click="active = {{ $i }}"
+                            <button type="button" x-show="{{ $i }} < 10 || showAll" @click="active = {{ $i }}"
                                     :class="active === {{ $i }} ? 'border-mint' : 'border-border'"
                                     class="border-2 rounded-lg overflow-hidden aspect-square hover:border-mint/60 transition">
                                 <img src="{{ $image->url }}" alt="" class="object-cover w-full h-full" onerror="this.remove()">
                             </button>
                         @endforeach
+                        @if ($product->images->count() > 10)
+                            <button type="button" @click="showAll = !showAll" x-show="!showAll"
+                                    class="border-2 border-dashed border-border rounded-lg aspect-square flex items-center justify-center text-xs font-semibold text-ink-secondary hover:border-mint/60 transition"
+                                    x-text="'+{{ $product->images->count() - 10 }} more'"></button>
+                        @endif
                     </div>
                 @endif
 
@@ -81,6 +86,14 @@
                 <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold">{{ $product->category_label }}</p>
                 <h1 class="font-display font-bold text-2xl sm:text-3xl mt-1 text-brand-900 leading-tight">{{ $product->title }}</h1>
                 <p class="text-ink-secondary mt-3 leading-relaxed">{{ $product->short_description }}</p>
+
+                @if (!empty($product->key_features))
+                    <ul class="mt-3 grid sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-charcoal">
+                        @foreach ($product->key_features as $feature)
+                            <li class="flex gap-1.5"><span class="text-mint-dark flex-shrink-0">✓</span> {{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                @endif
 
                 <div class="mt-6 glass-card rounded-xl p-5">
                     <div class="flex items-baseline gap-2 flex-wrap">
@@ -189,6 +202,22 @@
                         @else
                             <p class="text-sm text-ink-secondary">No detailed specifications recorded for this listing.</p>
                         @endif
+
+                        @if (!empty($product->specifications))
+                            <div class="mt-4 border border-border rounded-xl bg-white p-4">
+                                <p class="text-xs font-semibold text-ink-secondary uppercase tracking-widest mb-2">Full Manufacturer Attributes</p>
+                                <table class="w-full text-sm">
+                                    <tbody class="divide-y divide-border">
+                                        @foreach ($product->specifications as $key => $value)
+                                            <tr>
+                                                <td class="px-2 py-1.5 text-ink-secondary w-1/2">{{ $key }}</td>
+                                                <td class="px-2 py-1.5 font-mono text-brand-900">{{ $value }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
 
                     <div x-show="tab === 'included'" x-cloak class="pt-5">
@@ -248,7 +277,11 @@
 
                             <div class="mt-5 pt-4 border-t border-border">
                                 <p class="text-xs font-semibold text-brand-900 uppercase tracking-wide mb-1.5">Warranty</p>
-                                <p class="text-sm text-ink-secondary leading-relaxed">Manufacturer warranty terms vary by supplier and model — contact <a href="mailto:support@farmtech.co.za" class="text-mint-dark hover:underline">support@farmtech.co.za</a> with this product's SKU for the specific coverage on this listing.</p>
+                                @if ($product->warranty_period)
+                                    <p class="text-sm text-ink-secondary leading-relaxed">This item carries a manufacturer-backed <strong class="text-brand-900">{{ $product->warranty_period }}</strong> warranty. {{ $product->warranty_terms }}</p>
+                                @else
+                                    <p class="text-sm text-ink-secondary leading-relaxed">Manufacturer warranty terms vary by supplier and model — contact <a href="mailto:support@farmtech.co.za" class="text-mint-dark hover:underline">support@farmtech.co.za</a> with this product's SKU for the specific coverage on this listing.</p>
+                                @endif
                             </div>
                         </div>
                     </div>

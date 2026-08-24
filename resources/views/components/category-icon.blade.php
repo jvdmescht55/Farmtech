@@ -61,6 +61,31 @@
             <rect x="4" y="5" width="16" height="14" rx="1.5" /><path d="M8 15l2.5-5 2 3 2-4 1.5 6" />
         </svg>
         @break
+    @case('thermal-optic')
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="7.5" /><path d="M12 4.5V7M12 17v2.5M4.5 12H7M17 12h2.5" /><circle cx="12" cy="12" r="2" />
+        </svg>
+        @break
+    @case('trail-camera')
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="7" width="18" height="12" rx="2" /><circle cx="12" cy="13" r="3.2" /><path d="M8 7l1.5-2.5h5L16 7" />
+        </svg>
+        @break
+    @case('feeder')
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 4h14l-4 8v8h-6v-8L5 4z" /><path d="M10 20h4" />
+        </svg>
+        @break
+    @case('rangefinder')
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="9" width="7" height="6" rx="1.5" /><rect x="14" y="9" width="7" height="6" rx="1.5" /><path d="M10 12h4" />
+        </svg>
+        @break
+    @case('wildlife-tracking')
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12a8 8 0 0 1 16 0" /><rect x="9" y="12" width="6" height="5" rx="1.5" /><path d="M12 4v2.5" />
+        </svg>
+        @break
     @default
         <svg xmlns="http://www.w3.org/2000/svg" class="{{ $class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="9" />

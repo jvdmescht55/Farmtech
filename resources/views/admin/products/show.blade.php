@@ -4,18 +4,16 @@
 @php
     $hasTokenLeak = str_contains($product->short_description, "_") || str_contains($product->short_description, "moisture_meters");
     $isRadio = ($product->icasa_status === 'verification_required');
-    
-    $supplierZar = $product->original_price_usd ? ($product->original_price_usd * 18.5) : 925.00;
-    $freightZar = $product->intl_freight_zar ?? 180.00;
-    $dutyZar = $product->customs_vat_zar ?? 95.00;
-    $clearingZar = $product->customs_clearance_zar ?? 150.00;
-    $deliveryZar = $product->domestic_delivery_zar ?? 120.00;
-    $trueLandedCost = $supplierZar + $freightZar + $dutyZar + $clearingZar + $deliveryZar;
-    
-    $sellingPrice = $product->retail_price_zar > 0 ? $product->retail_price_zar : ($trueLandedCost * 1.45);
+
+    // $breakdown comes from ProductController::show() — a real
+    // LandedCostCalculator run against this product's own stored supplier
+    // cost/weight/exchange rate and the current admin Settings, not ad-hoc
+    // numbers computed here.
+    $trueLandedCost = $breakdown['landed_cost_zar'];
+    $sellingPrice = $product->retail_price_zar > 0 ? (float) $product->retail_price_zar : $breakdown['retail_price_zar'];
     $grossProfit = $sellingPrice - $trueLandedCost;
     $grossMarginPct = $sellingPrice > 0 ? (($grossProfit / $sellingPrice) * 100) : 0;
-    
+
     $blockers = [];
     if ($isRadio && !$product->radio_frequency_confirmed) {
         $blockers[] = "Radio / LoRa frequency plan not yet confirmed by supplier.";
@@ -28,18 +26,27 @@
     }
     $readyToPublish = (count($blockers) === 0);
     $readinessPct = round(((7 - count($blockers)) / 7) * 100);
+
+    $statusBadge = match ($product->status) {
+        'approved' => ['label' => 'Approved & Live', 'class' => 'bg-emerald-100 text-emerald-800'],
+        'pending_review' => ['label' => 'Vetting Pending', 'class' => 'bg-amber-100 text-amber-800'],
+        'rejected' => ['label' => 'Rejected', 'class' => 'bg-red-100 text-red-800'],
+        'rejected_uncompetitive' => ['label' => 'Rejected — Uncompetitive', 'class' => 'bg-red-100 text-red-800'],
+        'archived' => ['label' => 'Archived', 'class' => 'bg-gray-200 text-gray-700'],
+        default => ['label' => ucfirst(str_replace('_', ' ', $product->status)), 'class' => 'bg-gray-100 text-gray-700'],
+    };
 @endphp
 
 <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
         <div class="flex items-center gap-2">
             <h1 class="text-lg font-bold text-gray-900">{{ $product->title }}</h1>
-            <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Vetting Pending</span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
         </div>
         <div class="flex items-center gap-4 text-xs text-gray-500 mt-1">
             <span>SKU: <strong class="font-mono text-gray-700">{{ $product->sku }}</strong></span>
-            <span>Supplier: <strong text-gray-700">{{ $product->supplier_name ?? 'Alibaba Vetting Pending' }}</strong></span>
-            <span>Price Checked: <strong text-gray-700">23 Aug 2026</strong></span>
+            <span>Supplier: <strong text-gray-700">{{ $product->supplier_name ?? 'Not yet identified' }}</strong></span>
+            <span>Price Checked: <strong text-gray-700">{{ $product->supplier_last_checked_at?->format('d M Y') ?? 'Not yet checked' }}</strong></span>
         </div>
     </div>
     <div class="flex items-center gap-4 divide-x divide-gray-200">
@@ -83,6 +90,56 @@
                     </div>
                 @endif
             </div>
+
+            @if ($product->brand_name || $product->model_number || $product->warranty_period || !empty($product->specifications))
+                <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+                    <h2 class="font-semibold text-sm">Technical Specifications &amp; Attributes</h2>
+                    <div class="space-y-1 text-xs">
+                        @if ($product->brand_name)
+                            <div class="flex justify-between py-1 border-b border-gray-50">
+                                <span class="text-gray-600">Brand</span>
+                                <span class="font-medium text-gray-800">{{ $product->brand_name }}</span>
+                            </div>
+                        @endif
+                        @if ($product->model_number)
+                            <div class="flex justify-between py-1 border-b border-gray-50">
+                                <span class="text-gray-600">Model</span>
+                                <span class="font-mono text-gray-800">{{ $product->model_number }}</span>
+                            </div>
+                        @endif
+                        @if ($product->warranty_period)
+                            <div class="flex justify-between py-1 border-b border-gray-50">
+                                <span class="text-gray-600">Supplier Warranty</span>
+                                <span class="font-medium text-gray-800">{{ $product->warranty_period }}</span>
+                            </div>
+                        @endif
+                        @if ($product->package_dimensions)
+                            <div class="flex justify-between py-1 border-b border-gray-50">
+                                <span class="text-gray-600">Package Dimensions (cm)</span>
+                                <span class="font-mono text-gray-800">{{ $product->package_dimensions }}</span>
+                            </div>
+                        @endif
+                        @if ($product->gross_weight_kg)
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-600">Gross Weight</span>
+                                <span class="font-mono text-gray-800">{{ number_format($product->gross_weight_kg, 2) }} kg</span>
+                            </div>
+                        @endif
+                    </div>
+                    @if (!empty($product->specifications))
+                        <table class="w-full text-xs mt-2">
+                            <tbody class="divide-y divide-gray-50">
+                                @foreach ($product->specifications as $key => $value)
+                                    <tr>
+                                        <td class="py-1.5 pr-2 text-gray-500 w-2/5 align-top">{{ $key }}</td>
+                                        <td class="py-1.5 font-mono text-gray-800">{{ $value }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+            @endif
 
             <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
                 <div class="flex items-center justify-between border-b pb-2">
@@ -174,11 +231,11 @@
                     </div>
                     <div class="p-2.5 bg-white border border-gray-200 rounded">
                         <div class="text-gray-500">Intl. Freight</div>
-                        <div class="font-semibold text-gray-800 mt-0.5">R {{ number_format($freightZar, 2) }}</div>
+                        <div class="font-semibold text-gray-800 mt-0.5">R {{ number_format($breakdown['intl_freight_zar'], 2) }}</div>
                     </div>
                     <div class="p-2.5 bg-white border border-gray-200 rounded">
-                        <div class="text-gray-500">Customs & Duty</div>
-                        <div class="font-semibold text-gray-800 mt-0.5">R {{ number_format($dutyZar + $clearingZar, 2) }}</div>
+                        <div class="text-gray-500">Customs & VAT</div>
+                        <div class="font-semibold text-gray-800 mt-0.5">R {{ number_format($breakdown['customs_vat_zar'], 2) }}</div>
                     </div>
                     <div class="p-2.5 bg-white border-gray-200 rounded">
                         <div class="text-gray-500">True Landed Cost</div>
@@ -201,7 +258,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Est. Delivery</label>
-                        <input type="text" name="lead_time_days" value="7‑12 business days" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                        <input type="text" name="lead_time_days" value="{{ old('lead_time_days', $product->lead_time_days) }}" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                     </div>
                 </div>
             </div>
@@ -233,6 +290,25 @@
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('admin.products.index') }}" class="px-3 py-2 text-xs text-gray-600 hover:text-gray-900">← Back to Queue</a>
+
+            @if (in_array($product->status, ['archived', 'rejected', 'rejected_uncompetitive']))
+                <form method="POST" action="{{ route('admin.products.relist', $product) }}">
+                    @csrf
+                    <button type="submit" class="px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100">
+                        Put Back Up for Review
+                    </button>
+                </form>
+            @endif
+
+            @if ($product->status !== 'archived')
+                <form method="POST" action="{{ route('admin.products.archive', $product) }}" onsubmit="return confirm('Remove this listing from the store and archive it?');">
+                    @csrf
+                    <button type="submit" class="px-3 py-2 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100">
+                        Remove Listing
+                    </button>
+                </form>
+            @endif
+
             <button type="submit" name="action" value="save" class="px-4 py-2 bg-gray-200 text-gray-800 text-xs font-medium rounded-md hover:bg-gray-300">
                 Save Draft
             </button>

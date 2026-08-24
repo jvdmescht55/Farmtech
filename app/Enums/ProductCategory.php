@@ -2,49 +2,42 @@
 
 namespace App\Enums;
 
-/**
- * Single source of truth for product categories — label, storefront copy,
- * representative photo (see resources/data/category-images.php for
- * attribution), the HS-code heading the AI vetting pipeline should use, and
- * which Industry (see Industry.php) it belongs to. Was livestock-only; now
- * spans agriculture, construction, industrial/logistics, and solar power —
- * adding a category here (plus a matching entry in category-images.php and
- * a category-specific ruleset in worker/src/prompts/vettingPrompt.js) is a
- * few-file change rather than a schema migration, since `category` is a
- * plain string column, not a DB enum.
- */
 enum ProductCategory: string
 {
-    // Agriculture
     case Scales = 'scales';
     case Ultrasound = 'ultrasound';
     case Rfid = 'rfid';
     case SmartIrrigation = 'smart_irrigation';
+    case PrecisionGuidance = 'precision_guidance';
     case Accessories = 'accessories';
-
-    // Construction
     case LaserLevels = 'laser_levels';
     case MoistureMeters = 'moisture_meters';
     case RebarDetectors = 'rebar_detectors';
     case Theodolites = 'theodolites';
-
-    // Industrial & Logistics
+    case ThermalDiagnostics = 'thermal_diagnostics';
     case PlatformScales = 'platform_scales';
     case FleetTrackers = 'fleet_trackers';
+    case VehicleAccessories = 'vehicle_accessories';
+    case FuelMonitoring = 'fuel_monitoring';
     case IndustrialRfid = 'industrial_rfid';
-
-    // Solar Power
     case SolarPumps = 'solar_pumps';
     case MpptControllers = 'mppt_controllers';
     case Fencing = 'fencing';
+    case ThermalNightVisionOptics = 'thermal_night_vision_optics';
+    case GameTrailCameras = 'game_trail_cameras';
+    case GameFeeders = 'game_feeders';
+    case RangefindersBallistic = 'rangefinders_ballistic';
+    case WildlifeTracking = 'wildlife_tracking';
 
     public function industry(): Industry
     {
         return match ($this) {
-            self::Scales, self::Ultrasound, self::Rfid, self::SmartIrrigation, self::Accessories => Industry::Agriculture,
-            self::LaserLevels, self::MoistureMeters, self::RebarDetectors, self::Theodolites => Industry::Construction,
-            self::PlatformScales, self::FleetTrackers, self::IndustrialRfid => Industry::IndustrialLogistics,
+            self::Scales, self::Ultrasound, self::Rfid, self::SmartIrrigation, self::PrecisionGuidance, self::Accessories => Industry::Agriculture,
+            self::LaserLevels, self::MoistureMeters, self::RebarDetectors, self::Theodolites, self::ThermalDiagnostics => Industry::Construction,
+            self::PlatformScales, self::FleetTrackers, self::VehicleAccessories, self::FuelMonitoring, self::IndustrialRfid => Industry::IndustrialLogistics,
             self::SolarPumps, self::MpptControllers, self::Fencing => Industry::SolarPower,
+            self::ThermalNightVisionOptics, self::GameTrailCameras, self::GameFeeders,
+            self::RangefindersBallistic, self::WildlifeTracking => Industry::Hunting,
         };
     }
 
@@ -55,17 +48,26 @@ enum ProductCategory: string
             self::Ultrasound => 'Veterinary Pregnancy Ultrasound',
             self::Rfid => 'RFID Tags & Stick Readers',
             self::SmartIrrigation => 'Smart Irrigation Controllers',
+            self::PrecisionGuidance => 'Tractor GPS & Autosteer Systems',
             self::Accessories => 'Probes & Accessories',
             self::LaserLevels => 'Rotary Laser Levels & Detectors',
-            self::MoistureMeters => 'Concrete Moisture Meters',
+            self::MoistureMeters => 'Concrete & Grain Moisture Meters',
             self::RebarDetectors => 'Rebar Detectors & Cover Meters',
             self::Theodolites => 'Digital Theodolites',
+            self::ThermalDiagnostics => 'Thermal Cameras & Diagnostics',
             self::PlatformScales => 'Crane & Platform Scale Indicators',
             self::FleetTrackers => 'Real-Time GPS/OBD Trackers',
+            self::VehicleAccessories => 'Bakkie & 4x4 Electrical Upgrades',
+            self::FuelMonitoring => 'Ultrasonic Fuel & Tank Monitors',
             self::IndustrialRfid => 'Industrial RFID Fixed Gate Scanners',
             self::SolarPumps => 'Submersible Borehole Pumps',
             self::MpptControllers => 'MPPT Digital Inverter Regulators',
             self::Fencing => 'Solar Electric Fencing',
+            self::ThermalNightVisionOptics => 'Thermal & Night Vision Optics',
+            self::GameTrailCameras => 'Game & Trail Cameras',
+            self::GameFeeders => 'Game Feeders & Timers',
+            self::RangefindersBallistic => 'Rangefinders & Ballistic Tech',
+            self::WildlifeTracking => 'Wildlife Tracking & Radio Collars',
         };
     }
 
@@ -76,62 +78,83 @@ enum ProductCategory: string
             self::Ultrasound => 'Ultrasound',
             self::Rfid => 'RFID & Tagging',
             self::SmartIrrigation => 'Smart Irrigation',
+            self::PrecisionGuidance => 'Autosteer & GPS',
             self::Accessories => 'Accessories',
             self::LaserLevels => 'Laser Levels',
             self::MoistureMeters => 'Moisture Meters',
             self::RebarDetectors => 'Rebar Detectors',
             self::Theodolites => 'Theodolites',
+            self::ThermalDiagnostics => 'Thermal Cameras',
             self::PlatformScales => 'Platform Scales',
             self::FleetTrackers => 'Fleet Trackers',
+            self::VehicleAccessories => 'Vehicle Tech',
+            self::FuelMonitoring => 'Fuel Monitors',
             self::IndustrialRfid => 'Industrial RFID',
             self::SolarPumps => 'Solar Pumps',
             self::MpptControllers => 'MPPT Controllers',
             self::Fencing => 'Fencing',
+            self::ThermalNightVisionOptics => 'Thermal & Night Vision',
+            self::GameTrailCameras => 'Trail Cameras',
+            self::GameFeeders => 'Game Feeders',
+            self::RangefindersBallistic => 'Rangefinders',
+            self::WildlifeTracking => 'Wildlife Tracking',
         };
     }
 
-    /** Icon key for resources/views/components/category-icon.blade.php — a real inline SVG per category, not a generic placeholder. */
     public function icon(): string
     {
         return match ($this) {
             self::Scales, self::PlatformScales => 'scale',
             self::Ultrasound => 'ultrasound',
             self::Rfid, self::IndustrialRfid => 'rfid',
-            self::SmartIrrigation => 'irrigation',
-            self::Accessories => 'accessories',
-            self::LaserLevels => 'laser',
+            self::SmartIrrigation, self::FuelMonitoring => 'irrigation',
+            self::Accessories, self::VehicleAccessories => 'accessories',
+            self::LaserLevels, self::ThermalDiagnostics => 'laser',
             self::MoistureMeters => 'moisture',
             self::RebarDetectors => 'rebar',
-            self::Theodolites => 'theodolite',
+            self::Theodolites, self::PrecisionGuidance => 'theodolite',
             self::FleetTrackers => 'gps',
             self::SolarPumps => 'solar',
             self::MpptControllers => 'mppt',
             self::Fencing => 'fencing',
+            self::ThermalNightVisionOptics => 'thermal-optic',
+            self::GameTrailCameras => 'trail-camera',
+            self::GameFeeders => 'feeder',
+            self::RangefindersBallistic => 'rangefinder',
+            self::WildlifeTracking => 'wildlife-tracking',
         };
     }
 
     public function description(): string
     {
         return match ($this) {
-            self::Scales => 'Digital weighing indicators and platform scales built for the crush, race, or loading ramp — 220V/50Hz or battery powered, with load-cell sensitivity confirmed before listing.',
-            self::Ultrasound => 'Handheld pregnancy-diagnosis scanners with probe type confirmed for cattle, sheep, or swine — rectal linear, convex, or mechanical sector.',
-            self::Rfid => 'Handheld and stick readers checked against the 134.2 kHz ISO 11784/11785 livestock standard — the only frequency that reads standard SA ear tags.',
-            self::SmartIrrigation => 'Sensor-driven irrigation controllers and valves checked for power source and IP rating before listing — built for load-shedding-proof, water-wise crop irrigation.',
+            self::Scales => 'Digital weighing indicators and platform scales built for the crush, race, or loading ramp.',
+            self::Ultrasound => 'Handheld pregnancy-diagnosis scanners with probe type confirmed for cattle, sheep, or swine.',
+            self::Rfid => 'Handheld and stick readers checked against the 134.2 kHz ISO 11784/11785 livestock standard.',
+            self::SmartIrrigation => 'Sensor-driven irrigation controllers and valves checked for power source and IP rating.',
+            self::PrecisionGuidance => 'High-precision RTK tractor auto-steering guidance kits and agricultural drone accessories.',
             self::Accessories => 'Replacement parts and accessories for the scanners and readers above.',
-            self::LaserLevels => 'Self-levelling rotary and line lasers checked for laser class (2 or 3R) and stated working range before listing — the safety spec SA site teams need to know before use.',
-            self::MoistureMeters => 'Pin and pinless concrete/timber moisture meters checked for measurement range and calibration reference before listing.',
-            self::RebarDetectors => 'Cover meters and rebar locators checked for detection depth and accuracy tolerance before listing — for slab scanning before coring or drilling.',
-            self::Theodolites => 'Digital theodolites and total stations checked for angular accuracy and IP rating before listing — site-survey grade equipment.',
-            self::PlatformScales => 'Crane scales and industrial platform indicators checked for load capacity and calibration certificate before listing — for weighbridges, cranes, and warehouse floor scales.',
-            self::FleetTrackers => 'GPS/OBD vehicle trackers checked for ICASA cellular module approval and power source before listing — for fleet and asset tracking.',
-            self::IndustrialRfid => 'Fixed and handheld UHF RFID gate/access scanners checked for ICASA approval and read range before listing — for warehouse, yard, and access-control use, distinct from the 134.2 kHz livestock standard above.',
-            self::SolarPumps => 'Solar-driven borehole and irrigation pumps checked for voltage, flow rate, and head — built for load-shedding-proof water supply on livestock and crop farms.',
-            self::MpptControllers => 'MPPT solar charge/inverter controllers checked for input voltage range and rated current before listing — for off-grid and load-shedding backup solar setups.',
-            self::Fencing => 'Energizers and fencing kits checked for power source, joule output, and NRCS electrical-safety compliance — the standard SA requires before an energizer can legally be sold or imported.',
+            self::LaserLevels => 'Self-levelling rotary and line lasers checked for laser class and stated working range.',
+            self::MoistureMeters => 'Pin and pinless grain and concrete moisture meters checked for calibration.',
+            self::RebarDetectors => 'Cover meters and rebar locators checked for detection depth and accuracy tolerance.',
+            self::ThermalDiagnostics => 'Handheld thermal cameras and infrared diagnostics for farm machinery and electrical panels.',
+            self::Theodolites => 'Digital theodolites and total stations checked for angular accuracy.',
+            self::PlatformScales => 'Crane scales and industrial platform indicators checked for load capacity.',
+            self::FleetTrackers => 'GPS/OBD vehicle trackers checked for ICASA cellular module approval.',
+            self::VehicleAccessories => 'Heavy-duty 12V accessories, dual-battery split relays, head units, and electrical kits for Hilux and farm bakkies.',
+            self::FuelMonitoring => 'Non-invasive ultrasonic diesel tank level sensors and high-accuracy digital flow meters.',
+            self::IndustrialRfid => 'Fixed and handheld UHF RFID gate/access scanners.',
+            self::SolarPumps => 'Solar-driven borehole and irrigation pumps checked for voltage, flow rate, and head.',
+            self::MpptControllers => 'MPPT solar charge and hybrid inverter controllers.',
+            self::Fencing => 'Energizers and fencing kits checked for power source, joule output, and NRCS compliance.',
+            self::ThermalNightVisionOptics => 'Thermal and night-vision monoculars, scopes, and clip-ons checked for IP65+ weatherproofing and battery runtime before listing.',
+            self::GameTrailCameras => 'Game and trail scouting cameras checked for SA-compatible 4G/LTE cellular bands (B1/B3/B8/B20/B40) or true solar/battery standalone operation, and IP65+ ingress protection.',
+            self::GameFeeders => 'Programmable game and livestock feeders with timer units checked for weatherproof housing and 12V/battery power compatibility.',
+            self::RangefindersBallistic => 'Laser rangefinders and ballistic calculators checked for stated range accuracy and IP65+ weatherproofing.',
+            self::WildlifeTracking => 'GPS/radio wildlife tracking collars checked for battery life, SA-legal transmission frequency, and collar durability rating.',
         };
     }
 
-    /** 6-digit international HS heading the AI vetting prompt should classify under (see README for SARS sourcing). */
     public function hsCodeHint(): string
     {
         return match ($this) {
@@ -139,49 +162,42 @@ enum ProductCategory: string
             self::Ultrasound => '9018.12',
             self::Rfid, self::Accessories, self::IndustrialRfid => '8471.90',
             self::SmartIrrigation => '8424.82',
+            self::PrecisionGuidance => '9015.80',
             self::LaserLevels => '9015.30',
-            self::MoistureMeters => '9027.80',
+            self::MoistureMeters, self::ThermalDiagnostics => '9027.80',
             self::RebarDetectors => '9031.80',
             self::Theodolites => '9015.20',
             self::FleetTrackers => '8526.91',
+            self::VehicleAccessories => '8708.29',
+            self::FuelMonitoring => '9026.10',
             self::Fencing => '8543.70',
             self::SolarPumps => '8413.70',
             self::MpptControllers => '8504.40',
+            self::ThermalNightVisionOptics => '9013.80',
+            self::GameTrailCameras => '8525.89',
+            self::GameFeeders => '8543.70',
+            self::RangefindersBallistic => '9015.80',
+            self::WildlifeTracking => '8526.91',
         };
     }
 
-    /**
-     * Real (non-AI-generated) representative photo + required CC attribution
-     * — see resources/data/category-images.php.
-     *
-     * @return array{url: string, credit: string, license: string, license_url: string, source_url: string}
-     */
     public function image(): array
     {
         static $images = null;
         $images ??= require resource_path('data/category-images.php');
-
-        return $images[$this->value];
+        return $images[$this->value] ?? $images['hero_fallback'];
     }
 
-    /** @return array{url: string, credit: string, license: string, license_url: string, source_url: string} */
     public static function heroFallbackImage(): array
     {
         static $images = null;
         $images ??= require resource_path('data/category-images.php');
-
         return $images['hero_fallback'];
     }
 
-    /**
-     * @return array<int, array{value: string, label: string}>
-     */
     public static function options(): array
     {
-        return array_map(
-            fn (self $case) => ['value' => $case->value, 'label' => $case->label()],
-            self::cases()
-        );
+        return array_map(fn (self $case) => ['value' => $case->value, 'label' => $case->label()], self::cases());
     }
 
     public static function values(): array

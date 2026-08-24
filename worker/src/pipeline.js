@@ -183,7 +183,7 @@ async function processListing(listing, args, results) {
     let images = [];
     if (!args.dryRun && !args.skipImages && listing.image_urls?.length) {
         images = await downloadAndOptimizeImages(listing.image_urls, {
-            uploadDir: process.env.WORKER_UPLOAD_DIR || '../public/uploads/products',
+            uploadDir: process.env.WORKER_UPLOAD_DIR || '../storage/app/public/products',
             sku: listing.sku,
             geminiApiKey: process.env.GEMINI_API_KEY,
             geminiImageModel: process.env.GEMINI_IMAGE_MODEL,

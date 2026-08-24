@@ -117,6 +117,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::match(['post', 'patch', 'put'], '/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
             Route::post('/products/{product}/approve', [AdminProductController::class, 'approve'])->name('products.approve');
             Route::post('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('products.reject');
+            Route::post('/products/{product}/archive', [AdminProductController::class, 'archive'])->name('products.archive');
+            Route::post('/products/{product}/relist', [AdminProductController::class, 'relist'])->name('products.relist');
         });
 
         Route::middleware('can:manage-users')->group(function () {

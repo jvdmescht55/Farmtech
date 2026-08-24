@@ -22,12 +22,46 @@ if (!file_exists($jsonPath)) {
 $raw = json_decode(file_get_contents($jsonPath), true);
 $items = is_array($raw) && isset($raw['items']) ? $raw['items'] : $raw;
 
+// Optional CLI filters for targeted test runs: --sku=FT-ALI-XXXXXXXX or --limit=N
+// (matched against the SKU this script itself would compute for each item, so
+// callers can verify a single known listing without re-ingesting everything).
+// --skip-images updates every DB field except photos, without the network
+// round-trips — for re-applying a text-only change (title cleanup, pricing
+// fix, etc.) across the whole catalog fast, without re-fetching photos
+// already fetched by a prior run.
+$onlySku = null;
+$limit = null;
+$skipImages = false;
+foreach ($argv as $arg) {
+    if (str_starts_with($arg, '--sku=')) {
+        $onlySku = substr($arg, strlen('--sku='));
+    } elseif (str_starts_with($arg, '--limit=')) {
+        $limit = (int) substr($arg, strlen('--limit='));
+    } elseif ($arg === '--skip-images') {
+        $skipImages = true;
+    }
+}
+
+if ($onlySku !== null) {
+    $items = array_filter($items, function ($item, $index) use ($onlySku) {
+        $rawTitle = $item['product']['title'] ?? $item['title'] ?? $item['subject'] ?? 'Commercial Agri Hardware #' . ($index + 1);
+        $title = preg_replace('/\s+/', ' ', trim($rawTitle));
+        $sku = 'FT-ALI-' . strtoupper(substr(md5($title . $index), 0, 8));
+        return $sku === $onlySku;
+    }, ARRAY_FILTER_USE_BOTH);
+}
+
+if ($limit !== null && $limit > 0) {
+    $items = array_slice($items, 0, $limit, true);
+}
+
 $storageDir = storage_path('app/public/products');
 if (!is_dir($storageDir)) {
     mkdir($storageDir, 0755, true);
 }
 
 $staged = 0;
+$rejected = ['price' => 0, 'images' => 0, 'title' => 0];
 
 foreach ($items as $index => $item) {
     $rawTitle = $item['product']['title'] ?? $item['title'] ?? $item['subject'] ?? 'Commercial Agri Hardware #' . ($index + 1);
@@ -38,83 +72,80 @@ foreach ($items as $index => $item) {
     // Pricing & Weight
     $exchangeRate = ft_extract_exchange_rate($item);
     $usdPrice = ft_extract_usd_price($item);
-    if ($usdPrice <= 0) $usdPrice = 65.00;
-
     $weightKg = ft_extract_weight_kg($item);
+
+    // Real attributes: brand, model, warranty, probe options, battery, etc.
+    $specifications = ft_extract_specifications($item);
+    $identity = ft_extract_identity($specifications);
+    $packageDimensions = ft_extract_package_dimensions($item);
+    $sourceUrl = ft_extract_source_url($item);
+
+    // SKU/slug are derived from the RAW title, unchanged — this is the
+    // identity key updateOrCreate matches on, so cleaning it here would
+    // create duplicate products instead of updating existing ones.
+    $sku = 'FT-ALI-' . strtoupper(substr(md5($title . $index), 0, 8));
+    $slug = Str::slug(mb_substr($title, 0, 60)) . '-' . ($index + 1);
+
+    // Displayed title/copy: cleaned of Alibaba SEO/marketing filler, and
+    // grounded in the real scraped brand/model/warranty/specs rather than
+    // one identical boilerplate sentence for every product.
+    $displayTitle = ft_clean_title($title);
+    $imageUrls = $skipImages ? [] : ft_extract_image_urls($item);
+
+    // Quality gatekeeper — only for items not already in the catalog. An
+    // existing product (any status) keeps getting its fields refreshed on
+    // rerun regardless of these checks, so a rescrape can never silently
+    // unpublish something an admin already approved; only first-time
+    // inserts of junk get stopped here.
+    $isNew = !\App\Models\Product::where('sku', $sku)->exists();
+
+    if ($isNew) {
+        if ($usdPrice < 10.00) {
+            echo "Rejected (price \${$usdPrice}, below \$10 minimum): {$title}\n";
+            $rejected['price']++;
+            continue;
+        }
+
+        if (!$skipImages && empty($imageUrls)) {
+            echo "Rejected (no usable images): {$title}\n";
+            $rejected['images']++;
+            continue;
+        }
+
+        if (mb_strlen(trim($displayTitle)) < 10) {
+            echo "Rejected (unreadable/too-short title): \"{$title}\"\n";
+            $rejected['title']++;
+            continue;
+        }
+    }
 
     // Landed Cost & Margins
     $costing = ft_compute_costing($usdPrice, $weightKg, $exchangeRate);
     $intlFreightZar = $costing['intlFreightZar'];
-    $customsDutyZar = $costing['customsDutyZar'];
     $vatZar = $costing['vatZar'];
     $domesticZar = $costing['domesticZar'];
     $landedCost = $costing['landedCost'];
     $retailPrice = $costing['retailPrice'];
 
     // Dynamic keyword matching across all new niches
-    $lower = strtolower($title);
-    $category = 'accessories';
-    $hsCode = '8471.90';
+    [$category, $hsCode] = ft_categorize($title);
+    $categoryLabel = \App\Enums\ProductCategory::from($category)->label();
+    $copy = ft_build_fallback_copy($categoryLabel, $identity, $specifications);
 
-    if (str_contains($lower, 'fuel') || str_contains($lower, 'diesel') || str_contains($lower, 'tank level') || str_contains($lower, 'flow meter')) {
-        $category = 'fuel_monitoring';
-        $hsCode = '9026.10';
-    } elseif (str_contains($lower, 'thermal') || str_contains($lower, 'infrared camera') || str_contains($lower, 'imaging')) {
-        $category = 'thermal_diagnostics';
-        $hsCode = '9027.80';
-    } elseif (str_contains($lower, 'laser') || str_contains($lower, 'level')) {
-        $category = 'laser_levels';
-        $hsCode = '9015.30';
-    } elseif (str_contains($lower, 'moisture') || str_contains($lower, 'grain') || str_contains($lower, 'tester') || str_contains($lower, 'npk')) {
-        $category = 'moisture_meters';
-        $hsCode = '9027.80';
-    } elseif (str_contains($lower, 'pump') || str_contains($lower, 'borehole') || str_contains($lower, 'deep well')) {
-        $category = 'solar_pumps';
-        $hsCode = '8413.70';
-    } elseif (str_contains($lower, 'inverter') || str_contains($lower, 'mppt') || str_contains($lower, 'charge controller')) {
-        $category = 'mppt_controllers';
-        $hsCode = '8504.40';
-    } elseif (str_contains($lower, 'fence') || str_contains($lower, 'energizer')) {
-        $category = 'fencing';
-        $hsCode = '8543.70';
-    } elseif (str_contains($lower, 'valve') || str_contains($lower, 'irrigation')) {
-        $category = 'smart_irrigation';
-        $hsCode = '8424.82';
-    } elseif (str_contains($lower, 'theodolite') || str_contains($lower, 'total station')) {
-        $category = 'theodolites';
-        $hsCode = '9015.20';
-    } elseif (str_contains($lower, 'rebar') || str_contains($lower, 'cover meter') || str_contains($lower, 'detector')) {
-        $category = 'rebar_detectors';
-        $hsCode = '9031.80';
-    } elseif (str_contains($lower, 'crane scale') || str_contains($lower, 'platform scale') || str_contains($lower, 'weighbridge')) {
-        $category = 'platform_scales';
-        $hsCode = '8423.82';
-    } elseif (str_contains($lower, 'gps') || str_contains($lower, 'tracker') || str_contains($lower, 'fleet')) {
-        $category = 'fleet_trackers';
-        $hsCode = '8526.91';
-    } elseif (str_contains($lower, 'rfid') || str_contains($lower, 'ear tag') || str_contains($lower, 'reader') || str_contains($lower, 'microchip')) {
-        $category = 'rfid';
-        $hsCode = '8471.90';
-    } elseif (str_contains($lower, 'ultrasound') || str_contains($lower, 'probe') || str_contains($lower, 'pregnancy') || str_contains($lower, 'sonar')) {
-        $category = 'ultrasound';
-        $hsCode = '9018.12';
-    } elseif (str_contains($lower, 'scale') || str_contains($lower, 'weigh') || str_contains($lower, 'load cell') || str_contains($lower, 'indicator') || str_contains($lower, 't7e')) {
-        $category = 'scales';
-        $hsCode = '8423.82';
-    }
+    // Save Product — status/is_active are only forced to the "just staged"
+    // defaults for a brand-new row. A rerun against an already-existing SKU
+    // (re-pricing, spec refresh, etc.) must never silently knock an
+    // admin-approved product back to pending_review / off the storefront.
+    $statusDefaults = $isNew ? ['status' => 'pending_review', 'is_active' => false] : [];
 
-    $sku = 'FT-ALI-' . strtoupper(substr(md5($title . $index), 0, 8));
-    $slug = Str::slug(mb_substr($title, 0, 60)) . '-' . ($index + 1);
-
-    // Save Product
     $product = \App\Models\Product::updateOrCreate(
         ['sku' => $sku],
-        [
-            'title' => $title,
+        array_merge($statusDefaults, [
+            'title' => $displayTitle,
             'slug' => $slug,
             'category' => $category,
-            'short_description' => 'Commercial-grade hardware with verified South African duty and freight calculation.',
-            'description_html' => '<p>' . htmlspecialchars($title) . '</p><p>Door-to-door delivery with customs, clearance, and 15% VAT included.</p>',
+            'short_description' => $copy['short_description'],
+            'description_html' => $copy['description_html'],
             'original_price_usd' => $usdPrice,
             'supplier_cost_usd' => $usdPrice,
             'exchange_rate' => $exchangeRate,
@@ -123,19 +154,24 @@ foreach ($items as $index => $item) {
             'domestic_delivery_zar' => $domesticZar,
             'est_weight_kg' => $weightKg,
             'hs_code' => $hsCode,
-            'customs_duty_rate' => 0.10,
-            'vat_rate' => 0.15,
+            'customs_duty_rate' => $costing['dutyRate'],
+            'vat_rate' => $costing['vatRate'],
             'landed_cost_zar' => $landedCost,
             'retail_price_zar' => $retailPrice,
-            'profit_margin_pct' => 38.00,
+            'profit_margin_pct' => $costing['targetMarginPct'],
             'stock_status' => 'in_stock',
             'lead_time_days' => '7-12 business days',
-            'status' => 'pending_review',
-            'is_active' => false,
             'supplier_name' => $supplier,
             'supplier_url' => $supplierInfo['url'],
+            'source_url' => $sourceUrl,
             'supplier_last_checked_at' => now(),
-        ]
+            'specifications' => $specifications,
+            'brand_name' => $identity['brand_name'],
+            'model_number' => $identity['model_number'],
+            'warranty_period' => $identity['warranty_period'],
+            'gross_weight_kg' => $weightKg,
+            'package_dimensions' => $packageDimensions,
+        ])
     );
 
     // Save Compliance Audit
@@ -150,18 +186,27 @@ foreach ($items as $index => $item) {
         ]
     );
 
-    // Download & Link Photos Locally
-    $rawImages = $item['product']['images'] ?? $item['images'] ?? [];
-    $imageUrls = [];
-    foreach ($rawImages as $img) {
-        if (is_string($img)) $imageUrls[] = $img;
-        elseif (is_array($img) && isset($img['url'])) $imageUrls[] = $img['url'];
-    }
-
+    // Download & Link Photos Locally — every scraped photo, not capped at 5.
+    // $imageUrls was already computed above for the gatekeeper check (empty
+    // under --skip-images, a text-only re-run with no network round-trips).
     if (!empty($imageUrls)) {
         $product->images()->delete();
-        foreach (array_slice($imageUrls, 0, 5) as $imgIdx => $sourceUrl) {
-            $sourceUrl = str_replace(['_300x300.jpg', '_300x300.png'], ['_800x800.jpg', '_800x800.png'], $sourceUrl);
+
+        // Clear any stale local files from a previous run — the filename is
+        // just a positional index (p_{id}_{n}.jpg), so if the source URL set
+        // changed (e.g. switching from thumbnail to full-res URLs) a file
+        // already sitting at that path would otherwise be treated as
+        // "already downloaded" and never get refreshed.
+        foreach (glob(storage_path('app/public/products/p_' . $product->id . '_*.jpg')) as $staleFile) {
+            unlink($staleFile);
+        }
+
+        foreach ($imageUrls as $imgIdx => $sourceUrl) {
+            // Alibaba CDN thumbnail URLs carry a "_{width}x{height}" suffix
+            // (e.g. "_50x50.jpg", "_220x220.jpg") right before the
+            // extension — stripping it resolves to the original full-size
+            // source image, whatever size was embedded in the listing.
+            $sourceUrl = preg_replace('/_\d{2,4}x\d{2,4}(\.(?:jpg|jpeg|png|webp))$/i', '$1', $sourceUrl);
             $filename = 'products/p_' . $product->id . '_' . ($imgIdx + 1) . '.jpg';
             $fullPath = storage_path('app/public/' . $filename);
 
@@ -192,4 +237,6 @@ foreach ($items as $index => $item) {
     $staged++;
 }
 
-echo "\nDone staging {$staged} products!\n";
+$totalRejected = array_sum($rejected);
+echo "\nDone staging {$staged} products! Rejected {$totalRejected} "
+    . "(price: {$rejected['price']}, images: {$rejected['images']}, title: {$rejected['title']}).\n";

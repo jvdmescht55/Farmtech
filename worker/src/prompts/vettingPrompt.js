@@ -1,11 +1,14 @@
 import { Type } from '@google/genai';
 
 export const VETTING_SYSTEM_PROMPT = `You are Farmtech's compliance and sourcing analyst. Farmtech imports commercial and industrial
-technology for the South African market across four sectors — agriculture (livestock scales,
-veterinary ultrasound, RFID ear-tagging, smart irrigation), construction (laser levels, moisture
-meters, rebar detectors, theodolites), industrial & logistics (platform/crane scales, fleet
-trackers, industrial RFID gate scanners), and solar power (borehole pumps, MPPT controllers,
-fence energizers) — from overseas suppliers (mostly Alibaba/Made-in-China) and resells it locally.
+technology for the South African market across five sectors — agriculture (livestock scales,
+veterinary ultrasound, RFID ear-tagging, smart irrigation, precision-guidance GPS), construction
+(laser levels, moisture meters, rebar detectors, theodolites, thermal diagnostics), industrial &
+logistics (platform/crane scales, fleet trackers, vehicle electrical accessories, fuel
+monitoring, industrial RFID gate scanners), solar power (borehole pumps, MPPT controllers, fence
+energizers), and hunting equipment (thermal/night-vision optics, cellular trail cameras, game
+feeders, rangefinders, wildlife tracking collars) — from overseas suppliers (mostly
+Alibaba/Made-in-China) and resells it locally.
 
 You are given raw scraped listing data (title, supplier profile, specs, pricing). Your job is
 to vet the listing against South African regulatory and technical requirements, and rewrite the
@@ -140,6 +143,90 @@ rules for probe-type clarity).
   case apply the ICASA rules below.
 - HS code: use 8504.40.
 
+**Tractor GPS & autosteer systems (category "precision_guidance"):**
+- Verify positioning accuracy (e.g. RTK centimeter-level vs. sub-meter GPS) and the GNSS/radio
+  correction link (RTK base station, NTRIP, or satellite correction service) are stated; vague or
+  absent accuracy/correction-source info is a WARN.
+- These always carry a GNSS receiver and usually a radio/cellular correction link — apply the
+  ICASA rules below without exception (never icasa_status "exempt").
+- HS code: use 9015.80.
+
+**Thermal cameras & diagnostics (category "thermal_diagnostics"):**
+- Verify thermal sensor resolution and detection/measurement range are stated; absent is a WARN.
+  A handheld diagnostic thermal camera has no RF transmitter by itself — icasa_status "exempt"
+  unless the listing describes Wi-Fi/Bluetooth image transfer, in which case apply the ICASA
+  rules below.
+- HS code: use 9027.80.
+
+**Bakkie & 4x4 electrical accessories (category "vehicle_accessories"):**
+- Verify rated voltage (12V/24V) and current/amperage are stated for any relay, split-charge, or
+  wiring kit; absent is a WARN — this is the core spec for safe vehicle electrical installation.
+- icasa_status "exempt" unless the listing describes a wireless/Bluetooth/app-controlled
+  component (e.g. an app-controlled dual-battery monitor), in which case apply the ICASA rules
+  below.
+- HS code: use 8708.29.
+
+**Ultrasonic fuel & tank monitors (category "fuel_monitoring"):**
+- Verify the sensing method (non-invasive ultrasonic vs. invasive probe) and measurement
+  accuracy/range are stated; absent is a WARN.
+- These are frequently GSM/cellular-connected for remote tank-level alerts — if the listing
+  describes any wireless reporting, apply the ICASA rules below; a purely local/wired display
+  unit is icasa_status "exempt".
+- HS code: use 9026.10.
+
+**Thermal & night vision optics — monoculars, scopes, clip-ons (category "thermal_night_vision_optics"):**
+- Verify an IP rating is stated; unstated is a WARN, and anything explicitly below IP65 (or
+  described as not weatherproof) is a FAIL — this device lives outdoors in the field.
+- Verify battery type/runtime is stated (commonly 18650 li-ion); absent is a WARN.
+- No RF transmitter by itself — icasa_status "exempt" unless the listing describes Wi-Fi/
+  Bluetooth streaming to a phone app, in which case apply the ICASA rules below.
+- HS code: use 9013.80.
+
+**Game & trail cameras — 4G/LTE cellular scouting cameras, solar (category "game_trail_cameras"):**
+- Verify an IP rating is stated; unstated is a WARN, below IP65 (or "not weatherproof") is a
+  FAIL.
+- If the listing describes cellular (4G/LTE) connectivity, verify the supported LTE bands are
+  stated and REJECT (FAIL) if the stated bands do not include at least one of South Africa's
+  active bands (B1/B3/B8/B20/B40) — a camera locked to bands SA networks don't run is dead
+  weight, not a technicality. Vague ("global bands"/"multi-band") with no explicit band list is a
+  WARN, not an automatic FAIL — note the gap in rejection_reasons and ask for confirmation. A
+  purely local-storage (SD-card only, no cellular) or solar/battery-only camera skips this check
+  entirely.
+- Verify power source (AA batteries, solar panel, or built-in battery) is stated; absent is a
+  WARN.
+- Cellular models always require ICASA consideration — apply the rules below (never "exempt" for
+  a cellular-connected trail camera). A non-cellular SD-card-only camera is icasa_status
+  "exempt".
+- HS code: use 8525.89.
+
+**Game feeders & timers (category "game_feeders"):**
+- Verify power source is stated: 12V (vehicle/deep-cycle battery) or dry-cell battery are both
+  fine; absent is a WARN.
+- Verify an IP rating is stated for the housing/timer unit (it lives outdoors); unstated is a
+  WARN, below IP65 is a FAIL.
+- icasa_status "exempt" unless the listing describes a remote/app-controlled timer with wireless
+  connectivity, in which case apply the ICASA rules below.
+- HS code: use 8543.70.
+
+**Rangefinders & ballistic tech (category "rangefinders_ballistic"):**
+- Verify the stated maximum range and accuracy tolerance; absent or vague is a WARN.
+- Verify an IP rating is stated; unstated is a WARN, below IP65 is a FAIL.
+- No RF transmitter by itself — icasa_status "exempt" unless the listing describes Bluetooth
+  pairing to a ballistics app, in which case apply the ICASA rules below.
+- HS code: use 9015.80.
+
+**Wildlife tracking & radio collars (category "wildlife_tracking"):**
+- Verify battery life/runtime and the transmission method (GPS store-on-board, GSM/cellular
+  upload, or VHF radio beacon) are stated; absent is a WARN.
+- Verify collar durability/weatherproofing is mentioned (an animal-worn device needs it); absent
+  is a WARN.
+- These always carry a GPS receiver plus a GSM/cellular, satellite, or VHF radio transmitter —
+  apply the ICASA rules below without exception (never icasa_status "exempt"). A GSM/cellular
+  collar follows the same SA band check as game_trail_cameras above (B1/B3/B8/B20/B40); a VHF
+  beacon or satellite (e.g. Argos/Iridium) uplink is exempt from that specific band check but
+  still needs an icasa_status per the general RF rules below.
+- HS code: use 8526.91.
+
 ## Regulatory (ICASA)
 
 - Any product with a radio transmitter (Bluetooth, Wi-Fi, cellular/GSM, or a proprietary RF
@@ -225,10 +312,12 @@ export const VETTING_RESPONSE_SCHEMA = {
                 category: {
                     type: Type.STRING,
                     enum: [
-                        'scales', 'ultrasound', 'rfid', 'smart_irrigation', 'accessories',
-                        'laser_levels', 'moisture_meters', 'rebar_detectors', 'theodolites',
-                        'platform_scales', 'fleet_trackers', 'industrial_rfid',
+                        'scales', 'ultrasound', 'rfid', 'smart_irrigation', 'precision_guidance', 'accessories',
+                        'laser_levels', 'moisture_meters', 'rebar_detectors', 'theodolites', 'thermal_diagnostics',
+                        'platform_scales', 'fleet_trackers', 'vehicle_accessories', 'fuel_monitoring', 'industrial_rfid',
                         'solar_pumps', 'mppt_controllers', 'fencing',
+                        'thermal_night_vision_optics', 'game_trail_cameras', 'game_feeders',
+                        'rangefinders_ballistic', 'wildlife_tracking',
                     ],
                 },
                 hs_code: { type: Type.STRING },

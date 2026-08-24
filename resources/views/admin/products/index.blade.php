@@ -45,7 +45,9 @@
                         <td class="px-4 py-3 flex items-center gap-3">
                             <div class="w-10 h-10 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                                 @if ($product->thumbnail)
-                                    <img src="{{ $product->thumbnail->url }}" class="object-cover w-full h-full" alt="">
+                                    <a href="{{ $product->thumbnail->url }}" target="_blank" title="Click to view full photo" class="block w-full h-full">
+                                        <img src="{{ $product->thumbnail->url }}" class="object-cover w-full h-full hover:opacity-80 transition" alt="">
+                                    </a>
                                 @endif
                             </div>
                             <span class="font-medium">{{ $product->title }}</span>

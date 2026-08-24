@@ -15,6 +15,7 @@ enum Industry: string
     case Construction = 'construction';
     case IndustrialLogistics = 'industrial_logistics';
     case SolarPower = 'solar_power';
+    case Hunting = 'hunting';
 
     public function label(): string
     {
@@ -23,6 +24,7 @@ enum Industry: string
             self::Construction => 'Site & Construction',
             self::IndustrialLogistics => 'Fleet & Asset Logistics',
             self::SolarPower => 'Solar & Water Infrastructure',
+            self::Hunting => 'Hunting Equipment',
         };
     }
 
@@ -34,6 +36,7 @@ enum Industry: string
             self::Construction => 'construction',
             self::IndustrialLogistics => 'logistics',
             self::SolarPower => 'solar',
+            self::Hunting => 'hunting-equipment',
         };
     }
 
@@ -45,6 +48,7 @@ enum Industry: string
             self::Construction => 'Construction Tech',
             self::IndustrialLogistics => 'Logistics Tech',
             self::SolarPower => 'Solar Tech',
+            self::Hunting => 'Hunting Gear',
         };
     }
 

@@ -23,20 +23,12 @@ class ProductImage extends Model
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     * `local_path` is just a filename (e.g. "FT-SKU-1.webp") — where it
-     * actually lives depends on FILESYSTEM_DISK. Local disk: served from
-     * public/uploads/products/. S3/R2: same relative key under a
-     * "products/" prefix in the bucket, uploaded there directly by the
-     * worker (see worker/src/lib/imagePipeline.js) instead of writing to
-     * local disk at all when that's the active disk.
-     */
     public function getUrlAttribute(): string
     {
         if (config('filesystems.default') === 's3') {
-            return Storage::disk('s3')->url('products/'.ltrim($this->local_path, '/'));
+            return Storage::disk('s3')->url(ltrim($this->local_path, '/'));
         }
 
-        return asset('uploads/products/'.ltrim($this->local_path, '/'));
+        return asset('storage/' . ltrim($this->local_path, '/'));
     }
 }

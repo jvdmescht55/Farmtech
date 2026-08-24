@@ -14,6 +14,18 @@
         }
     }
 
+    // First power/voltage/frequency attribute found in the raw scraped
+    // specifications — key wording varies by supplier ("Power", "Voltage",
+    // "Frequency", "Rated Voltage"), so match loosely on the key rather than
+    // one exact name.
+    $powerSpec = null;
+    foreach (($product->specifications ?? []) as $key => $value) {
+        if (preg_match('/power|voltage|frequency/i', $key)) {
+            $powerSpec = "{$key}: {$value}";
+            break;
+        }
+    }
+
     // Every entry here is backed by a real field the pipeline actually
     // recorded for THIS product — never a fixed "always show 4 badges" set.
     // A product with fewer verified attributes simply shows fewer badges.
@@ -29,6 +41,9 @@
             ? ['label' => 'ISO 11784/11785 Compliant', 'tone' => 'green'] : null,
         $audit?->battery_transport_cert ? ['label' => 'Battery Transport Certified', 'tone' => 'green'] : null,
         $ipRating ? ['label' => $ipRating.' Ingress Protection', 'tone' => 'green', 'mono' => true] : null,
+        $product->warranty_period ? ['label' => $product->warranty_period.' Warranty', 'tone' => 'green'] : null,
+        $powerSpec ? ['label' => $powerSpec, 'tone' => 'slate', 'mono' => true] : null,
+        $product->supplier_name ? ['label' => 'Vetted Supplier: '.$product->supplier_name, 'tone' => 'slate'] : null,
     ])->filter()->values();
 
     $toneClasses = [

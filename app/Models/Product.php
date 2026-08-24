@@ -14,11 +14,12 @@ class Product extends Model
 
     protected $fillable = [
         'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'included_items',
-        'compatibility_notes', 'requirements_notes', 'warranty_terms', 'technical_specs_json',
-        'original_price_usd', 'est_weight_kg', 'hs_code', 'customs_duty_rate', 'vat_rate',
+        'compatibility_notes', 'requirements_notes', 'warranty_terms',
+        'specifications', 'key_features', 'brand_name', 'model_number', 'warranty_period',
+        'original_price_usd', 'est_weight_kg', 'gross_weight_kg', 'package_dimensions', 'hs_code', 'customs_duty_rate', 'vat_rate',
         'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar', 'customs_clearance_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
-        'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'supplier_last_checked_at',
+        'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'source_url', 'supplier_last_checked_at',
         'import_contingency_pct', 'insurance_cost_zar', 'payment_fees_zar',
         'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'is_active',
         'stock_quantity', 'allow_backorder', 'low_stock_threshold',
@@ -30,8 +31,11 @@ class Product extends Model
     {
         return [
             'included_items' => 'array',
+            'specifications' => 'array',
+            'key_features' => 'array',
             'original_price_usd' => 'decimal:2',
             'est_weight_kg' => 'decimal:3',
+            'gross_weight_kg' => 'decimal:3',
             'customs_duty_rate' => 'decimal:4',
             'vat_rate' => 'decimal:4',
             'intl_freight_zar' => 'decimal:2',

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Setting;
+use App\Services\LandedCostCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -42,10 +44,31 @@ class ProductController extends Controller
         ]);
     }
 
+    /** Review panel: real financial breakdown from LandedCostCalculator, not ad-hoc numbers in the view. */
     public function show(Product $product)
     {
         $product->load('images');
-        return view('admin.products.show', compact('product'));
+
+        $calculator = new LandedCostCalculator(
+            freightUsdPerKg: (float) Setting::get('air_freight_usd_per_kg', 16),
+            domesticDeliveryZar: (float) Setting::get('clearing_agent_fee_zar', 250),
+            vatRate: (float) Setting::get('vat_rate', 0.15),
+        );
+
+        $weightKg = (float) ($product->gross_weight_kg ?: $product->est_weight_kg ?: 0.5);
+        $exchangeRate = (float) ($product->exchange_rate ?: 18.50);
+        $dutyRate = (float) ($product->customs_duty_rate ?: 0.10);
+        $marginPct = (float) ($product->profit_margin_pct ?: Setting::get('target_margin_pct', 35));
+
+        $breakdown = $calculator->calculate(
+            (float) $product->original_price_usd,
+            $weightKg,
+            $exchangeRate,
+            $dutyRate,
+            $marginPct,
+        );
+
+        return view('admin.products.show', compact('product', 'breakdown'));
     }
 
     public function update(Request $request, Product $product)
@@ -57,11 +80,12 @@ class ProductController extends Controller
             'compatibility_notes' => 'nullable|string',
             'retail_price_zar' => 'nullable|numeric',
             'stock_availability_type' => 'nullable|string',
+            'lead_time_days' => 'nullable|string|max:100',
         ]);
 
         $product->fill($request->only([
             'title', 'short_description', 'requirements_notes',
-            'compatibility_notes', 'retail_price_zar', 'stock_availability_type'
+            'compatibility_notes', 'retail_price_zar', 'stock_availability_type', 'lead_time_days',
         ]));
 
         if ($request->filled('title')) {
@@ -110,5 +134,27 @@ class ProductController extends Controller
             'is_active' => false
         ]);
         return back()->with('success', 'Product rejected.');
+    }
+
+    /** Pulls a listing off the storefront without deleting it. */
+    public function archive(Product $product)
+    {
+        $product->update([
+            'status' => 'archived',
+            'is_active' => false,
+        ]);
+
+        return back()->with('success', 'Listing removed from the store and archived.');
+    }
+
+    /** Sends an archived/rejected listing back to the review queue — never auto-publishes. */
+    public function relist(Product $product)
+    {
+        $product->update([
+            'status' => 'pending_review',
+            'is_active' => false,
+        ]);
+
+        return back()->with('success', 'Listing sent back to the review queue.');
     }
 }
