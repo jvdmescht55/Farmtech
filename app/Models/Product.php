@@ -24,7 +24,7 @@ class Product extends Model
         'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'is_active',
         'stock_quantity', 'allow_backorder', 'low_stock_threshold',
         'verification_tier', 'icasa_status', 'radio_frequency_confirmed', 'datasheet_uploaded',
-        'published_at', 'approved_at',
+        'published_at', 'approved_at', 'auto_publish_checked_at', 'published_via',
     ];
 
     protected function casts(): array
@@ -61,6 +61,7 @@ class Product extends Model
             'datasheet_uploaded' => 'boolean',
             'published_at' => 'datetime',
             'approved_at' => 'datetime',
+            'auto_publish_checked_at' => 'datetime',
         ];
     }
 

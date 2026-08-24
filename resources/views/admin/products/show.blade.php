@@ -47,6 +47,12 @@
             <span>SKU: <strong class="font-mono text-gray-700">{{ $product->sku }}</strong></span>
             <span>Supplier: <strong text-gray-700">{{ $product->supplier_name ?? 'Not yet identified' }}</strong></span>
             <span>Price Checked: <strong text-gray-700">{{ $product->supplier_last_checked_at?->format('d M Y') ?? 'Not yet checked' }}</strong></span>
+            @if ($product->source_url)
+                <a href="{{ $product->source_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-orange-700 hover:text-orange-800 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    View on Alibaba
+                </a>
+            @endif
         </div>
     </div>
     <div class="flex items-center gap-4 divide-x divide-gray-200">

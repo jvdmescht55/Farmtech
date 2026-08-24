@@ -17,6 +17,7 @@ class SettingsController extends Controller
                 'clearing_agent_fee_zar' => Setting::get('clearing_agent_fee_zar', 450),
                 'vat_rate' => Setting::get('vat_rate', 0.15),
                 'support_whatsapp' => Setting::get('support_whatsapp', ''),
+                'auto_publish_cap_per_category' => Setting::get('auto_publish_cap_per_category', 2),
             ],
         ]);
     }
@@ -36,11 +37,20 @@ class SettingsController extends Controller
             'vat_rate' => ['required', 'numeric', 'min:0', 'max:1'],
             // E.164-ish: optional leading +, 8-15 digits — matches wa.me's own accepted format.
             'support_whatsapp' => ['nullable', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
+            // How many products the AI auto-publish command will put live per
+            // category on its own, without a human approving each one.
+            'auto_publish_cap_per_category' => ['required', 'integer', 'min:0', 'max:20'],
         ]);
 
         foreach ($validated as $key => $value) {
             if ($key === 'support_whatsapp') {
                 Setting::set($key, $value ?? '', 'string');
+
+                continue;
+            }
+
+            if ($key === 'auto_publish_cap_per_category') {
+                Setting::set($key, $value, 'integer');
 
                 continue;
             }

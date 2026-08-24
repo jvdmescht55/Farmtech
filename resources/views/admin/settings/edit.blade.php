@@ -29,6 +29,12 @@
             <p class="text-xs text-gray-400 mt-1">Digits only (optional leading +). Leave blank to hide the WhatsApp CTA on the storefront entirely.</p>
         </div>
 
+        <div>
+            <label class="block text-sm font-medium mb-1">AI Auto-Publish Cap (per category)</label>
+            <input type="number" step="1" min="0" max="20" name="auto_publish_cap_per_category" value="{{ $settings['auto_publish_cap_per_category'] }}" class="w-full border rounded-md px-3 py-2">
+            <p class="text-xs text-gray-400 mt-1">The AI auto-publish job (<code>products:auto-publish</code>, runs hourly) only publishes a listing on its own when it's fully confident and this category isn't already at its live cap. Set to 0 to disable auto-publishing entirely.</p>
+        </div>
+
         <p class="text-xs text-gray-400">API keys (Gemini, exchange rate, payment gateways) are managed via the server's .env file, not here — they're too sensitive for a web form without additional encryption-at-rest work.</p>
 
         <button type="submit" class="bg-farmtech-green text-white font-semibold px-6 py-2 rounded-md hover:bg-farmtech-green-dark">Save Settings</button>

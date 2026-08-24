@@ -105,6 +105,7 @@ class ProductController extends Controller
             $product->is_active = true;
             $product->published_at = now();
             $product->approved_at = now();
+            $product->published_via = 'manual';
         }
 
         $product->save();
@@ -122,7 +123,8 @@ class ProductController extends Controller
             'status' => 'approved',
             'is_active' => true,
             'approved_at' => now(),
-            'published_at' => now()
+            'published_at' => now(),
+            'published_via' => 'manual',
         ]);
         return back()->with('success', 'Product approved and published.');
     }
@@ -134,6 +136,21 @@ class ProductController extends Controller
             'is_active' => false
         ]);
         return back()->with('success', 'Product rejected.');
+    }
+
+    /** Everything actually live on the storefront right now, grouped by industry/category — same grouping the public catalogue uses. */
+    public function live()
+    {
+        $products = Product::storefrontVisible()
+            ->with('thumbnail')
+            ->orderBy('title')
+            ->get()
+            ->groupBy(fn (Product $product) => $product->category->value);
+
+        return view('admin.products.live', [
+            'industries' => \App\Enums\Industry::cases(),
+            'grouped' => $products,
+        ]);
     }
 
     /** Pulls a listing off the storefront without deleting it. */
