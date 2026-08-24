@@ -256,13 +256,43 @@ function ft_categorize(string $title): array
     $category = 'accessories';
     $hsCode = '8471.90';
 
-    if (str_contains($lower, 'fuel') || str_contains($lower, 'diesel') || str_contains($lower, 'tank level') || str_contains($lower, 'flow meter')) {
+    // Hunting-equipment rules go first — several of their keywords
+    // ("thermal", "laser") overlap with construction-category terms
+    // further down (thermal_diagnostics, laser_levels), so the more
+    // specific hunting-context phrase has to win before the generic one
+    // gets a chance to match.
+    if (str_contains($lower, 'trail camera') || str_contains($lower, 'game camera') || str_contains($lower, 'scouting camera') || str_contains($lower, 'hunting camera')) {
+        // Checked before the thermal/night-vision optics rule below —
+        // "night vision"/"infrared" are common FEATURES a trail camera's
+        // own listing advertises, not evidence the product itself is an
+        // optic; the specific product-type phrase has to win.
+        $category = 'game_trail_cameras';
+        $hsCode = '8525.89';
+    } elseif (
+        (str_contains($lower, 'thermal') || str_contains($lower, 'night vision') || str_contains($lower, 'infrared'))
+        && (str_contains($lower, 'monocular') || str_contains($lower, 'scope') || str_contains($lower, 'clip-on') || str_contains($lower, 'clip on') || str_contains($lower, 'riflescope') || str_contains($lower, 'hunting'))
+    ) {
+        $category = 'thermal_night_vision_optics';
+        $hsCode = '9013.80';
+    } elseif (str_contains($lower, 'game feeder') || str_contains($lower, 'deer feeder') || str_contains($lower, 'wildlife feeder') || str_contains($lower, 'feeder timer')) {
+        $category = 'game_feeders';
+        $hsCode = '8543.70';
+    } elseif (str_contains($lower, 'rangefinder') || str_contains($lower, 'range finder') || str_contains($lower, 'ballistic')) {
+        $category = 'rangefinders_ballistic';
+        $hsCode = '9015.80';
+    } elseif (str_contains($lower, 'radio collar') || str_contains($lower, 'tracking collar') || str_contains($lower, 'wildlife collar') || str_contains($lower, 'gps collar')) {
+        $category = 'wildlife_tracking';
+        $hsCode = '8526.91';
+    } elseif (str_contains($lower, 'fuel') || str_contains($lower, 'diesel') || str_contains($lower, 'tank level') || str_contains($lower, 'flow meter')) {
         $category = 'fuel_monitoring';
         $hsCode = '9026.10';
     } elseif (str_contains($lower, 'thermal') || str_contains($lower, 'infrared camera') || str_contains($lower, 'imaging')) {
         $category = 'thermal_diagnostics';
         $hsCode = '9027.80';
-    } elseif (str_contains($lower, 'laser') || str_contains($lower, 'level')) {
+    } elseif (str_contains($lower, 'laser')) {
+        // Bare "level" alone used to qualify here too, which swallowed any
+        // unrelated "water level"/"liquid level" sensor listing — laser is
+        // the actual signal for this category (rotary/line laser levels).
         $category = 'laser_levels';
         $hsCode = '9015.30';
     } elseif (str_contains($lower, 'moisture') || str_contains($lower, 'grain') || str_contains($lower, 'tester') || str_contains($lower, 'npk')) {

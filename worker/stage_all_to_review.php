@@ -10,28 +10,20 @@ use Illuminate\Support\Str;
 
 require __DIR__ . '/lib_pricing.php';
 
-$jsonPath = __DIR__ . '/scraped_data.json';
-if (!file_exists($jsonPath)) {
-    $jsonPath = __DIR__ . '/vetted_input.json';
-}
-if (!file_exists($jsonPath)) {
-    echo "No scraped JSON file found in worker directory.\n";
-    exit(1);
-}
-
-$raw = json_decode(file_get_contents($jsonPath), true);
-$items = is_array($raw) && isset($raw['items']) ? $raw['items'] : $raw;
-
-// Optional CLI filters for targeted test runs: --sku=FT-ALI-XXXXXXXX or --limit=N
-// (matched against the SKU this script itself would compute for each item, so
-// callers can verify a single known listing without re-ingesting everything).
+// Optional CLI filters: --sku=FT-ALI-XXXXXXXX or --limit=N (matched against
+// the SKU this script itself would compute for each item, so callers can
+// verify a single known listing without re-ingesting everything).
 // --skip-images updates every DB field except photos, without the network
 // round-trips — for re-applying a text-only change (title cleanup, pricing
 // fix, etc.) across the whole catalog fast, without re-fetching photos
 // already fetched by a prior run.
+// --file=path.json overrides the default scraped_data.json/vetted_input.json
+// lookup — for staging a separate one-off batch (e.g. a fresh Apify run
+// saved to its own file) without touching/re-processing the main file.
 $onlySku = null;
 $limit = null;
 $skipImages = false;
+$fileOverride = null;
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--sku=')) {
         $onlySku = substr($arg, strlen('--sku='));
@@ -39,8 +31,26 @@ foreach ($argv as $arg) {
         $limit = (int) substr($arg, strlen('--limit='));
     } elseif ($arg === '--skip-images') {
         $skipImages = true;
+    } elseif (str_starts_with($arg, '--file=')) {
+        $fileOverride = substr($arg, strlen('--file='));
     }
 }
+
+if ($fileOverride !== null) {
+    $jsonPath = str_starts_with($fileOverride, '/') ? $fileOverride : __DIR__ . '/' . $fileOverride;
+} else {
+    $jsonPath = __DIR__ . '/scraped_data.json';
+    if (!file_exists($jsonPath)) {
+        $jsonPath = __DIR__ . '/vetted_input.json';
+    }
+}
+if (!file_exists($jsonPath)) {
+    echo "No scraped JSON file found ({$jsonPath}).\n";
+    exit(1);
+}
+
+$raw = json_decode(file_get_contents($jsonPath), true);
+$items = is_array($raw) && isset($raw['items']) ? $raw['items'] : $raw;
 
 if ($onlySku !== null) {
     $items = array_filter($items, function ($item, $index) use ($onlySku) {
