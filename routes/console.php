@@ -16,3 +16,10 @@ Schedule::command('products:auto-publish')
     ->hourly()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Keeps is_featured/featured_score current as real reviews, sales, and
+// PDP click-throughs accumulate — see Product::computeFeaturedScore().
+Schedule::command('products:rank-featured')
+    ->daily()
+    ->withoutOverlapping()
+    ->runInBackground();
