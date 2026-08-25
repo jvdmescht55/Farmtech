@@ -149,6 +149,9 @@
                         <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-alert-dark bg-alert/10 rounded-full px-3 py-1.5">
                             ⚡ Express Air-Import &middot; {{ $product->lead_time_days }}
                         </span>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-900 bg-canvas border border-border rounded-full px-3 py-1.5">
+                            🇿🇦 Geskik vir rowwe veldtoestande &middot; Built for the practical boer
+                        </span>
                     </div>
 
                     <div class="mt-3 text-sm flex items-center gap-2 flex-wrap">

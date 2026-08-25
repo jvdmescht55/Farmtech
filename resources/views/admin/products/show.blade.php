@@ -137,7 +137,7 @@
                             <tbody class="divide-y divide-gray-50">
                                 @foreach ($product->specifications as $key => $value)
                                     <tr>
-                                        <td class="py-1.5 pr-2 text-gray-500 w-2/5 align-top">{{ $key }}</td>
+                                        <td class="py-1.5 pr-2 text-gray-500 w-2/5 align-top">{{ \App\Support\SpecLabelHumanizer::humanize($key) }}</td>
                                         <td class="py-1.5 font-mono text-gray-800">{{ $value }}</td>
                                     </tr>
                                 @endforeach
@@ -268,6 +268,62 @@
                     </div>
                 </div>
             </div>
+
+            @if ($product->variants->isNotEmpty())
+                <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+                    <h2 class="font-semibold text-sm text-gray-900">Variant Pricing Breakdown ({{ $product->variants->count() }})</h2>
+                    <table class="w-full text-xs">
+                        <thead class="text-gray-500 uppercase text-[10px]">
+                            <tr>
+                                <th class="text-left py-1.5 pr-2">Variant</th>
+                                <th class="text-right py-1.5 px-2">Supplier USD</th>
+                                <th class="text-right py-1.5 px-2">Landed (ZAR)</th>
+                                <th class="text-right py-1.5 px-2">Selling (ZAR)</th>
+                                <th class="text-right py-1.5 pl-2">Est. Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach ($product->variants as $variant)
+                                <tr class="{{ $variant->is_default ? 'bg-emerald-50/50' : '' }}">
+                                    <td class="py-1.5 pr-2 text-gray-800">
+                                        {{ $variant->option_name }}
+                                        @if ($variant->is_default) <span class="text-emerald-600 font-semibold">(default)</span> @endif
+                                    </td>
+                                    <td class="text-right py-1.5 px-2 font-mono text-gray-700">${{ number_format($variant->supplier_cost_usd, 2) }}</td>
+                                    <td class="text-right py-1.5 px-2 font-mono text-gray-700">R{{ number_format($variant->landed_cost_zar, 2) }}</td>
+                                    <td class="text-right py-1.5 px-2 font-mono font-semibold text-gray-900">R{{ number_format($variant->retail_price_zar, 2) }}</td>
+                                    <td class="text-right py-1.5 pl-2 font-mono text-emerald-700">R{{ number_format($variant->est_profit_zar, 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            @if ($product->reviews->isNotEmpty())
+                <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+                    <h2 class="font-semibold text-sm text-gray-900 flex items-center justify-between">
+                        <span>Supplier Reviews ({{ $product->reviews->count() }})</span>
+                        <span class="text-xs text-gray-500">Avg {{ number_format($product->average_rating, 1) }}/5</span>
+                    </h2>
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                        @foreach ($product->reviews as $review)
+                            <div class="text-xs border-b border-gray-50 pb-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-gray-800">{{ $review->author_name }}</span>
+                                    <span class="text-amber-500">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                                </div>
+                                @if ($review->review_text)
+                                    <p class="text-gray-600 mt-0.5">{{ $review->review_text }}</p>
+                                @endif
+                                @if ($review->review_date)
+                                    <p class="text-gray-400 mt-0.5">{{ $review->review_date->format('d M Y') }}</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
                 <h2 class="font-semibold text-sm text-gray-900">Technical & Regulatory Checks</h2>

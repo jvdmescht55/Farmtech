@@ -285,7 +285,12 @@ Rewrite the title, a short_description (1-2 sentences), and a description_html (
 paragraphs, may include a <ul> of key selling points) in clean, friendly South African English
 for a working farmer audience — plain, concrete, no overseas marketing fluff, no unverifiable
 superlatives ("world's best", "guaranteed"). Keep all technical claims consistent with what you
-verified above; do not invent specs that were not in the source listing.
+verified above; do not invent specs that were not in the source listing. Where the specs
+genuinely support it (an IP rating, a rugged/sealed housing, a wide operating temperature range),
+ground the copy in real South African farming trust language — built for the practical boer,
+suited to rough veld conditions, field-durable. Never claim field-durability the specs don't
+back, and never force this phrasing into a listing it doesn't fit (e.g. an office scale or an
+indoor lab instrument).
 
 Produce 4-10 spec rows in product.specs, grouped by spec_group (e.g. "Frequency & Compliance",
 "Power", "Physical", "Probe" for ultrasound). Mark the 2-4 most farmer-relevant specs as

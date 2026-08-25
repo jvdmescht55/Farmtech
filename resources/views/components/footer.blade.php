@@ -8,7 +8,7 @@
         {{-- Column 1: Brand & Assurance --}}
         <div>
             <p class="font-display font-bold text-lg text-white mb-2">Farm<span class="text-mint">tech</span></p>
-            <p class="text-sm leading-relaxed text-ink-muted">Professional agricultural &amp; industrial equipment, sourced globally and delivered locally.</p>
+            <p class="text-sm leading-relaxed text-ink-muted">Professional agricultural &amp; industrial equipment, sourced globally and delivered locally — built for the South African boer.</p>
             @if ($whatsappUrl)
                 <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener"
                    class="inline-flex items-center gap-2 mt-4 bg-white/10 border border-white/15 hover:bg-white/15 rounded-full px-3.5 py-2 text-xs font-semibold text-white transition">

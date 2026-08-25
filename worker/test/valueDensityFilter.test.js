@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluateValueDensity } from '../src/lib/valueDensityFilter.js';
+import { evaluateValueDensity, evaluateLogistics, parseDimensionsCm } from '../src/lib/valueDensityFilter.js';
 
 test('passes a light, high-value item even though it would have failed the old flat $50 floor', () => {
     // A small, cheap sensor module — light enough that freight is a trivial
@@ -57,4 +57,50 @@ test('net profit is reported correctly on both pass and fail', () => {
 
     const failing = evaluateValueDensity({ base_zar: 1000, intl_freight_zar: 50, landed_cost_zar: 1200, retail_price_zar: 1300 });
     assert.equal(failing.netProfitZar, 100);
+});
+
+// Logistics & Dimensional Gatekeeper
+
+test('parseDimensionsCm extracts three numbers from varied supplier formats', () => {
+    assert.deepEqual(parseDimensionsCm('28cm*14.7cm*6cm'), [28, 14.7, 6]);
+    assert.deepEqual(parseDimensionsCm('50 x 40 x 30 cm'), [50, 40, 30]);
+    assert.equal(parseDimensionsCm('single value'), null);
+    assert.equal(parseDimensionsCm(null), null);
+});
+
+test('evaluateLogistics rejects a massive tractor generator over the 25kg weight limit', () => {
+    const result = evaluateLogistics({ grossWeightKg: 180, packageDimensions: null, hazardText: 'Diesel generator', intlFreightZar: 1000, retailPriceZar: 20000 });
+    assert.equal(result.passes, false);
+    assert.equal(result.reason, 'exceeds_max_weight');
+});
+
+test('evaluateLogistics rejects an oversized crate on longest-side dimension', () => {
+    const result = evaluateLogistics({ grossWeightKg: 20, packageDimensions: '150x40x40', hazardText: '', intlFreightZar: 500, retailPriceZar: 5000 });
+    assert.equal(result.passes, false);
+    assert.equal(result.reason, 'exceeds_max_dimension');
+});
+
+test('evaluateLogistics rejects on volumetric weight even when actual weight is under the limit', () => {
+    // 100x100x100cm / 5000 = 200kg volumetric — light box, huge chargeable freight.
+    const result = evaluateLogistics({ grossWeightKg: 5, packageDimensions: '100x100x100', hazardText: '', intlFreightZar: 500, retailPriceZar: 5000 });
+    assert.equal(result.passes, false);
+    assert.equal(result.reason, 'excessive_volumetric_weight');
+});
+
+test('evaluateLogistics rejects bulk hazardous goods regardless of weight/value', () => {
+    const result = evaluateLogistics({ grossWeightKg: 2, packageDimensions: null, hazardText: 'Bulk Diesel Fuel Container 20L', intlFreightZar: 50, retailPriceZar: 2000 });
+    assert.equal(result.passes, false);
+    assert.equal(result.reason, 'prohibited_hazardous_goods');
+});
+
+test('evaluateLogistics rejects when shipping cost exceeds 65% of retail value', () => {
+    const result = evaluateLogistics({ grossWeightKg: 22, packageDimensions: null, hazardText: '', intlFreightZar: 1400, retailPriceZar: 2000 });
+    assert.equal(result.passes, false);
+    assert.equal(result.reason, 'low_value_density');
+});
+
+test('evaluateLogistics passes a normal light, well-priced item', () => {
+    const result = evaluateLogistics({ grossWeightKg: 1.5, packageDimensions: '30x20x15', hazardText: 'RFID ear tag reader', intlFreightZar: 100, retailPriceZar: 1500 });
+    assert.equal(result.passes, true);
+    assert.equal(result.reason, null);
 });

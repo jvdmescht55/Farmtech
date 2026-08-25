@@ -8,7 +8,7 @@ class OrderItem extends Model
 {
     protected $fillable = [
         'order_id', 'product_id', 'title_snapshot', 'unit_price_zar', 'quantity', 'line_total_zar',
-        'variant_key', 'variant_attributes', 'variant_sku',
+        'product_variant_id', 'variant_option_name', 'variant_sku',
     ];
 
     protected function casts(): array
@@ -16,7 +16,6 @@ class OrderItem extends Model
         return [
             'unit_price_zar' => 'decimal:2',
             'line_total_zar' => 'decimal:2',
-            'variant_attributes' => 'array',
         ];
     }
 
@@ -28,5 +27,10 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

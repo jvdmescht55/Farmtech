@@ -18,7 +18,7 @@
                     Sourced globally.<br><span class="italic font-medium text-brand-900">Delivered locally.</span>
                 </h1>
                 <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:140ms" class="text-ink-secondary text-base sm:text-lg max-w-md mb-10 leading-relaxed">
-                    Verified agricultural and industrial technology for South African businesses and farms.
+                    Verified agricultural and industrial technology for South African businesses and farms — technology built for the practical boer, tested for real veld conditions.
                 </p>
 
                 <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:200ms" class="flex flex-wrap items-center gap-4">
@@ -47,6 +47,7 @@
                 'VAT included',
                 'Import costs shown',
                 'Door-to-door delivery',
+                'Built for the South African boer',
             ] as $item)
                 <span class="flex items-center gap-2 px-4 sm:px-8 text-xs sm:text-sm font-semibold text-charcoal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mint-dark flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

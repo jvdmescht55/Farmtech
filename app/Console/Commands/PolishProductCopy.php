@@ -140,7 +140,11 @@ class PolishProductCopy extends Command
             "allowed) written as a DETAILED, South-African-agriculture-tailored functional use case — describe " .
             "a concrete on-farm scenario this device solves, using only facts present in the specifications " .
             "above. Include, if present in the specifications, the power/operating requirements (voltage, " .
-            "battery type/capacity, charging method) stated plainly so a buyer knows what they need to run it.\n" .
+            "battery type/capacity, charging method) stated plainly so a buyer knows what they need to run it. " .
+            "Where it reads naturally (never forced into every paragraph), ground the copy in real South " .
+            "African farming trust language — built for the practical boer, suited to rough veld conditions, " .
+            "field-durable — but only when genuinely supported by the specifications (e.g. an IP rating, rugged " .
+            "housing, or wide operating temperature range); never claim field-durability the specs don't back.\n" .
             "4. \"manifest\": Array of exact items included in the box, derived ONLY from probe/accessory-style " .
             "spec entries (e.g. \"Probe options\") and the currently recorded included items above — do not " .
             "invent accessories not evidenced in the data (e.g. [\"1x Main Unit\", \"1x Rectal Probe\", " .

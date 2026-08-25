@@ -110,72 +110,247 @@ function ft_extract_specifications(array $item): array
 }
 
 /**
- * Buyer-selectable SKU variants (color, wattage, probe type, size, ...)
- * from Alibaba's per-listing SKU table, into the same shape
- * App\Models\Product::findVariant()/variantOptionGroups() expect:
- * [{"attributes": {"Color": "Black", ...}, "sku_suffix": "...", "price_delta_zar": 0.0}, ...].
+ * Real per-listing price tiers from Alibaba's own SKU table — confirmed
+ * against a live re-scrape of a real listing (a "Radar Water Level
+ * Sensor" priced independently per range: 7m/15m/40m/80m, plus a
+ * "Wireless module + server + software" package option). Shape:
  *
- * CAVEAT: every one of the 240 items in the current scraped_data.json has
- * an empty detail.skus array — this scrape run never captured populated
- * SKU/variant data, and no authoritative schema for a populated one was
- * available to build against. This reads the most plausible shape
- * (mirroring the confirmed attrName/attrValue convention real
- * detail.specs rows use, per ft_extract_specifications() above, with a
- * few fallback key names) and is covered by a synthetic fixture, but is
- * UNVERIFIED against real populated data. It safely returns [] (no
- * variants) whenever the shape doesn't match, rather than guessing.
+ *   detail.skus.skuAttrs  = [{ id, name, values: [{ id, name, selected }] }, ...]
+ *   detail.skus.skuInfoMap = { "attrId:valueId;attrId2:valueId2;": { dollarPrice, id, ... }, ... }
+ *
+ * Returns rows shaped for ProductVariant::create() — {sku, option_name,
+ * supplier_cost_usd, is_default} — NOT run through LandedCostCalculator
+ * here (that needs Setting::get()/the app's Eloquent models, which this
+ * plain-PHP-include file has no business depending on); the caller in
+ * stage_all_to_review.php does that per row.
  */
-function ft_extract_variants(array $item, float $baseUsdPrice, float $exchangeRate, float $weightKg): array
+function ft_extract_variants(array $item): array
 {
     $skus = $item['detail']['skus'] ?? [];
-    if (!is_array($skus) || empty($skus)) {
+    $skuAttrs = $skus['skuAttrs'] ?? [];
+    $skuInfoMap = $skus['skuInfoMap'] ?? [];
+
+    if (!is_array($skuAttrs) || !is_array($skuInfoMap) || empty($skuInfoMap)) {
+        return [];
+    }
+
+    // Only attribute groups with 2+ real values represent an actual
+    // customer choice — a single-value group (seen in real data: "Mfg.
+    // Date Code" with only a "-" placeholder value) isn't one, even
+    // though it still appears in every skuInfoMap key.
+    $meaningfulGroups = [];
+    foreach ($skuAttrs as $attr) {
+        $attrId = $attr['id'] ?? null;
+        $values = $attr['values'] ?? [];
+        if ($attrId === null || !is_array($values) || count($values) < 2) {
+            continue;
+        }
+
+        $valueNames = [];
+        $selectedValueId = null;
+        foreach ($values as $value) {
+            $valueId = $value['id'] ?? null;
+            $name = trim((string) ($value['name'] ?? ''));
+            if ($valueId === null || $name === '') {
+                continue;
+            }
+            $valueNames[$valueId] = $name;
+            if (!empty($value['selected'])) {
+                $selectedValueId = $valueId;
+            }
+        }
+
+        if (!empty($valueNames)) {
+            $meaningfulGroups[$attrId] = ['values' => $valueNames, 'selected' => $selectedValueId];
+        }
+    }
+
+    if (empty($meaningfulGroups)) {
         return [];
     }
 
     $variants = [];
 
-    foreach ($skus as $sku) {
-        $attrRows = $sku['specAttrs'] ?? $sku['skuAttrs'] ?? $sku['attrs'] ?? $sku['props'] ?? [];
-        if (!is_array($attrRows) || empty($attrRows)) {
+    foreach ($skuInfoMap as $compositeKey => $info) {
+        $usdPrice = (float) ($info['dollarPrice'] ?? 0);
+        if ($usdPrice <= 0) {
             continue;
         }
 
-        $attributes = [];
-        foreach ($attrRows as $row) {
-            $name = trim((string) ($row['attrName'] ?? $row['name'] ?? $row['propName'] ?? ''));
-            $value = trim((string) ($row['attrValue'] ?? $row['value'] ?? $row['propValue'] ?? ''));
-            if ($name !== '' && $value !== '') {
-                $attributes[$name] = $value;
+        // Composite key format: "attrId:valueId;attrId2:valueId2;" —
+        // parse every pair, but only keep the ones belonging to a
+        // meaningful (2+ value) group.
+        $optionParts = [];
+        $isDefault = true;
+        foreach (explode(';', trim((string) $compositeKey, ';')) as $pair) {
+            if ($pair === '' || !str_contains($pair, ':')) {
+                continue;
+            }
+            [$attrId, $valueId] = array_map('trim', explode(':', $pair, 2));
+            $attrId = is_numeric($attrId) ? (int) $attrId : $attrId;
+            $valueId = is_numeric($valueId) ? (int) $valueId : $valueId;
+
+            if (!isset($meaningfulGroups[$attrId])) {
+                continue;
+            }
+
+            $optionParts[] = $meaningfulGroups[$attrId]['values'][$valueId] ?? null;
+
+            if ($meaningfulGroups[$attrId]['selected'] !== $valueId) {
+                $isDefault = false;
             }
         }
 
-        if (empty($attributes)) {
+        $optionParts = array_filter($optionParts);
+        if (empty($optionParts)) {
             continue;
         }
 
-        // A per-SKU USD price (if the scrape captured one) is run through
-        // the same costing formula as the base price, so the delta reflects
-        // a real landed-cost/margin difference — never a flat USD-to-ZAR
-        // pass-through, which would understate the actual retail delta.
-        $skuUsdPrice = (float) ($sku['price'] ?? $sku['amountOnSale'] ?? $sku['skuPrice'] ?? 0);
-        $priceDeltaZar = 0.0;
-        if ($skuUsdPrice > 0) {
-            $baseCosting = ft_compute_costing($baseUsdPrice, $weightKg, $exchangeRate);
-            $skuCosting = ft_compute_costing($skuUsdPrice, $weightKg, $exchangeRate);
-            $priceDeltaZar = round($skuCosting['retailPrice'] - $baseCosting['retailPrice'], 2);
-        }
-
-        $skuId = trim((string) ($sku['skuId'] ?? $sku['id'] ?? ''));
-        $skuSuffix = $skuId !== '' ? $skuId : strtoupper(preg_replace('/[^A-Z0-9]+/i', '', implode('', $attributes)));
-
         $variants[] = [
-            'attributes' => $attributes,
-            'sku_suffix' => $skuSuffix,
-            'price_delta_zar' => $priceDeltaZar,
+            'sku' => (string) ($info['id'] ?? ''),
+            'option_name' => implode(' / ', $optionParts),
+            'supplier_cost_usd' => round($usdPrice, 2),
+            'is_default' => $isDefault,
         ];
     }
 
     return $variants;
+}
+
+/**
+ * Real per-product buyer reviews from the scrape's top-level `reviews[]`
+ * array (only present when the actor run had includeReviews:true — billed
+ * per review, a separate cost from a normal search) — genuine masked
+ * buyer names ("V************o", Alibaba's own display convention, not
+ * something to unmask or invent), real 1-5 quality scores, real dates,
+ * real free text.
+ */
+function ft_extract_reviews(array $item): array
+{
+    $reviews = $item['reviews'] ?? [];
+    if (!is_array($reviews)) {
+        return [];
+    }
+
+    $out = [];
+
+    foreach ($reviews as $review) {
+        $buyerName = trim((string) ($review['buyer']['anonymousName'] ?? ''));
+        $productReviews = $review['productReview'] ?? [];
+
+        foreach ($productReviews as $pr) {
+            $text = trim((string) ($pr['reviewContent'] ?? ''));
+            $reviewId = $pr['reviewId'] ?? null;
+            $score = $pr['latitudeScore']['score'] ?? null;
+
+            if ($buyerName === '' || $reviewId === null || $score === null) {
+                continue;
+            }
+
+            $reviewDate = null;
+            if (!empty($review['reviewTime'])) {
+                try {
+                    $reviewDate = (new DateTime($review['reviewTime']))->format('Y-m-d');
+                } catch (Exception) {
+                    $reviewDate = null;
+                }
+            }
+
+            $out[] = [
+                'source_review_id' => (string) $reviewId,
+                'author_name' => $buyerName,
+                'rating' => max(1, min(5, (int) round((float) $score))),
+                'review_text' => $text !== '' ? $text : null,
+                'review_date' => $reviewDate,
+            ];
+        }
+    }
+
+    return $out;
+}
+
+/** Real supplier trust signals ("7 yrs" Gold Supplier, store service score) — currently never populated by this ingestion path, only by the Node AI pipeline's own extraction. */
+function ft_extract_supplier_trust(array $item): array
+{
+    $yearsRaw = (string) ($item['supplier']['goldSupplierYears'] ?? '');
+    preg_match('/(\d+)/', $yearsRaw, $matches);
+
+    return [
+        'supplier_years' => isset($matches[1]) ? (int) $matches[1] : null,
+        'service_score' => isset($item['supplier']['serviceScore']) ? (float) $item['supplier']['serviceScore'] : null,
+    ];
+}
+
+/**
+ * Real Alibaba CDN thumbnail URLs append a full second
+ * "_{width}x{height}.{ext}" suffix AFTER the image's own real extension
+ * (confirmed against real data: "...50R.jpg_300x300.jpg", not
+ * "...50R_300x300.jpg" — every one of 7,422 sampled thumbnail URLs across
+ * the current scrape corpus follows this double-extension form). Naively
+ * replacing only the "_WxH" part while keeping one trailing extension
+ * leaves a dangling double extension ("...jpg.jpg") that 404s — verified
+ * live against Alibaba's CDN. This strips the whole "_WxH" + duplicate
+ * extension tail back to the single real extension, resolving to the
+ * genuine full-resolution original (verified: 4x the byte size of the
+ * thumbnail on the same real URL). The leading extension-before-"_WxH" is
+ * optional so a hypothetical single-extension form ("foo_220x220.jpg",
+ * not currently seen in this corpus but named as an example case) still
+ * resolves correctly. Also handles a bare format-conversion suffix with no
+ * dimensions ("foo.jpg_.webp") the same way. Shared by the carousel-image
+ * and description-image extractors so there's exactly one place this
+ * pattern lives.
+ */
+function ft_strip_thumbnail_suffix(string $url): string
+{
+    $url = preg_replace(
+        '/(?:\.(?:jpg|jpeg|png|webp))?_\d{2,4}x\d{2,4}(\.(?:jpg|jpeg|png|webp))$/i',
+        '$1',
+        $url
+    );
+
+    return preg_replace(
+        '/(\.(?:jpg|jpeg|png|webp))_\.(?:jpg|jpeg|png|webp)$/i',
+        '$1',
+        $url
+    );
+}
+
+/**
+ * Inline diagrams/photos embedded in the rich Alibaba description HTML
+ * (detail.descriptionHtml.html) — real DOM parsing (not regex) since it's
+ * real, messy third-party HTML. The raw HTML itself is never rendered
+ * directly on our own pages (it carries its own <STYLE> blocks scoped to
+ * supplier-chosen ids and JSON data-attributes — real style-bleed/bloat
+ * risk); this only lifts the image URLs out of it for the gallery.
+ */
+function ft_extract_description_images(array $item): array
+{
+    $html = $item['detail']['descriptionHtml']['html'] ?? '';
+    if (!is_string($html) || trim($html) === '') {
+        return [];
+    }
+
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+    libxml_clear_errors();
+
+    $urls = [];
+    foreach ($dom->getElementsByTagName('img') as $img) {
+        // Lazy-loaded images carry the real URL in data-src and a generic
+        // "img-placeholder.png" in src itself — data-src wins whenever
+        // it's present, not just when src is empty.
+        $src = trim($img->getAttribute('data-src') ?: $img->getAttribute('src'));
+        if ($src === '' || str_contains($src, 'img-placeholder')) {
+            continue;
+        }
+        if (str_starts_with($src, '//')) {
+            $src = 'https:' . $src;
+        }
+        $urls[] = ft_strip_thumbnail_suffix($src);
+    }
+
+    return array_values(array_unique($urls));
 }
 
 /**
@@ -196,6 +371,69 @@ function ft_find_spec(array $lowerIndex, array $candidateKeys): ?string
     }
 
     return null;
+}
+
+/**
+ * Real, deterministic brand cleanup — a mechanical pass (mirrors
+ * ft_clean_title()'s relationship to PolishProductCopy's AI rewrite), not
+ * an AI call, so it runs on every staged item at zero extra cost.
+ *
+ * Survey of the current live catalog's 307 populated Brand Name values
+ * found the raw "Brand Name" spec field itself is already mostly clean
+ * (e.g. "GREAT FARM", "HONDETEC", "Vetfine") since it's a distinct field
+ * from the supplier/company name — the genuine junk is a small set of
+ * placeholder values ("/", "No Brand", "OEM", "ODM/OEM", "Original"),
+ * multi-brand slash/comma lists that end in one of those placeholders
+ * ("FarmaMed/OEM", "SUOLI, KELIER, OEM"), and stray suffixes ("FOREVER
+ * SCALES or Customized"). The factory-company-name stripping (Shenzhen/
+ * Zhengzhou/.../Co.,Ltd/Technology Co/Trading Co) doesn't currently fire
+ * on this corpus but is kept as real, defensive handling per Alibaba's
+ * well-known convention, in case a future scrape's Brand Name field is
+ * ever populated from the company name instead.
+ */
+function ft_clean_brand_name(?string $raw, string $categoryLabel): string
+{
+    $fallback = "Farmtech Pro-Series / {$categoryLabel}";
+    $brand = trim((string) $raw);
+
+    if ($brand === '') {
+        return $fallback;
+    }
+
+    // Multi-brand slash lists ("Sonoscape/MEDSINGLONG", "FarmaMed/OEM") —
+    // keep the first real (non-OEM/ODM) segment.
+    $segments = array_filter(
+        array_map('trim', explode('/', $brand)),
+        fn ($s) => $s !== '' && !preg_match('/^(oem|odm)$/i', $s)
+    );
+    $brand = $segments ? (string) reset($segments) : '';
+
+    // Trailing junk after a comma list ("SUOLI, KELIER, OEM" -> "SUOLI").
+    if (str_contains($brand, ',')) {
+        $brand = trim(explode(',', $brand)[0]);
+    }
+
+    // Factory/company-name boilerplate that sometimes leaks into a Brand
+    // Name field on other listings, even though it doesn't on this corpus.
+    $brand = preg_replace(
+        '/\b(co\.,?\s*ltd\.?|co\.?\s*limited|technology\s*co\.?|trading\s*co\.?|industrial\s*co\.?|factory\s*direct\s*sale|factory|manufactory|manufacturer)\b/i',
+        '',
+        $brand
+    );
+    $brand = preg_replace(
+        '/^(shenzhen|zhengzhou|guangzhou|dongguan|ningbo|yiwu|foshan|wenzhou|hangzhou|jinan|qingdao|xiamen|shanghai|beijing|shandong|henan|hebei)\s+/i',
+        '',
+        $brand
+    );
+    $brand = preg_replace('/\s+or\s+customi[sz]ed\s*$/i', '', $brand);
+    $brand = trim(preg_replace('/\s+/', ' ', $brand), " \t\n\r\0\x0B,-/");
+
+    $junkWhole = ['oem', 'odm', 'oem/odm', 'odm/oem', 'no brand', 'original', 'unbranded', 'n/a', 'none', '-'];
+    if ($brand === '' || mb_strlen($brand) < 2 || in_array(strtolower($brand), $junkWhole, true)) {
+        return $fallback;
+    }
+
+    return $brand;
 }
 
 /** Brand/model/warranty are direct 1:1 fields inside specifications — no AI needed. */
@@ -347,6 +585,24 @@ function ft_extract_source_url(array $item): ?string
     return (is_string($url) && $url !== '') ? $url : null;
 }
 
+/**
+ * The stable numeric Alibaba listing id embedded in every product URL
+ * (".../Some-Title_1601414781820.html?priceId=..."). The trailing
+ * "?priceId=..." query param changes between scrapes of the exact same
+ * listing (confirmed: two real re-scrapes of the same URL a session apart
+ * had different priceId values) — comparing full source_url strings would
+ * wrongly treat a rescrape as a brand-new, different product. This id is
+ * what actually identifies "the same real listing" across scrapes.
+ */
+function ft_extract_alibaba_product_id(?string $url): ?string
+{
+    if ($url === null) {
+        return null;
+    }
+
+    return preg_match('/_(\d{6,})\.html/', $url, $m) ? $m[1] : null;
+}
+
 /** Raw "LxWxH" package dimension string in cm, stored as-is — format varies by supplier. */
 function ft_extract_package_dimensions(array $item): ?string
 {
@@ -472,7 +728,7 @@ function ft_build_fallback_copy(string $categoryLabel, array $identity, array $s
         $paragraphs[] = '<ul>' . implode('', $items) . '</ul>';
     }
 
-    $paragraphs[] = '<p>All-in landed pricing — customs clearance and door-to-door delivery are handled for you, with nothing extra to pay on arrival.</p>';
+    $paragraphs[] = '<p>All-in landed pricing — customs clearance and door-to-door delivery are handled for you, with nothing extra to pay on arrival. Sourced and vetted for the South African boer.</p>';
 
     return [
         'short_description' => $shortDescription,

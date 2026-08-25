@@ -84,9 +84,9 @@ class CheckoutController extends Controller
                         'unit_price_zar' => $item['unit_price_zar'],
                         'quantity' => $item['quantity'],
                         'line_total_zar' => $item['line_total'],
-                        'variant_key' => $item['variant_key'] ?: null,
-                        'variant_attributes' => $item['variant']['attributes'] ?? null,
-                        'variant_sku' => $item['variant']['sku_suffix'] ?? null,
+                        'product_variant_id' => $item['variant']?->id,
+                        'variant_option_name' => $item['variant']?->option_name,
+                        'variant_sku' => $item['variant']?->sku,
                     ]);
                 }
 

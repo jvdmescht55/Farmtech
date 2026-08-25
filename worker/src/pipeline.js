@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs, HELP_TEXT } from './lib/cli.js';
 import { getRateWithFallback } from './lib/forex.js';
 import { calculateLandedCost } from './lib/landedCost.js';
-import { evaluateValueDensity, MIN_MARGIN_PCT } from './lib/valueDensityFilter.js';
+import { evaluateValueDensity, evaluateLogistics, MIN_MARGIN_PCT } from './lib/valueDensityFilter.js';
 import { vetListing } from './lib/geminiVetting.js';
 import { downloadAndOptimizeImages } from './lib/imagePipeline.js';
 import { withRetry } from './lib/retry.js';
@@ -150,6 +150,22 @@ async function processListing(listing, args, results) {
     });
     const valueDensity = evaluateValueDensity(costing);
     console.log(`  Landed cost: R${costing.landed_cost_zar}  →  Required retail (${effectiveMarginPct}% margin): R${costing.retail_price_zar}  (net profit R${valueDensity.netProfitZar.toFixed(2)})`);
+
+    // Logistics & Dimensional Gatekeeper — rejects items that simply cannot
+    // move as an air-freighted parcel (too heavy, too large, hazardous
+    // goods) or that are too low-value-density to justify the freight cost,
+    // BEFORE spending an AI vetting call on them. See valueDensityFilter.js.
+    const logistics = evaluateLogistics({
+        grossWeightKg: listing.weight_kg ?? null,
+        packageDimensions: listing.package_dimensions ?? null,
+        hazardText: `${listing.raw_title || ''} ${listing.raw_specs_text || ''}`,
+        intlFreightZar: costing.intl_freight_zar,
+        retailPriceZar: costing.retail_price_zar,
+    });
+    if (!logistics.passes) {
+        console.log(`  SKIPPED — ${logistics.detail}\n`);
+        return { sku: listing.sku, title: listing.raw_title, skipped: true, reason: logistics.reason };
+    }
 
     // Value-Density Feasibility Engine — both checks fully computable
     // without an AI call, so reject a low-value-density item before paying

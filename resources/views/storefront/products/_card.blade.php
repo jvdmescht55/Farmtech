@@ -14,7 +14,13 @@
     // spec rows means no key-spec line, not a placeholder.
     $keySpec = $product->specs->firstWhere('is_highlight', true) ?? $product->specs->first();
 
-    $roundedPrice = 'R'.number_format($product->retail_price_zar, 0, '', ' ');
+    // A product with real per-variant pricing (see ProductVariant) can have
+    // a base retail_price_zar that's neither its cheapest nor most
+    // expensive real option — show the true range instead of one
+    // potentially-misleading flat number.
+    $roundedPrice = $product->hasVariants()
+        ? 'From R'.number_format($product->min_price_zar, 0, '', ' ')
+        : 'R'.number_format($product->retail_price_zar, 0, '', ' ');
 
     // Snapshot for Quick View / Compare — Alpine reads this client-side, so
     // it's the same real, already-fetched data the card renders, not a

@@ -15,13 +15,13 @@ class Product extends Model
     protected $fillable = [
         'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'included_items',
         'compatibility_notes', 'requirements_notes', 'warranty_terms',
-        'specifications', 'key_features', 'variants', 'brand_name', 'model_number', 'warranty_period',
+        'specifications', 'key_features', 'brand_name', 'model_number', 'warranty_period',
         'original_price_usd', 'est_weight_kg', 'gross_weight_kg', 'package_dimensions', 'hs_code', 'customs_duty_rate', 'vat_rate',
         'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar', 'customs_clearance_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
         'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'source_url', 'supplier_last_checked_at',
         'import_contingency_pct', 'insurance_cost_zar', 'payment_fees_zar',
-        'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'is_active',
+        'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'rejection_reason', 'is_active',
         'stock_quantity', 'allow_backorder', 'low_stock_threshold',
         'verification_tier', 'icasa_status', 'radio_frequency_confirmed', 'datasheet_uploaded',
         'published_at', 'approved_at', 'auto_publish_checked_at', 'published_via',
@@ -33,7 +33,6 @@ class Product extends Model
             'included_items' => 'array',
             'specifications' => 'array',
             'key_features' => 'array',
-            'variants' => 'array',
             'original_price_usd' => 'decimal:2',
             'est_weight_kg' => 'decimal:3',
             'gross_weight_kg' => 'decimal:3',
@@ -111,73 +110,65 @@ class Product extends Model
         return $this->hasMany(ProductSpec::class)->orderBy('spec_group')->orderBy('id');
     }
 
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class)->orderByDesc('is_default')->orderBy('retail_price_zar');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class)->latest('review_date');
+    }
+
     public function hasVariants(): bool
     {
-        return !empty($this->variants);
+        return $this->variants->isNotEmpty();
     }
 
-    /**
-     * Deterministic key for a variant's attribute combination — sorted by
-     * attribute name so {"Power":"50W","Color":"Black"} and
-     * {"Color":"Black","Power":"50W"} produce the same key. Must match the
-     * JS `variantKey()` helper in products/show.blade.php exactly, since
-     * the cart/add-to-cart form is keyed on this same string from both
-     * sides (server-rendered PHP and the client-side Alpine selector).
-     */
-    public static function variantKey(array $attributes): string
+    /** Real per-listing lowest variant price, falling back to the base retail price for the ~all products with no variant rows. */
+    public function getMinPriceZarAttribute(): ?float
     {
-        ksort($attributes);
-
-        $parts = [];
-        foreach ($attributes as $name => $value) {
-            $parts[] = "{$name}={$value}";
+        if ($this->variants->isEmpty()) {
+            return $this->retail_price_zar !== null ? (float) $this->retail_price_zar : null;
         }
 
-        return implode('|', $parts);
+        return (float) $this->variants->min('retail_price_zar');
     }
 
-    /**
-     * Option groups derived from the variants array for the storefront
-     * selector UI — e.g. {"Color": ["Black", "White"], "Power": ["50W", "100W"]}.
-     * Order preserved (first-seen), not alphabetical, so the admin's
-     * scrape-order intent survives into the UI.
-     */
-    public function variantOptionGroups(): array
+    public function getMaxPriceZarAttribute(): ?float
     {
-        $groups = [];
-
-        foreach ($this->variants ?? [] as $variant) {
-            foreach (($variant['attributes'] ?? []) as $name => $value) {
-                $groups[$name] ??= [];
-                if (!in_array($value, $groups[$name], true)) {
-                    $groups[$name][] = $value;
-                }
-            }
+        if ($this->variants->isEmpty()) {
+            return $this->retail_price_zar !== null ? (float) $this->retail_price_zar : null;
         }
 
-        return $groups;
+        return (float) $this->variants->max('retail_price_zar');
     }
 
-    /** The variant row (attributes/sku_suffix/price_delta_zar) matching a given attribute selection, if any. */
-    public function findVariant(array $attributes): ?array
+    /** "R 2,939.80 - R 10,203.20" when variants span a real range, a single price otherwise. */
+    public function getPriceRangeDisplayAttribute(): ?string
     {
-        return $this->findVariantByKey(static::variantKey($attributes));
-    }
+        $min = $this->min_price_zar;
+        $max = $this->max_price_zar;
 
-    /** Same lookup as findVariant(), but from an already-computed variantKey() string (e.g. from a cart line). */
-    public function findVariantByKey(string $key): ?array
-    {
-        if ($key === '') {
+        if ($min === null) {
             return null;
         }
 
-        foreach ($this->variants ?? [] as $variant) {
-            if (static::variantKey($variant['attributes'] ?? []) === $key) {
-                return $variant;
-            }
+        if ($min === $max) {
+            return 'R ' . number_format($min, 2);
         }
 
-        return null;
+        return 'R ' . number_format($min, 2) . ' - R ' . number_format($max, 2);
+    }
+
+    /** Mean of real imported reviews — null (never a fabricated default) when there are none. */
+    public function getAverageRatingAttribute(): ?float
+    {
+        if ($this->reviews->isEmpty()) {
+            return null;
+        }
+
+        return round((float) $this->reviews->avg('rating'), 1);
     }
 
     public function highlightSpecs()

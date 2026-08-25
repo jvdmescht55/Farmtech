@@ -47,7 +47,7 @@ class ProductController extends Controller
     /** Review panel: real financial breakdown from LandedCostCalculator, not ad-hoc numbers in the view. */
     public function show(Product $product)
     {
-        $product->load('images');
+        $product->load(['images', 'variants', 'reviews']);
 
         $calculator = new LandedCostCalculator(
             freightUsdPerKg: (float) Setting::get('air_freight_usd_per_kg', 16),
