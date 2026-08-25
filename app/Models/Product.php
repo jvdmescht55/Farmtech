@@ -22,6 +22,7 @@ class Product extends Model
         'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'source_url', 'supplier_last_checked_at',
         'import_contingency_pct', 'insurance_cost_zar', 'payment_fees_zar',
         'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'rejection_reason', 'is_active',
+        'is_featured', 'featured_score', 'click_count',
         'stock_quantity', 'allow_backorder', 'low_stock_threshold',
         'verification_tier', 'icasa_status', 'radio_frequency_confirmed', 'datasheet_uploaded',
         'published_at', 'approved_at', 'auto_publish_checked_at', 'published_via',
@@ -52,6 +53,9 @@ class Product extends Model
             'payment_fees_zar' => 'decimal:2',
             'profit_margin_pct' => 'decimal:2',
             'is_active' => 'boolean',
+            'is_featured' => 'boolean',
+            'featured_score' => 'decimal:2',
+            'click_count' => 'integer',
             'category' => ProductCategory::class,
             'stock_quantity' => 'integer',
             'allow_backorder' => 'boolean',
@@ -228,15 +232,83 @@ class Product extends Model
      */
     public function scopeTrending(Builder $query): Builder
     {
+        // Ties (the common case for a young catalog with little/no sales
+        // yet) break on the real curation score before falling back to pure
+        // recency — a genuinely higher-margin, better-photographed, trust-
+        // verified listing surfaces over an arbitrary "just imported" one,
+        // without ever overriding real units-sold when that signal exists.
         return $query->storefrontVisible()
             ->withSum('orderItems as units_sold', 'quantity')
             ->orderByDesc('units_sold')
+            ->orderByDesc('featured_score')
             ->orderByDesc('created_at');
     }
 
     public function scopeStorefrontVisible(Builder $query): Builder
     {
         return $query->where('status', 'approved')->where('is_active', true);
+    }
+
+    /** The stored top-N cut of computeFeaturedScore() — see RecalculateFeaturedScores. */
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->storefrontVisible()->where('is_featured', true)->orderByDesc('featured_score');
+    }
+
+    /**
+     * Storefront curation score — a composite of only real, already-recorded
+     * signals (never a fabricated "trending" or "editor's pick" claim):
+     *   - Value density: net profit margin % (App\Services\ValueDensityEvaluator's
+     *     own "high value density" principle — a genuinely profitable listing).
+     *   - Compactness: a lighter gross_weight_kg item is cheaper to freight and
+     *     easier to keep in stock at scale — the same "compact, high practical
+     *     utility" preference the Logistics Gatekeeper already enforces as a
+     *     hard cutoff at 25kg, expressed here as a soft preference below it.
+     *   - Media richness: real photo count plus a real, populated description
+     *     and key-features list — never a placeholder gallery.
+     *   - Trust: a PASS/WARN compliance audit verdict and real recorded
+     *     supplier years-trading.
+     *   - Demand: real reviews (count + rating), real units actually sold
+     *     (order_items, same source as scopeTrending), and real storefront
+     *     click-throughs (Storefront\ProductController::show()).
+     *
+     * Expects images/reviews/complianceAudit already eager-loaded by the
+     * caller (and optionally a `units_sold` withSum alias) — issues no
+     * queries of its own. Score is an arbitrary composite scale, not a
+     * percentage; only the relative ranking across products is meaningful.
+     */
+    public function computeFeaturedScore(): float
+    {
+        $marginPct = (float) ($this->net_profit_margin_pct ?? 0);
+        $marginScore = max(0, min(30, $marginPct)) / 30 * 25;
+
+        $weightKg = $this->gross_weight_kg !== null ? (float) $this->gross_weight_kg : (float) ($this->est_weight_kg ?? 0);
+        $compactnessScore = $weightKg > 0 ? max(0, 15 - min(15, $weightKg)) : 10;
+
+        $imageCount = $this->relationLoaded('images') ? $this->images->count() : 0;
+        $mediaScore = min(5, $imageCount) / 5 * 15;
+        $mediaScore += !empty($this->description_html) ? 5 : 0;
+        $mediaScore += !empty($this->key_features) ? 5 : 0;
+
+        $reviews = $this->relationLoaded('reviews') ? $this->reviews : collect();
+        $reviewCount = $reviews->count();
+        $avgRating = $reviewCount > 0 ? (float) $reviews->avg('rating') : 0;
+        $reviewScore = (min(10, $reviewCount) / 10 * 10) + ($avgRating / 5 * 10);
+
+        $verdict = $this->relationLoaded('complianceAudit') ? $this->complianceAudit?->audit_verdict : null;
+        $trustScore = match ($verdict) {
+            'PASS' => 10,
+            'WARN' => 4,
+            default => 0,
+        };
+        $supplierYears = $this->relationLoaded('complianceAudit') ? (int) ($this->complianceAudit?->supplier_years ?? 0) : 0;
+        $trustScore += min(5, $supplierYears);
+
+        $unitsSold = (float) ($this->units_sold ?? 0);
+        $demandScore = min(10, $unitsSold) / 10 * 10;
+        $demandScore += min(10, log10($this->click_count + 1) * 4);
+
+        return round($marginScore + $compactnessScore + $mediaScore + $reviewScore + $trustScore + $demandScore, 2);
     }
 
     public function getCategoryLabelAttribute(): string

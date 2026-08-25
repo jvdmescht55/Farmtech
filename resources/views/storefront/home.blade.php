@@ -59,6 +59,33 @@
 
     <x-featured-marquee :products="$marqueeProducts" />
 
+    {{-- Featured Boer Tech — top-scoring listings by the real curation algorithm
+         (margin, compactness, photo/description richness, reviews, verified-supplier
+         trust, units sold, click-throughs — see Product::computeFeaturedScore() and
+         `products:rank-featured`), never a hand-picked or fabricated "editor's pick". --}}
+    @if ($featured->isNotEmpty())
+        <section class="bg-white py-20 sm:py-24">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
+                    <div class="max-w-2xl">
+                        <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Featured Boer Tech</p>
+                        <h2 class="font-display font-bold text-3xl text-charcoal mb-2">Top equipment for the South African boer</h2>
+                        <p class="text-ink-secondary">Ranked on real margin, media quality, reviews, and verified-supplier trust &mdash; not a promoted placement.</p>
+                    </div>
+                    <a href="{{ route('equipment.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-dark hover:text-brand-900 transition flex-shrink-0">
+                        View all equipment
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    @foreach ($featured->take(8) as $i => $product)
+                        @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- Shop by application — large image cards, 3 per row. Replaces the earlier
          industry-card grid at this position per the exact-spec walkthrough (items
          11-12); industry-level browsing is still reachable via the header's

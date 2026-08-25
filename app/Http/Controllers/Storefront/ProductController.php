@@ -130,6 +130,12 @@ class ProductController extends Controller
     {
         abort_unless($product->status === 'approved' && $product->is_active, 404);
 
+        // Real click-through signal for the curation algorithm
+        // (Product::computeFeaturedScore()/products:rank-featured) — a
+        // single atomic UPDATE, not a read-then-write, so concurrent
+        // requests never clobber each other's increment.
+        Product::where('id', $product->id)->increment('click_count');
+
         $product->load(['images', 'specs', 'complianceAudit', 'variants', 'reviews', 'bundleCompanions' => function ($query) {
             $query->storefrontVisible()->with(['thumbnail', 'complianceAudit', 'specs']);
         }]);
