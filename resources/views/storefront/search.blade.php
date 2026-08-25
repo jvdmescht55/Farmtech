@@ -6,8 +6,8 @@
     <x-trending-strip :products="$trending" :sticky="true" />
 
     <div class="max-w-7xl mx-auto px-4 py-10">
-        <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-1">Search results</p>
-        <h1 class="font-display font-bold text-2xl sm:text-3xl text-brand-900 mb-8">
+        <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-2">Search results</p>
+        <h1 class="font-display font-semibold text-3xl sm:text-4xl text-brand-900 mb-8">
             @if ($query !== '')
                 "{{ $query }}"
             @else

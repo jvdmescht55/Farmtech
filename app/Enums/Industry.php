@@ -65,6 +65,32 @@ enum Industry: string
         return implode(', ', $labels).'.';
     }
 
+    /**
+     * Storefront-facing cases only — industries with at least one currently
+     * storefront-visible product. Keeps nav/hero/footer from linking to a
+     * dead-end hub page for a vertical that's been fully deactivated (e.g.
+     * Hunting), without deleting the underlying enum case/products, which
+     * stay intact for admin views and order history.
+     */
+    public static function activeCases(): array
+    {
+        static $activeCategoryValues = null;
+
+        if ($activeCategoryValues === null) {
+            $activeCategoryValues = \App\Models\Product::storefrontVisible()
+                ->select('category')->distinct()->pluck('category')
+                ->map(fn (ProductCategory $c) => $c->value)->all();
+        }
+
+        return array_values(array_filter(
+            self::cases(),
+            fn (Industry $i) => array_intersect(
+                array_map(fn (ProductCategory $c) => $c->value, $i->categories()),
+                $activeCategoryValues
+            ) !== []
+        ));
+    }
+
     public static function values(): array
     {
         return array_column(self::cases(), 'value');

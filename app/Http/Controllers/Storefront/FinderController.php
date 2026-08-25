@@ -17,7 +17,7 @@ class FinderController extends Controller
      */
     public function index()
     {
-        $industries = collect(Industry::cases())->map(fn (Industry $industry) => [
+        $industries = collect(Industry::activeCases())->map(fn (Industry $industry) => [
             'value' => $industry->value,
             'label' => $industry->label(),
             'goals' => collect($industry->categories())->map(fn ($category) => [

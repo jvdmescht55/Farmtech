@@ -6,7 +6,7 @@
     <div class="bg-canvas border-b border-border">
         <div class="max-w-4xl mx-auto px-4 py-16 text-center">
             <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">How It Works</p>
-            <h1 class="font-display font-extrabold text-3xl sm:text-4xl text-charcoal leading-tight mb-4">
+            <h1 class="font-display font-bold text-3xl sm:text-4xl text-charcoal leading-tight mb-4">
                 Global equipment. Local confidence.
             </h1>
             <p class="text-ink-secondary text-lg leading-relaxed max-w-2xl mx-auto">

@@ -138,6 +138,82 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
+// Cart drawer — server session remains the source of truth (Cart::summary());
+// this store just mirrors it so add/update/remove can happen without a full
+// page reload. Bootstrapped from a JSON blob the layout renders server-side
+// (so the drawer already has the right count/items on first paint, no extra
+// fetch), then kept in sync by replacing its state with whatever the server
+// returns from each request — never computed optimistically client-side, so
+// it can't drift from real stock/price rules enforced server-side.
+document.addEventListener('alpine:init', () => {
+    Alpine.store('cart', {
+        open: false,
+        loading: false,
+        items: [],
+        count: 0,
+        subtotal: 0,
+        init() {
+            const boot = document.getElementById('cart-bootstrap');
+            if (!boot) return;
+            try {
+                this.apply(JSON.parse(boot.textContent));
+            } catch (e) {
+                // malformed/missing bootstrap payload — drawer just opens empty
+            }
+        },
+        apply(data) {
+            this.items = data.items ?? [];
+            this.count = data.count ?? 0;
+            this.subtotal = data.subtotal ?? 0;
+        },
+        async request(url, body) {
+            this.loading = true;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': token },
+                    body,
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    Alpine.store('toast').push(err.message || 'Something went wrong — please try again.', 'error');
+                    return null;
+                }
+                const data = await response.json();
+                this.apply(data);
+                return data;
+            } catch (e) {
+                Alpine.store('toast').push('Network error — please try again.', 'error');
+                return null;
+            } finally {
+                this.loading = false;
+            }
+        },
+        async submitForm(form) {
+            const data = await this.request(form.action, new FormData(form));
+            if (data) {
+                this.open = true;
+                Alpine.store('toast').push('Added to your cart.', 'success');
+            }
+        },
+        async updateQuantity(item, quantity) {
+            if (quantity < 1) return this.removeItem(item);
+            const body = new FormData();
+            body.append('_method', 'PATCH');
+            body.append('quantity', quantity);
+            if (item.variant_id) body.append('variant_id', item.variant_id);
+            await this.request(`/cart/${item.product_id}`, body);
+        },
+        async removeItem(item) {
+            const body = new FormData();
+            body.append('_method', 'DELETE');
+            if (item.variant_id) body.append('variant_id', item.variant_id);
+            await this.request(`/cart/${item.product_id}`, body);
+        },
+    });
+});
+
 // Cinematic entrance sequence, once per browser tab session — read before
 // marking played, so THIS page load still gets `alreadyPlayed: false` and
 // plays the animation; every subsequent navigation in the same tab sees it

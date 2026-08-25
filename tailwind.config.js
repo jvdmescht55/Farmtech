@@ -62,12 +62,13 @@ export default {
                 },
             },
             fontFamily: {
-                // rev. 11 — locked typography: Inter everywhere (headings included —
-                // no separate display face). `font-mono` (IBM Plex Mono) is reserved
-                // for model numbers, SKUs, dimensions, and other technical values —
-                // never body copy. `font-display` kept as a class name so existing
-                // markup doesn't need a mechanical rename; it now just resolves to Inter.
-                display: ['"Inter"', 'sans-serif'],
+                // rev. 12 — premium-catalogue typography: Fraunces (a soft-serif with
+                // an optical-size axis, so it reads well both huge on a hero and small
+                // on a card title) for `font-display` — hero/section headings, product
+                // titles, PDP names. Inter stays the workhorse for body copy, nav, forms,
+                // and anywhere density matters. `font-mono` (IBM Plex Mono) is unchanged:
+                // reserved for model numbers, SKUs, dimensions, technical values.
+                display: ['"Fraunces"', 'ui-serif', 'Georgia', 'serif'],
                 body: ['"Inter"', 'sans-serif'],
                 mono: ['"IBM Plex Mono"', 'monospace'],
             },
@@ -118,6 +119,13 @@ export default {
                     '0%': { opacity: '0', transform: 'scale(0.95)' },
                     '100%': { opacity: '1', transform: 'scale(1)' },
                 },
+                // Slow, near-imperceptible drift on hero/feature photography —
+                // the closest a static supplier photo gets to "cinematic
+                // imagery" without a real video/360 asset to work with.
+                'ken-burns': {
+                    '0%': { transform: 'scale(1)' },
+                    '100%': { transform: 'scale(1.08)' },
+                },
             },
             animation: {
                 'reveal-up': 'reveal-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
@@ -128,6 +136,7 @@ export default {
                 'glow-pulse': 'glow-pulse 2.2s ease-out infinite',
                 'slide-down-in': 'slide-down-in 0.5s cubic-bezier(0.16,1,0.3,1) both',
                 'scale-in': 'scale-in 0.6s cubic-bezier(0.16,1,0.3,1) both',
+                'ken-burns': 'ken-burns 20s ease-out both',
             },
         },
     },

@@ -25,7 +25,7 @@ class HomeController extends Controller
         $costSample = $featured->first(fn (Product $p) => $p->landed_cost_zar && $p->retail_price_zar);
 
         return view('storefront.home', [
-            'industries' => Industry::cases(),
+            'industries' => Industry::activeCases(),
             'featured' => $featured,
             'trending' => $trending,
             'marqueeProducts' => $marqueeProducts,

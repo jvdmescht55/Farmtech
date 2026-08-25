@@ -130,7 +130,7 @@ class ProductController extends Controller
     {
         abort_unless($product->status === 'approved' && $product->is_active, 404);
 
-        $product->load(['images', 'specs', 'complianceAudit', 'bundleCompanions' => function ($query) {
+        $product->load(['images', 'specs', 'complianceAudit', 'variants', 'reviews', 'bundleCompanions' => function ($query) {
             $query->storefrontVisible()->with(['thumbnail', 'complianceAudit', 'specs']);
         }]);
 
@@ -157,9 +157,24 @@ class ProductController extends Controller
             $related = $related->concat($industryFill);
         }
 
+        // Lightweight personalization: a per-browser-session trail of real
+        // pages viewed, not a fabricated "customers also viewed" signal.
+        // Read before this product is pushed onto it, so the section never
+        // shows the product whose page you're already on.
+        $recentlyViewedIds = array_filter(session('recently_viewed', []), fn ($id) => $id !== $product->id);
+        $recentlyViewed = Product::storefrontVisible()
+            ->whereIn('id', array_slice($recentlyViewedIds, 0, 8))
+            ->with(['thumbnail', 'complianceAudit', 'specs'])
+            ->get()
+            ->sortBy(fn ($p) => array_search($p->id, $recentlyViewedIds))
+            ->values();
+
+        session()->put('recently_viewed', array_slice(array_unique([$product->id, ...$recentlyViewedIds]), 0, 8));
+
         return view('storefront.products.show', [
             'product' => $product,
             'related' => $related,
+            'recentlyViewed' => $recentlyViewed,
         ]);
     }
 }

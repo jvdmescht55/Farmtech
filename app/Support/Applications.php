@@ -15,7 +15,7 @@ class Applications
 {
     public static function all(): array
     {
-        return [
+        $applications = [
             ['label' => 'Weigh livestock', 'description' => 'Scales, indicators and load cells', 'icon' => 'scale', 'target' => ProductCategory::Scales],
             ['label' => 'Track & identify animals', 'description' => 'RFID readers and ear tagging', 'icon' => 'rfid', 'target' => ProductCategory::Rfid],
             ['label' => 'Monitor irrigation', 'description' => 'Smart irrigation controllers', 'icon' => 'irrigation', 'target' => ProductCategory::SmartIrrigation],
@@ -23,8 +23,17 @@ class Applications
             ['label' => 'Power remote equipment', 'description' => 'Solar pumps and MPPT controllers', 'icon' => 'solar', 'target' => Industry::SolarPower],
             ['label' => 'Track fleet & industrial assets', 'description' => 'GPS trackers and industrial RFID', 'icon' => 'gps', 'target' => ProductCategory::FleetTrackers],
             ['label' => 'Hilux accessories', 'description' => 'Dual-battery kits and 4x4 electrical upgrades', 'icon' => 'accessories', 'target' => ProductCategory::VehicleAccessories],
-            ['label' => 'Hunting equipment', 'description' => 'Thermal optics, trail cameras and tracking gear', 'icon' => 'thermal-optic', 'target' => Industry::Hunting],
         ];
+
+        // Drop any application whose target has no storefront-visible products left
+        // (e.g. a fully-deactivated vertical) rather than linking to a dead-end page.
+        $activeIndustries = Industry::activeCases();
+
+        return array_values(array_filter($applications, function (array $app) use ($activeIndustries) {
+            return $app['target'] instanceof Industry
+                ? in_array($app['target'], $activeIndustries, true)
+                : in_array($app['target']->industry(), $activeIndustries, true);
+        }));
     }
 
     public static function url(array $application): string

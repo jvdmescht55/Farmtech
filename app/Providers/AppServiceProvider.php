@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.storefront', function ($view) {
             $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
 
-            $view->with('cartCount', app(Cart::class)->count());
+            $view->with('cartSummary', app(Cart::class)->summary());
             $view->with('whatsappUrl', $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null);
         });
 

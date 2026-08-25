@@ -51,6 +51,7 @@ Route::get('/finder', [FinderController::class, 'index'])->name('finder.index');
 
 Route::middleware('throttle:cart')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/cart/summary', [CartController::class, 'summary'])->name('cart.summary');
     Route::post('/cart/{product}/add', [CartController::class, 'add'])->name('cart.add');
     Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');

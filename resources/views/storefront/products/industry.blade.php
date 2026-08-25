@@ -4,17 +4,17 @@
 
 @section('content')
     <div class="bg-canvas border-b border-border">
-        <div class="max-w-7xl mx-auto px-4 py-10">
-            <p class="text-xs font-mono uppercase tracking-widest text-mint-dark mb-2">
+        <div class="max-w-7xl mx-auto px-4 py-12 sm:py-14">
+            <p class="text-xs font-mono uppercase tracking-widest text-mint-dark mb-3">
                 <a href="{{ route('home') }}" class="hover:text-brand-900 transition">Home</a>
                 <span class="mx-1 text-ink-muted">/</span>
                 <span class="text-brand-900">{{ $industry->label() }}</span>
             </p>
-            <div class="flex items-center gap-3 mb-2">
-                <span class="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center flex-shrink-0 text-brand-900">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="w-11 h-11 rounded-xl bg-white border border-border flex items-center justify-center flex-shrink-0 text-brand-900">
                     <x-category-icon :icon="$industry->categories()[0]->icon()" class="w-5 h-5" />
                 </span>
-                <h1 class="font-display font-bold text-2xl sm:text-3xl text-brand-900">{{ $industry->label() }}</h1>
+                <h1 class="font-display font-semibold text-3xl sm:text-4xl text-brand-900">{{ $industry->label() }}</h1>
             </div>
             <p class="text-ink-secondary max-w-2xl leading-relaxed text-sm">{{ $industry->description() }}</p>
 

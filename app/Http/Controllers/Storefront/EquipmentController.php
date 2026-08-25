@@ -16,7 +16,7 @@ class EquipmentController extends Controller
     public function index()
     {
         return view('storefront.equipment', [
-            'industries' => Industry::cases(),
+            'industries' => Industry::activeCases(),
         ]);
     }
 }

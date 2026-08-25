@@ -15,34 +15,10 @@
     ])->filter();
     $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
     $whatsappUrl = $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp).'?text='.rawurlencode("Hi Farmtech, I have a technical question about {$product->title} ({$product->sku}).") : null;
+    $hasVariants = $product->hasVariants();
 @endphp
 
 @section('content')
-    {{-- Variant selection state, shared by the price card, the add-to-cart form, and the
-         mobile sticky purchase bar (a page-level sibling further down) — wrapping the whole
-         section, not just the info column, so all three stay in sync. No-op for the 274+
-         existing products with no variants: hasVariants is false, selected/currentVariant
-         stay empty/null, displayPrice just falls back to the base retail price. --}}
-    <div x-data="{
-            hasVariants: {{ $product->hasVariants() ? 'true' : 'false' }},
-            variants: @js($product->variants ?? []),
-            optionGroups: @js($product->variantOptionGroups()),
-            selected: @js($product->variants[0]['attributes'] ?? []),
-            basePrice: {{ (float) $product->retail_price_zar }},
-            baseSku: @js($product->sku),
-            variantKey(attrs) {
-                return Object.keys(attrs).sort().map(k => `${k}=${attrs[k]}`).join('|');
-            },
-            get currentVariant() {
-                if (!this.hasVariants) return null;
-                const key = this.variantKey(this.selected);
-                return this.variants.find(v => this.variantKey(v.attributes || {}) === key) || null;
-            },
-            get variantAvailable() { return !this.hasVariants || this.currentVariant !== null; },
-            get displayPrice() { return this.basePrice + (this.currentVariant ? Number(this.currentVariant.price_delta_zar || 0) : 0); },
-            get displaySku() { return this.currentVariant?.sku_suffix ? this.baseSku + '-' + this.currentVariant.sku_suffix : this.baseSku; },
-            fmt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); },
-         }">
     <div class="max-w-7xl mx-auto px-4 py-3 text-xs text-ink-secondary font-mono">
         <a href="{{ route('home') }}" class="hover:text-mint-dark transition">Farmtech</a>
         <span class="mx-1.5">/</span>
@@ -53,9 +29,18 @@
 
     <div class="max-w-7xl mx-auto px-4 pb-28 lg:pb-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {{-- Sticky gallery with zoom modal --}}
-            <div x-data="{ active: 0, zoomed: false }" class="min-w-0 lg:sticky lg:top-24 self-start">
-                <div class="relative w-full aspect-square bg-white border border-border rounded-xl overflow-hidden flex items-center justify-center mb-3">
+            {{-- Sticky gallery with hover-zoom lens (desktop) and a click-to-fullscreen modal (all sizes) --}}
+            <div x-data="{
+                    active: 0, zoomed: false, hovering: false, lensX: 50, lensY: 50,
+                    images: {{ Js::from($product->images->pluck('url')) }},
+                    track(e) {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        this.lensX = Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100));
+                        this.lensY = Math.max(0, Math.min(100, ((e.clientY - r.top) / r.height) * 100));
+                    },
+                 }" class="min-w-0 lg:sticky lg:top-24 self-start">
+                <div class="relative w-full aspect-square bg-white border border-border rounded-xl overflow-hidden flex items-center justify-center mb-3"
+                     @mousemove="track($event)" @mouseenter="hovering = true" @mouseleave="hovering = false">
                     @if ($product->images->isNotEmpty())
                         @foreach ($product->images as $i => $image)
                             <img x-show="active === {{ $i }}" x-transition.opacity.duration.300ms
@@ -63,6 +48,13 @@
                                  @click="zoomed = true" onerror="this.style.display='none'"
                                  class="absolute inset-0 object-contain w-full h-full p-4 drop-shadow-sm cursor-zoom-in">
                         @endforeach
+
+                        {{-- Magnify lens — desktop only, follows the cursor over the real image at 2.2x --}}
+                        <div x-show="hovering && images[active]" x-cloak
+                             class="hidden lg:block absolute inset-0 pointer-events-none"
+                             :style="'background-image: url(' + JSON.stringify(images[active]) + '); background-repeat: no-repeat; background-size: 220%; background-position: ' + lensX + '% ' + lensY + '%;'">
+                        </div>
+
                         <button type="button" @click="zoomed = true" aria-label="Zoom image"
                                 class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/90 border border-border shadow-sm flex items-center justify-center text-ink-secondary hover:text-brand-900 hover:scale-110 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
@@ -109,8 +101,8 @@
             {{-- Info --}}
             <div x-reveal>
                 <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold">{{ $product->category_label }}</p>
-                <h1 class="font-display font-bold text-2xl sm:text-3xl mt-1 text-brand-900 leading-tight">{{ $product->title }}</h1>
-                <p class="text-ink-secondary mt-3 leading-relaxed">{{ $product->short_description }}</p>
+                <h1 class="font-display font-semibold text-3xl sm:text-4xl mt-2 text-brand-900 leading-[1.15]">{{ $product->title }}</h1>
+                <p class="text-ink-secondary mt-4 leading-relaxed">{{ $product->short_description }}</p>
 
                 @if (!empty($product->key_features))
                     <ul class="mt-3 grid sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-charcoal">
@@ -122,31 +114,30 @@
 
                 <div class="mt-6 glass-card rounded-xl p-5">
                     <div class="flex items-baseline gap-2 flex-wrap">
-                        <span class="font-mono text-3xl font-bold text-brand-900" x-text="'R' + fmt(displayPrice)">R{{ number_format($product->retail_price_zar, 0, '', ' ') }}</span>
+                        <span id="pdp-price" class="font-mono text-3xl font-bold text-brand-900">{{ $hasVariants ? $product->price_range_display : 'R'.number_format($product->retail_price_zar, 0, '', ' ') }}</span>
                         <span class="text-sm text-ink-secondary">incl. duty &amp; {{ $vatPct }}% VAT</span>
                     </div>
                     <p class="text-xs text-ink-secondary font-mono mt-1">Duty {{ $dutyPct }}% + VAT {{ $vatPct }}% already included — nothing extra on delivery</p>
-                    @if ($product->hasVariants())
-                        <p class="text-xs text-ink-muted font-mono mt-1" x-text="'SKU: ' + displaySku"></p>
 
-                        <div class="mt-4 space-y-3 pt-4 border-t border-border">
-                            @foreach ($product->variantOptionGroups() as $optionName => $values)
-                                <div>
-                                    <p class="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-1.5">
-                                        {{ $optionName }}: <span class="font-mono normal-case text-brand-900" x-text="selected['{{ $optionName }}']"></span>
-                                    </p>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach ($values as $value)
-                                            <button type="button" @click="selected['{{ $optionName }}'] = '{{ $value }}'"
-                                                    :class="selected['{{ $optionName }}'] === '{{ $value }}' ? 'border-mint bg-mint/10 text-brand-900' : 'border-border text-ink-secondary hover:border-mint/50'"
-                                                    class="border rounded-full px-4 py-1.5 text-sm font-medium transition">
-                                                {{ $value }}
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                            <p x-show="!variantAvailable" x-cloak class="text-xs font-semibold text-alert-dark bg-alert/10 rounded-lg px-3 py-2">This combination isn't available — try a different option.</p>
+                    @if ($hasVariants)
+                        <p id="pdp-sku" class="text-xs text-ink-muted font-mono mt-1">SKU: {{ $product->sku }}</p>
+
+                        <div class="mt-4 pt-4 border-t border-border">
+                            <p class="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-1.5">
+                                Choose an option — <span id="pdp-selected-option" class="normal-case text-brand-900">select below</span>
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($product->variants as $variant)
+                                    <button type="button"
+                                            id="variant-btn-{{ $variant->id }}"
+                                            class="variant-option-btn border rounded-full px-4 py-1.5 text-sm font-medium transition border-border text-ink-secondary hover:border-mint/50"
+                                            onclick="ftSelectVariant({{ $variant->id }}, {{ (float) $variant->retail_price_zar }}, '{{ addslashes($variant->sku) }}', '{{ addslashes($variant->option_name) }}', this)">
+                                        {{ $variant->option_name }}
+                                        <span class="font-mono text-xs opacity-75">— R{{ number_format($variant->retail_price_zar, 2) }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                            <p id="pdp-variant-required" class="hidden text-xs font-semibold text-alert-dark bg-alert/10 rounded-lg px-3 py-2 mt-3">Please select an option above before adding this item to your cart.</p>
                         </div>
                     @endif
 
@@ -185,17 +176,14 @@
                             Out of stock — check back soon
                         </div>
                     @else
-                        <form id="add-to-cart-form" action="{{ route('cart.add', $product) }}" method="POST" class="mt-5 flex gap-3">
+                        <form id="add-to-cart-form" action="{{ route('cart.add', $product) }}" method="POST" class="mt-5 flex gap-3" onsubmit="return ftHandleAddToCart(event, {{ $hasVariants ? 'true' : 'false' }})">
                             @csrf
-                            <input type="hidden" name="variant_key" :value="hasVariants ? variantKey(selected) : ''">
+                            <input type="hidden" id="variant_id_input" name="variant_id" value="">
                             <input type="number" name="quantity" value="1" min="1" @if($product->isTracked() && !$product->allow_backorder) max="{{ $product->stock_quantity }}" @endif
                                    class="w-20 border border-border rounded-full px-4 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-mint/30">
-                            <button type="submit" :disabled="!variantAvailable"
-                                    x-data="{ loading: false }" @click="loading = true"
-                                    :class="!variantAvailable ? 'opacity-50 cursor-not-allowed' : ''"
+                            <button type="submit" id="add-to-cart-btn"
                                     class="flex-1 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95 flex items-center justify-center gap-2">
-                                <svg x-show="loading" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
-                                <span x-text="loading ? 'Adding…' : 'Add to Cart'"></span>
+                                <span>Add to Cart</span>
                             </button>
                         </form>
                     @endif
@@ -260,7 +248,7 @@
                                     <tbody class="divide-y divide-border">
                                         @foreach ($product->specifications as $key => $value)
                                             <tr>
-                                                <td class="px-2 py-1.5 text-ink-secondary w-1/2">{{ $key }}</td>
+                                                <td class="px-2 py-1.5 text-ink-secondary w-1/2">{{ \App\Support\SpecLabelHumanizer::humanize($key) }}</td>
                                                 <td class="px-2 py-1.5 font-mono text-brand-900">{{ $value }}</td>
                                             </tr>
                                         @endforeach
@@ -340,11 +328,70 @@
         </div>
 
         @if ($product->description_html)
-            <div x-reveal class="mt-10 max-w-3xl prose prose-sm prose-headings:font-display max-w-none text-brand-900">
-                {!! $product->description_html !!}
+            <div x-reveal class="mt-16 pt-12 border-t border-border max-w-3xl mx-auto lg:mx-0">
+                <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-3">The Details</p>
+                <div class="prose prose-lg prose-headings:font-display prose-headings:font-semibold prose-headings:text-brand-900 prose-p:leading-relaxed prose-p:text-ink-secondary max-w-none">
+                    {!! $product->description_html !!}
+                </div>
             </div>
         @endif
     </div>
+
+    {{-- Trust section — real Alibaba buyer feedback for this listing's verified supplier.
+         Deliberately labelled "for [supplier]", not "reviews of this product": Alibaba's
+         review feed is store-wide (covers everything that supplier sells), not per-SKU —
+         confirmed by cross-checking the raw scrape data, where individual review entries
+         carry a productId that doesn't match this listing's own. Real, unedited feedback,
+         just honestly attributed to the supplier rather than implied to be unboxing
+         reviews of this exact item. Not rendered at all when there's nothing imported. --}}
+    @if ($product->reviews->isNotEmpty())
+        <section class="border-t border-border py-14">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="font-display font-bold text-xl text-brand-900">Verified Buyer Feedback{{ $product->supplier_name ? ' for '.$product->supplier_name : '' }}</h2>
+                        <p class="text-sm text-ink-secondary mt-1">Real trade-verified reviews from Alibaba, for the supplier behind this listing — not reviews of this specific item's unboxing.</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="font-display font-bold text-2xl text-brand-900">{{ number_format($product->average_rating, 1) }}</span>
+                        <div>
+                            <div class="flex text-amber-400">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="{{ $i <= round($product->average_rating) ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                @endfor
+                            </div>
+                            <p class="text-xs text-ink-secondary">{{ $product->reviews->count() }} review{{ $product->reviews->count() === 1 ? '' : 's' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach ($product->reviews->take(9) as $review)
+                        <div class="border border-border rounded-xl bg-white p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-sm text-brand-900">{{ $review->author_name }}</span>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Verified Buyer
+                                </span>
+                            </div>
+                            <div class="flex text-amber-400 mb-2">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="{{ $i <= $review->rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                @endfor
+                            </div>
+                            @if ($review->review_text)
+                                <p class="text-sm text-charcoal leading-relaxed">{{ $review->review_text }}</p>
+                            @endif
+                            @if ($review->review_date)
+                                <p class="text-xs text-ink-muted mt-2">{{ $review->review_date->format('j M Y') }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
 
     @if ($product->bundleCompanions->isNotEmpty())
         <section class="border-t border-border mt-8 py-14">
@@ -373,6 +420,19 @@
         </section>
     @endif
 
+    @if ($recentlyViewed->isNotEmpty())
+        <section class="border-t border-border py-14">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="font-display font-bold text-xl text-brand-900 mb-6">Recently Viewed</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    @foreach ($recentlyViewed as $i => $item)
+                        @include('storefront.products._card', ['product' => $item, 'delay' => $i * 70])
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- Desktop floating WhatsApp specialist CTA — mobile gets it inline in the sticky purchase bar below instead. --}}
     @if ($whatsappUrl)
         <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="Chat with an equipment specialist on WhatsApp"
@@ -384,7 +444,7 @@
     {{-- Mobile sticky purchase bar — price + WhatsApp enquiry + Add to Cart together, so a buyer never has to hunt for either action. --}}
     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-border px-4 py-3 flex items-center gap-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <div class="min-w-0 flex-1">
-            <p class="font-mono font-bold text-brand-900 text-lg leading-none" x-text="'R' + fmt(displayPrice)">R{{ number_format($product->retail_price_zar, 0, '', ' ') }}</p>
+            <p id="pdp-price-mobile" class="font-mono font-bold text-brand-900 text-lg leading-none">{{ $hasVariants ? $product->price_range_display : 'R'.number_format($product->retail_price_zar, 0, '', ' ') }}</p>
             <p class="text-[11px] text-ink-secondary mt-0.5 truncate">{{ $product->title }}</p>
         </div>
         @if ($whatsappUrl)
@@ -394,10 +454,58 @@
             </a>
         @endif
         @if (!$product->isOutOfStock())
-            <button type="submit" form="add-to-cart-form" :disabled="!variantAvailable" :class="!variantAvailable ? 'opacity-50 cursor-not-allowed' : ''" class="flex-shrink-0 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
+            <button type="submit" form="add-to-cart-form" class="flex-shrink-0 bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-2.5 rounded-full transition active:scale-95">
                 Add to Cart
             </button>
         @endif
     </div>
-    </div>
+
+    {{-- Add-to-cart submit handler — routes through the cart drawer's Alpine store (AJAX,
+         opens the drawer, no page reload) when it's available, falling back to a normal
+         form submit otherwise. Deliberately plain JS, not an Alpine directive on the form
+         itself, so it works identically whether or not $hasVariants pulls in the variant
+         script below. --}}
+    <script>
+        function ftHandleAddToCart(event, hasVariants) {
+            event.preventDefault();
+            if (hasVariants && !document.getElementById('variant_id_input').value) {
+                document.getElementById('pdp-variant-required').classList.remove('hidden');
+                return false;
+            }
+            if (window.Alpine && window.Alpine.store('cart')) {
+                window.Alpine.store('cart').submitForm(event.target);
+            } else {
+                event.target.submit();
+            }
+            return false;
+        }
+    </script>
+
+    {{-- Vanilla JS variant selector — deliberately not Alpine, unlike the rest of this
+         page: a flat list of real ProductVariant rows (each with its own real price),
+         not a multi-attribute combination matrix, so there's no "invalid combination"
+         state to manage — every button is always a real, purchasable SKU. --}}
+    @if ($hasVariants)
+        <script>
+            function ftFormatZar(n) {
+                return 'R' + Number(n).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function ftSelectVariant(variantId, priceZar, sku, optionName, buttonEl) {
+                document.getElementById('variant_id_input').value = variantId;
+                document.getElementById('pdp-price').textContent = ftFormatZar(priceZar);
+                document.getElementById('pdp-price-mobile').textContent = ftFormatZar(priceZar);
+                document.getElementById('pdp-sku').textContent = 'SKU: ' + sku;
+                document.getElementById('pdp-selected-option').textContent = optionName;
+                document.getElementById('pdp-variant-required').classList.add('hidden');
+
+                document.querySelectorAll('.variant-option-btn').forEach(function (btn) {
+                    btn.classList.remove('border-mint', 'bg-mint/10', 'text-brand-900');
+                    btn.classList.add('border-border', 'text-ink-secondary');
+                });
+                buttonEl.classList.remove('border-border', 'text-ink-secondary');
+                buttonEl.classList.add('border-mint', 'bg-mint/10', 'text-brand-900');
+            }
+        </script>
+    @endif
 @endsection

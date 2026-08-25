@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-canvas text-charcoal antialiased flex flex-col min-h-screen font-body">
@@ -23,6 +23,8 @@
         x-data="{
             categoriesOpen: false,
             supportOpen: false,
+            mobileMenuOpen: false,
+            mobileAccordion: null,
             q: '{{ addslashes(request('q', '')) }}',
             products: [], categories: [], applications: [],
             loading: false,
@@ -43,7 +45,12 @@
         class="glass-header sticky top-0 z-40 bg-white md:h-[76px] md:flex md:items-center">
         <div class="max-w-7xl mx-auto px-4 w-full">
             <div class="flex items-center gap-2 py-3 md:py-0">
-                <a href="{{ route('home') }}" class="font-display font-extrabold text-xl tracking-tight text-brand-900 flex-shrink-0 mr-2">
+                <button type="button" @click="mobileMenuOpen = true" aria-label="Open menu"
+                        class="md:hidden flex-shrink-0 w-9 h-9 -ml-1.5 flex items-center justify-center text-charcoal rounded-lg hover:bg-canvas transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+                </button>
+
+                <a href="{{ route('home') }}" class="font-display font-semibold text-xl tracking-tight text-brand-900 flex-shrink-0 mr-2">
                     Farm<span class="text-mint">tech</span>
                 </a>
 
@@ -55,7 +62,7 @@
                     </button>
                     <div x-show="categoriesOpen" x-transition x-cloak
                          class="absolute left-0 top-full mt-2 w-[640px] max-w-[90vw] card !rounded-xl shadow-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
-                        @foreach (\App\Enums\Industry::cases() as $navIndustry)
+                        @foreach (\App\Enums\Industry::activeCases() as $navIndustry)
                             <div>
                                 <a href="{{ route('domain.'.$navIndustry->domainSlug()) }}" @click="categoriesOpen = false"
                                    class="block px-3 pt-1 pb-2 text-[10px] font-mono uppercase tracking-widest text-ink-muted hover:text-mint-dark transition">{{ $navIndustry->label() }}</a>
@@ -149,13 +156,14 @@
 
                 <span class="hidden lg:inline-flex items-center gap-1 text-xs font-medium text-ink-muted flex-shrink-0 ml-2" title="Farmtech ships within South Africa, priced in South African Rand">🇿🇦 ZAR (R)</span>
 
-                <a href="{{ route('cart.index') }}" class="relative flex-shrink-0 flex items-center gap-1.5 text-sm font-semibold text-brand-900 hover:text-mint-dark transition group ml-2">
+                <button type="button" x-data @click="$store.cart.open = true"
+                        class="relative flex-shrink-0 flex items-center gap-1.5 text-sm font-semibold text-brand-900 hover:text-mint-dark transition group ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6"/></svg>
-                    @if (($cartCount ?? 0) > 0)
-                        <span class="absolute -top-2 -right-2 bg-mint text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 {{ session('status') ? 'animate-pop-in' : '' }}">{{ $cartCount }}</span>
-                    @endif
+                    <span x-show="$store.cart.count > 0" x-cloak
+                          class="absolute -top-2 -right-2 bg-mint text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
+                          x-text="$store.cart.count"></span>
                     <span class="hidden md:inline">Cart</span>
-                </a>
+                </button>
             </div>
 
             <form action="{{ route('search.index') }}" method="GET" class="pb-3 sm:hidden">
@@ -163,28 +171,75 @@
                        class="w-full border border-border bg-white rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mint/40">
             </form>
 
-            <nav class="flex md:hidden items-center gap-5 text-sm font-semibold pb-3 -mt-1 overflow-x-auto">
-                @foreach (\App\Enums\Industry::cases() as $navIndustry)
-                    @foreach ($navIndustry->categories() as $navCategory)
-                        <a href="{{ route('category.show', $navCategory) }}" class="text-ink-secondary hover:text-mint-dark transition whitespace-nowrap">{{ $navCategory->shortLabel() }}</a>
+        </div>
+
+        {{-- Mobile off-canvas menu — replaces the old horizontal category-scroll strip with
+             room to breathe: same real Industry/ProductCategory data as the desktop mega-menu,
+             as an accordion rather than a 4-column grid. --}}
+        <div x-show="mobileMenuOpen" x-cloak x-transition.opacity
+             @keydown.escape.window="mobileMenuOpen = false"
+             class="md:hidden fixed inset-0 z-50 bg-brand-950/60" @click="mobileMenuOpen = false">
+            <div @click.stop x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+                 class="fixed inset-y-0 left-0 z-50 w-[86vw] max-w-sm bg-white shadow-2xl flex flex-col">
+                <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-border flex-shrink-0">
+                    <span class="font-display font-semibold text-lg text-brand-900">Farm<span class="text-mint">tech</span></span>
+                    <button type="button" @click="mobileMenuOpen = false" aria-label="Close menu" class="w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-charcoal hover:bg-canvas transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto py-2">
+                    @foreach (\App\Enums\Industry::activeCases() as $navIndustry)
+                        <div class="border-b border-border">
+                            <button type="button" @click="mobileAccordion = mobileAccordion === '{{ $navIndustry->value }}' ? null : '{{ $navIndustry->value }}'"
+                                    class="w-full flex items-center justify-between px-5 py-3.5 text-left">
+                                <span class="text-sm font-semibold text-charcoal">{{ $navIndustry->label() }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-ink-muted transition-transform flex-shrink-0" :class="mobileAccordion === '{{ $navIndustry->value }}' && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <div x-show="mobileAccordion === '{{ $navIndustry->value }}'" x-transition x-cloak class="pb-2">
+                                @foreach ($navIndustry->categories() as $navCategory)
+                                    <a href="{{ route('category.show', $navCategory) }}" @click="mobileMenuOpen = false"
+                                       class="flex items-center gap-3 px-5 py-2.5 text-sm text-ink-secondary hover:text-brand-900 hover:bg-canvas transition">
+                                        <span class="w-6 h-6 rounded-lg bg-brand-900/5 text-brand-900 flex items-center justify-center flex-shrink-0">
+                                            <x-category-icon :icon="$navCategory->icon()" class="w-3 h-3" />
+                                        </span>
+                                        {{ $navCategory->shortLabel() }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
-                    @if (!$loop->last)
-                        <span class="text-ink-muted flex-shrink-0" aria-hidden="true">|</span>
-                    @endif
-                @endforeach
-            </nav>
+
+                    <a href="{{ route('equipment.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-mint-dark border-b border-border">Browse full catalogue</a>
+                    <a href="{{ route('finder.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Equipment Finder</a>
+                    <a href="{{ route('home') }}#shop-by-application" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Solutions</a>
+                    <a href="{{ route('how-it-works') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">How it works</a>
+                    <a href="{{ route('support.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Help &amp; FAQ</a>
+                    <a href="{{ route('track.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Track your order</a>
+                </div>
+            </div>
         </div>
     </header>
 
-    {{-- Floating toast for cart/status feedback — driven by the real session flash, not simulated. --}}
+    {{-- Cart bootstrap — hydrates $store.cart on first paint with the real session cart, no extra fetch. --}}
+    <script type="application/json" id="cart-bootstrap">{!! json_encode($cartSummary, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}</script>
+
+    {{-- Floating toast stack — session-flash statuses (full-page redirects like checkout) feed the same
+         $store.toast queue that AJAX cart actions use, so there's exactly one toast implementation. --}}
     @if (session('status'))
-        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3200)"
-             x-show="show" x-transition:enter="animate-toast-in" x-transition:leave="transition ease-in duration-200" x-transition:leave-end="opacity-0"
-             class="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card bg-brand-900/95 text-white rounded-full shadow-xl px-5 py-2.5 text-sm font-medium flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mint-light flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            {{ session('status') }}
-        </div>
+        <div x-data x-init="$store.toast.push(@js(session('status')))"></div>
     @endif
+    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none" x-data>
+        <template x-for="toast in $store.toast.items" :key="toast.id">
+            <div x-transition:enter="animate-toast-in" x-transition:leave="transition ease-in duration-200" x-transition:leave-end="opacity-0"
+                 class="rounded-full shadow-xl px-5 py-2.5 text-sm font-medium flex items-center gap-2 pointer-events-auto"
+                 :class="toast.tone === 'error' ? 'bg-error text-white' : 'bg-brand-900/95 text-white'">
+                <svg x-show="toast.tone !== 'error'" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mint-light flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg x-show="toast.tone === 'error'" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
 
     @if ($errors->any())
         <div class="max-w-7xl mx-auto w-full mt-4 px-4">
@@ -337,6 +392,70 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Cart drawer — slides in from the right on every add/update; state mirrors $store.cart, the
+         session cart's real server-computed truth (see Cart::summary()), never computed client-side. --}}
+    <div x-data x-show="$store.cart.open" x-cloak x-transition.opacity
+         @keydown.escape.window="$store.cart.open = false"
+         class="fixed inset-0 z-50 bg-brand-950/60" @click="$store.cart.open = false">
+        <div @click.stop x-show="$store.cart.open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+             class="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] bg-white shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-border flex-shrink-0">
+                <h2 class="font-display font-semibold text-xl text-charcoal">Your Cart
+                    <span class="text-sm font-body font-normal text-ink-muted" x-show="$store.cart.count > 0" x-text="'(' + $store.cart.count + ')'"></span>
+                </h2>
+                <button type="button" @click="$store.cart.open = false" aria-label="Close cart" class="w-8 h-8 rounded-full flex items-center justify-center text-ink-secondary hover:text-charcoal hover:bg-canvas transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-5 py-4 relative">
+                <div x-show="$store.cart.loading" class="absolute inset-0 bg-white/60 z-10 flex items-start justify-center pt-24" x-cloak>
+                    <div class="w-5 h-5 border-2 border-mint border-t-transparent rounded-full animate-spin"></div>
+                </div>
+
+                <div x-show="$store.cart.items.length === 0" class="py-20 text-center">
+                    <p class="text-ink-secondary text-sm mb-4">Your cart is empty.</p>
+                    <a href="{{ route('equipment.index') }}" @click="$store.cart.open = false" class="inline-block bg-mint hover:bg-mint-dark text-white font-semibold text-sm px-5 py-2.5 rounded-full transition">Browse equipment</a>
+                </div>
+
+                <ul class="space-y-4" x-show="$store.cart.items.length > 0">
+                    <template x-for="item in $store.cart.items" :key="item.line_key">
+                        <li class="flex gap-3">
+                            <a :href="item.url" @click="$store.cart.open = false" class="w-16 h-16 rounded-lg bg-canvas border border-border overflow-hidden flex-shrink-0">
+                                <img :src="item.image" x-show="item.image" x-on:error="item.image = null" class="w-full h-full object-contain p-1.5" alt="">
+                            </a>
+                            <div class="min-w-0 flex-1">
+                                <a :href="item.url" @click="$store.cart.open = false" class="text-sm font-medium text-charcoal hover:text-mint-dark transition line-clamp-2" x-text="item.title"></a>
+                                <p x-show="item.variant_label" class="text-xs text-ink-muted mt-0.5" x-text="item.variant_label"></p>
+                                <div class="flex items-center justify-between mt-2">
+                                    <div class="flex items-center border border-border rounded-full">
+                                        <button type="button" @click="$store.cart.updateQuantity(item, item.quantity - 1)" aria-label="Decrease quantity" class="w-7 h-7 flex items-center justify-center text-ink-secondary hover:text-charcoal transition">&minus;</button>
+                                        <span class="w-6 text-center text-xs font-mono font-semibold text-charcoal" x-text="item.quantity"></span>
+                                        <button type="button" @click="$store.cart.updateQuantity(item, item.quantity + 1)" aria-label="Increase quantity" class="w-7 h-7 flex items-center justify-center text-ink-secondary hover:text-charcoal transition">+</button>
+                                    </div>
+                                    <span class="font-mono text-sm font-semibold text-charcoal" x-text="'R' + item.line_total.toLocaleString('en-ZA', {minimumFractionDigits: 2})"></span>
+                                </div>
+                            </div>
+                            <button type="button" @click="$store.cart.removeItem(item)" aria-label="Remove item" class="flex-shrink-0 text-ink-muted hover:text-error transition self-start mt-0.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+            <div x-show="$store.cart.items.length > 0" class="flex-shrink-0 border-t border-border px-5 py-4 space-y-3">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-ink-secondary">Subtotal</span>
+                    <span class="font-mono text-base font-bold text-charcoal" x-text="'R' + $store.cart.subtotal.toLocaleString('en-ZA', {minimumFractionDigits: 2})"></span>
+                </div>
+                <p class="text-xs text-ink-muted">VAT included &middot; shipping calculated at checkout</p>
+                <a href="{{ route('checkout.index') }}" class="block text-center bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-3 rounded-full transition">Checkout</a>
+                <a href="{{ route('cart.index') }}" @click="$store.cart.open = false" class="block text-center text-sm font-semibold text-charcoal hover:text-brand-900 transition">View full cart</a>
             </div>
         </div>
     </div>

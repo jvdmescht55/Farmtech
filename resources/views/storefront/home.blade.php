@@ -14,8 +14,8 @@
         <div class="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 items-center min-h-[600px] lg:min-h-[700px] py-16 lg:py-0 gap-12">
             <div>
                 <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-5">Professional Equipment</p>
-                <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:80ms" class="font-display font-extrabold text-4xl sm:text-5xl text-charcoal leading-[1.1] mb-6">
-                    Sourced globally.<br>Delivered locally.
+                <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:80ms" class="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-charcoal leading-[1.08] mb-6">
+                    Sourced globally.<br><span class="italic font-medium text-brand-900">Delivered locally.</span>
                 </h1>
                 <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:140ms" class="text-ink-secondary text-base sm:text-lg max-w-md mb-10 leading-relaxed">
                     Verified agricultural and industrial technology for South African businesses and farms.
@@ -33,7 +33,8 @@
             </div>
 
             <div :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'" style="animation-delay:120ms" class="relative aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[500px] rounded-xl overflow-hidden">
-                <img src="{{ $heroImage['url'] }}" alt="Agricultural drone monitoring crop rows" class="absolute inset-0 w-full h-full object-cover">
+                <img src="{{ $heroImage['url'] }}" alt="Agricultural drone monitoring crop rows" class="absolute inset-0 w-full h-full object-cover animate-ken-burns">
+                <div class="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-xl pointer-events-none"></div>
             </div>
         </div>
     </section>
@@ -114,8 +115,9 @@
     {{-- Why Farmtech + How It Works, merged into one flow — was two consecutive step
          sections telling overlapping stories (verification vs. process); this is the
          single real sequence a buyer actually goes through. --}}
-    <section class="bg-brand-950 py-20 sm:py-24">
-        <div class="max-w-6xl mx-auto px-4">
+    <section class="relative bg-brand-950 py-20 sm:py-24 overflow-hidden">
+        <div class="absolute inset-0 bg-grain pointer-events-none"></div>
+        <div class="relative max-w-6xl mx-auto px-4">
             <div class="max-w-2xl mx-auto text-center mb-14">
                 <p class="text-xs uppercase tracking-[0.2em] text-mint-light font-semibold mb-3">Why Farmtech</p>
                 <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Equipment without the import headache.</h2>
