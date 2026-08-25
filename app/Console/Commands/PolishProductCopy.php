@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class PolishProductCopy extends Command
 {
-    protected $signature = 'products:polish {--sku= : Only polish the product with this SKU} {--limit= : Only polish the first N pending products}';
+    protected $signature = 'products:polish {--sku= : Only polish the product with this SKU} {--limit= : Only polish the first N products} {--status=pending_review : Product status to target (pending_review, approved, or all)} {--live-only : When --status=approved, further restrict to currently storefront-visible (is_active) listings}';
     protected $description = 'Uses AI to rewrite raw supplier titles/descriptions/manifests, grounded in the real scraped specifications.';
 
     public function handle(): int
@@ -22,7 +22,20 @@ class PolishProductCopy extends Command
             return 1;
         }
 
-        $query = Product::where('status', 'pending_review');
+        $status = $this->option('status');
+        $query = Product::query();
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        // "approved" alone doesn't mean currently on the storefront — a
+        // curated-out listing can still be status=approved with
+        // is_active=false. --live-only scopes AI spend to what buyers can
+        // actually see right now.
+        if ($status === 'approved' && $this->option('live-only')) {
+            $query->where('is_active', true);
+        }
 
         if ($sku = $this->option('sku')) {
             $query->where('sku', $sku);
@@ -68,6 +81,15 @@ class PolishProductCopy extends Command
                         if (!empty($data['key_features']) && is_array($data['key_features'])) {
                             $product->key_features = $data['key_features'];
                         }
+                        // Staging already ran ft_clean_brand_name() (a mechanical
+                        // pass), so this is a second, judgment-based layer for
+                        // cases that need more than pattern-matching (e.g.
+                        // deciding a lowercase raw value like "boman" is a real
+                        // brand worth proper-casing vs. genuine noise) — only
+                        // applied when the AI actually returned one.
+                        if (!empty($data['brand_name'])) {
+                            $product->brand_name = $data['brand_name'];
+                        }
 
                         $product->save();
                         $this->info('  -> New: ' . $data['title']);
@@ -103,8 +125,17 @@ class PolishProductCopy extends Command
             "Raw scraped technical specifications (JSON, verbatim from the supplier listing — do not invent " .
             "any spec not present here):\n{$specsJson}\n\n" .
             "Output VALID JSON only, no markdown fences, with these exact keys:\n" .
-            "1. \"title\": Clean, professional commercial title (5-10 words), no SEO fluff, no ALL CAPS.\n" .
-            "2. \"short_description\": 2-3 precise sentences on what it does and how it works.\n" .
+            "0. \"brand_name\": The brand above, cleaned for Western commercial display — already-clean real " .
+            "brand names (e.g. \"HONDETEC\", \"GREAT FARM\") pass through unchanged aside from fixing casing if " .
+            "it's all-lowercase; strip any factory/company boilerplate (\"Co., Ltd.\", \"Technology Co\", a " .
+            "Chinese city prefix) if present; if the brand is a placeholder with no real brand identity (\"OEM\", " .
+            "\"No Brand\", \"Original\", \"/\", blank/unbranded), output exactly " .
+            "\"Farmtech Pro-Series / {$product->category->label()}\" instead. Never invent a brand name that " .
+            "isn't grounded in the raw value above or this exact fallback format.\n" .
+            "1. \"title\": Clean, professional commercial title (5-10 words), no SEO fluff, no ALL CAPS, no " .
+            "leftover Chinglish phrasing — standard agricultural/industrial engineering terminology.\n" .
+            "2. \"short_description\": 2-3 precise sentences on what it does and how it works, in clean " .
+            "professional English (rewrite any awkward machine-translated phrasing from the raw title/specs).\n" .
             "3. \"description_html\": A few short paragraphs (plain <p> and one <ul> of key selling points " .
             "allowed) written as a DETAILED, South-African-agriculture-tailored functional use case — describe " .
             "a concrete on-farm scenario this device solves, using only facts present in the specifications " .
