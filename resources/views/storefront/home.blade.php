@@ -4,6 +4,8 @@
 
 @php
     $heroImage = \App\Enums\ProductCategory::heroFallbackImage();
+    $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
+    $whatsappUrl = $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null;
 @endphp
 
 @section('content')
@@ -13,22 +15,28 @@
     <section x-data class="bg-white border-b border-border overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 items-center min-h-[600px] lg:min-h-[700px] py-16 lg:py-0 gap-12">
             <div>
-                <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-5">Professional Equipment</p>
+                <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-5">Direct Farm-Tech Procurement</p>
                 <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:80ms" class="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-charcoal leading-[1.08] mb-6">
-                    Sourced globally.<br><span class="italic font-medium text-brand-900">Delivered locally.</span>
+                    Specialist Farm &amp; Industrial Tech.<br><span class="italic font-medium text-brand-900">Direct from Tier-1 Manufacturers to Your Farm Gate.</span>
                 </h1>
                 <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:140ms" class="text-ink-secondary text-base sm:text-lg max-w-md mb-10 leading-relaxed">
-                    Verified agricultural and industrial technology for South African businesses and farms — technology built for the practical boer, tested for real veld conditions.
+                    We source, vet, and land high-precision livestock, solar, telemetry, and security equipment directly from global manufacturers — cutting out heavy retail markups while backing everything locally.
                 </p>
 
                 <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:200ms" class="flex flex-wrap items-center gap-4">
                     <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition-all hover:gap-3">
-                        Explore Equipment
+                        Browse Vetted Equipment
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </a>
-                    <a href="{{ route('equipment.index') }}" class="inline-flex items-center gap-2 border border-border hover:border-charcoal/30 text-charcoal text-sm font-semibold px-7 py-3.5 rounded-full transition">
-                        Browse Sourced Hardware
-                    </a>
+                    @if ($whatsappUrl ?? null)
+                        <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 border border-border hover:border-charcoal/30 text-charcoal text-sm font-semibold px-7 py-3.5 rounded-full transition">
+                            Talk to Technical Service
+                        </a>
+                    @else
+                        <a href="{{ route('equipment.index') }}" class="inline-flex items-center gap-2 border border-border hover:border-charcoal/30 text-charcoal text-sm font-semibold px-7 py-3.5 rounded-full transition">
+                            Talk to Technical Service
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -39,27 +47,30 @@
         </div>
     </section>
 
-    {{-- Trust bar — white, 80-100px tall, items separated by a hairline vertical divider --}}
+    {{-- 4-Pillar trust grid — the core value propositions, stated as concrete
+         cards rather than a thin one-line ribbon. --}}
     <div class="bg-white border-b border-border">
-        <div class="max-w-6xl mx-auto px-4 h-20 sm:h-24 flex flex-wrap items-center justify-center divide-x divide-border">
-            @foreach ([
-                'Verified suppliers',
-                'VAT included',
-                'Import costs shown',
-                'Door-to-door delivery',
-                'Built for the South African boer',
-            ] as $item)
-                <span class="flex items-center gap-2 px-4 sm:px-8 text-xs sm:text-sm font-semibold text-charcoal">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mint-dark flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {{ strtoupper($item) }}
-                </span>
-            @endforeach
+        <div class="max-w-7xl mx-auto px-4 py-14 sm:py-16">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                @foreach ([
+                    ['icon' => '🛡️', 'title' => '1-Year Local Warranty', 'body' => 'Fast South African replacement swap-outs with zero overseas return hassles.'],
+                    ['icon' => '📦', 'title' => '100% Door-to-Farm Logistics', 'body' => 'All import duties, SARS customs clearance, and courier delivery fully included.'],
+                    ['icon' => '⚡', 'title' => 'Vetted for African Conditions', 'body' => 'Compatible with 220V/50Hz mains, 12V/24V off-grid solar, and harsh veld environments.'],
+                    ['icon' => '💬', 'title' => 'Dedicated Technical Support', 'body' => 'Direct setup, calibration, and wiring guidance via WhatsApp and phone.'],
+                ] as $pillar)
+                    <div class="border border-border rounded-xl p-5 hover:border-mint/40 hover:shadow-sm transition-all">
+                        <span class="text-2xl">{{ $pillar['icon'] }}</span>
+                        <h3 class="font-display font-bold text-sm text-charcoal mt-3 mb-1.5">{{ $pillar['title'] }}</h3>
+                        <p class="text-ink-secondary text-xs leading-relaxed">{{ $pillar['body'] }}</p>
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
 
     <x-featured-marquee :products="$marqueeProducts" />
 
-    {{-- Featured Boer Tech — top-scoring listings by the real curation algorithm
+    {{-- Featured Farm Tech — top-scoring listings by the real curation algorithm
          (margin, compactness, photo/description richness, reviews, verified-supplier
          trust, units sold, click-throughs — see Product::computeFeaturedScore() and
          `products:rank-featured`), never a hand-picked or fabricated "editor's pick". --}}
@@ -68,8 +79,8 @@
             <div class="max-w-7xl mx-auto px-4">
                 <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
                     <div class="max-w-2xl">
-                        <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Featured Boer Tech</p>
-                        <h2 class="font-display font-bold text-3xl text-charcoal mb-2">Top equipment for the South African boer</h2>
+                        <p class="text-xs uppercase tracking-[0.2em] text-mint-dark font-semibold mb-3">Featured Farm Tech</p>
+                        <h2 class="font-display font-bold text-3xl text-charcoal mb-2">Top equipment for South African farms</h2>
                         <p class="text-ink-secondary">Ranked on real margin, media quality, reviews, and verified-supplier trust &mdash; not a promoted placement.</p>
                     </div>
                     <a href="{{ route('equipment.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-dark hover:text-brand-900 transition flex-shrink-0">

@@ -27,6 +27,8 @@
                 @can('manage-catalog')
                     <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.index') || request()->routeIs('admin.products.show') ? 'bg-white/10 font-semibold' : '' }}">Staging Queue</a>
                     <a href="{{ route('admin.products.live') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.live') ? 'bg-white/10 font-semibold' : '' }}">Live Products</a>
+                    <a href="{{ route('admin.suppliers.outreach') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.suppliers.outreach') ? 'bg-white/10 font-semibold' : '' }}">Supplier Outreach</a>
+                    <a href="{{ route('admin.outreach.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.outreach.*') ? 'bg-white/10 font-semibold' : '' }}">Video Outreach</a>
                 @endcan
                 <a href="{{ route('admin.orders.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.orders.*') ? 'bg-white/10 font-semibold' : '' }}">Orders</a>
                 @can('manage-users')

@@ -13,13 +13,14 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'included_items',
+        'sku', 'title', 'slug', 'category', 'short_description', 'description_html', 'video_url', 'has_video', 'included_items',
         'compatibility_notes', 'requirements_notes', 'warranty_terms',
         'specifications', 'key_features', 'brand_name', 'model_number', 'warranty_period',
         'original_price_usd', 'est_weight_kg', 'gross_weight_kg', 'package_dimensions', 'hs_code', 'customs_duty_rate', 'vat_rate',
         'intl_freight_zar', 'customs_vat_zar', 'domestic_delivery_zar', 'customs_clearance_zar',
         'landed_cost_zar', 'retail_price_zar', 'profit_margin_pct',
-        'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'source_url', 'supplier_last_checked_at',
+        'supplier_cost_usd', 'exchange_rate', 'supplier_name', 'supplier_url', 'supplier_phone', 'source_url', 'supplier_last_checked_at',
+        'supplier_contact_name', 'supplier_whatsapp', 'supplier_wechat_id', 'supplier_email', 'supplier_media_url',
         'import_contingency_pct', 'insurance_cost_zar', 'payment_fees_zar',
         'stock_status', 'stock_availability_type', 'lead_time_days', 'status', 'rejection_reason', 'is_active',
         'is_featured', 'featured_score', 'click_count',
@@ -62,6 +63,7 @@ class Product extends Model
             'low_stock_threshold' => 'integer',
             'radio_frequency_confirmed' => 'boolean',
             'datasheet_uploaded' => 'boolean',
+            'has_video' => 'boolean',
             'published_at' => 'datetime',
             'approved_at' => 'datetime',
             'auto_publish_checked_at' => 'datetime',
@@ -93,6 +95,13 @@ class Product extends Model
             if (empty($product->slug)) {
                 $product->slug = static::uniqueSlug($product->title);
             }
+        });
+
+        // Keep the indexed has_video flag a faithful mirror of video_url,
+        // whoever sets the URL (catalog:extract-videos, the admin product
+        // page, an importer).
+        static::saving(function (Product $product) {
+            $product->has_video = trim((string) $product->video_url) !== '';
         });
     }
 

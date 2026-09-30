@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\SourceController as AdminSourceController;
+use App\Http\Controllers\Admin\SupplierOutreachController as AdminSupplierOutreachController;
+use App\Http\Controllers\Admin\SupplierOutreachDashboardController as AdminSupplierOutreachDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Storefront\FinderController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\PaymentWebhookController;
 use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\AboutController;
 use App\Http\Controllers\Storefront\HowItWorksController;
 use App\Http\Controllers\Storefront\PolicyController;
 use App\Http\Controllers\Storefront\SearchController;
@@ -63,6 +66,7 @@ Route::middleware('throttle:cart')->group(function () {
 Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
 Route::get('/how-it-works', [HowItWorksController::class, 'index'])->name('how-it-works');
+Route::get('/about', [AboutController::class, 'index'])->name('about.index');
 
 Route::get('/track', [TrackOrderController::class, 'index'])->name('track.index');
 Route::post('/track', [TrackOrderController::class, 'show'])->name('track.show')->middleware('throttle:track');
@@ -122,6 +126,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('products.reject');
             Route::post('/products/{product}/archive', [AdminProductController::class, 'archive'])->name('products.archive');
             Route::post('/products/{product}/relist', [AdminProductController::class, 'relist'])->name('products.relist');
+
+            Route::get('/suppliers/outreach', [AdminSupplierOutreachController::class, 'index'])->name('suppliers.outreach');
+
+            Route::get('/outreach', [AdminSupplierOutreachDashboardController::class, 'index'])->name('outreach.index');
+            Route::patch('/outreach/{product}', [AdminSupplierOutreachDashboardController::class, 'update'])->name('outreach.update');
         });
 
         Route::middleware('can:manage-users')->group(function () {

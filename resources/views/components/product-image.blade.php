@@ -19,20 +19,32 @@
     browser can fetch in a few ms (or one already in cache), can easily be
     AFTER the image's 'load' event already fired. @load only ever fires once,
     so without this check the state stays stuck at 'loading' forever and the
-    photo never appears — this was the actual cause of thumbnails silently
-    not rendering on the storefront grid pages.
+    photo never appears.
+
+    Critically, the <img> itself is NEVER hidden with x-show/display:none
+    while loading="lazy" is set. A display:none element has no layout box,
+    and native lazy-loading can only start fetching an element once it can
+    measure its distance from the viewport — which requires it to actually
+    be rendered. Gating the image's own visibility on its own load state
+    created a deadlock: it needs to become visible to be considered "near
+    the viewport" and start loading, but it only becomes visible once
+    loaded. This was the real, site-wide cause of catalog thumbnails
+    (especially anything below the fold) silently never loading. The fix
+    keeps the <img> always laid out — so native lazy-loading can track it —
+    and only fades its opacity; the loading skeleton and the failed-state
+    fallback are separate, absolutely-positioned overlays on top of it.
 --}}
 <div x-data="{ state: '{{ $url ? 'loading' : 'failed' }}' }"
      {{ $attributes->merge(['class' => 'aspect-square bg-canvas border border-border rounded-xl p-4 flex items-center justify-center overflow-hidden relative']) }}>
     @if ($url)
         <div x-show="state === 'loading'" class="absolute inset-4 rounded-lg bg-border animate-pulse"></div>
         <img src="{{ $url }}" alt="{{ $product->title }}" loading="lazy"
-             x-show="state === 'loaded'"
              x-init="if ($el.complete && $el.naturalWidth > 0) { state = 'loaded' } else if ($el.complete) { state = 'failed' }"
              @load="state = 'loaded'" x-on:error="state = 'failed'"
-             class="object-contain max-h-full max-w-full drop-shadow-sm">
+             :class="state === 'loaded' ? 'opacity-100' : 'opacity-0'"
+             class="object-contain max-h-full max-w-full drop-shadow-sm transition-opacity duration-300">
     @endif
-    <div x-show="state === 'failed'" class="w-full h-full">
+    <div x-show="state === 'failed'" class="absolute inset-0 w-full h-full">
         <x-product-image-fallback :category="$product->category" class="!bg-transparent" />
     </div>
 </div>

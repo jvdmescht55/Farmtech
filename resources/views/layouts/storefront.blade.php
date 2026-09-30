@@ -13,10 +13,12 @@
 </head>
 <body class="bg-canvas text-charcoal antialiased flex flex-col min-h-screen font-body">
 
-    {{-- Utility bar — slides down once per tab session on first load --}}
+    {{-- Utility bar — slides down once per tab session on first load. Real trust
+         signals about the direct-procurement model (see storefront.about),
+         not a generic retail ribbon. --}}
     <div :class="$store.intro.alreadyPlayed ? '' : 'animate-slide-down-in'"
          class="bg-brand-900 text-white/90 text-[11px] sm:text-xs text-center py-2 px-4 font-medium tracking-wide">
-        <span class="hidden sm:inline">🇿🇦 Tegnologie Gebou vir die Suid-Afrikaanse Boer&nbsp;·&nbsp;Vetted Farm &amp; Industrial Hardware&nbsp;·&nbsp;100% Plaaslik Getoets&nbsp;·&nbsp;</span><a href="{{ route('track.index') }}" class="underline decoration-white/30 hover:decoration-white transition">Track order</a>
+        <span class="hidden sm:inline">🇿🇦 Field-Tested Hardware&nbsp;|&nbsp;Door-to-Farm Express Delivery&nbsp;|&nbsp;1-Year Local Replacement Warranty&nbsp;|&nbsp;@if ($whatsappUrl)<a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="underline decoration-white/30 hover:decoration-white transition">Direct WhatsApp Tech Support</a>@else Direct WhatsApp Tech Support @endif&nbsp;·&nbsp;</span><a href="{{ route('track.index') }}" class="underline decoration-white/30 hover:decoration-white transition">Track order</a>
     </div>
 
     <header
@@ -86,6 +88,7 @@
 
                 <a href="{{ route('home') }}#shop-by-application" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 border-transparent">Solutions</a>
                 <a href="{{ route('how-it-works') }}" class="hidden md:inline-block text-sm font-semibold px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 {{ request()->routeIs('how-it-works') ? 'text-brand-900 border-mint' : 'text-charcoal hover:text-brand-900 border-transparent' }}">How it works</a>
+                <a href="{{ route('about.index') }}" class="hidden md:inline-block text-sm font-semibold px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 {{ request()->routeIs('about.index') ? 'text-brand-900 border-mint' : 'text-charcoal hover:text-brand-900 border-transparent' }}">Our Promise</a>
 
                 <div class="relative hidden md:block">
                     <button type="button" @click="supportOpen = !supportOpen" @click.outside="supportOpen = false"
@@ -156,6 +159,14 @@
 
                 <span class="hidden lg:inline-flex items-center gap-1 text-xs font-medium text-ink-muted flex-shrink-0 ml-2" title="Farmtech ships within South Africa, priced in South African Rand">🇿🇦 ZAR (R)</span>
 
+                @if ($whatsappUrl)
+                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener"
+                       class="hidden lg:inline-flex items-center gap-1.5 flex-shrink-0 ml-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-full transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+                        Talk to a Technical Specialist
+                    </a>
+                @endif
+
                 <button type="button" x-data @click="$store.cart.open = true"
                         class="relative flex-shrink-0 flex items-center gap-1.5 text-sm font-semibold text-brand-900 hover:text-mint-dark transition group ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6"/></svg>
@@ -214,6 +225,13 @@
                     <a href="{{ route('finder.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Equipment Finder</a>
                     <a href="{{ route('home') }}#shop-by-application" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Solutions</a>
                     <a href="{{ route('how-it-works') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">How it works</a>
+                    <a href="{{ route('about.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Our Promise</a>
+                    @if ($whatsappUrl)
+                        <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" @click="mobileMenuOpen = false" class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-emerald-700 border-b border-border">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+                            Talk to a Technical Specialist
+                        </a>
+                    @endif
                     <a href="{{ route('support.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Help &amp; FAQ</a>
                     <a href="{{ route('track.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Track your order</a>
                 </div>

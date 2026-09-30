@@ -66,7 +66,33 @@
                     @if ($audit?->audit_verdict === 'PASS')
                         <span class="verified-stamp animate-stamp-in absolute top-4 right-4 bg-white/95 shadow">Verified<br>&amp; Cleared</span>
                     @endif
+
+                    @if ($product->video_url)
+                        <span class="absolute top-4 left-4 inline-flex items-center gap-1 bg-brand-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Video
+                        </span>
+                    @endif
                 </div>
+
+                @if ($product->video_url)
+                    {{-- Supplier listing video — a direct link found in this product's own
+                         stored listing data (or added by an admin), hotlinked the same way
+                         supplier images are. Degrades to its poster / a direct link if the
+                         host blocks hotlinking or the asset is gone. --}}
+                    <div class="mb-3">
+                        <p class="flex items-center gap-1.5 text-xs font-semibold text-mint-dark mb-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                            Supplier product video
+                        </p>
+                        <video controls preload="none" playsinline
+                               @if ($product->images->isNotEmpty()) poster="{{ $product->images->first()->url }}" @endif
+                               class="w-full rounded-xl border border-border bg-black aspect-video object-contain">
+                            <source src="{{ $product->video_url }}">
+                            <span class="block p-3 text-xs text-ink-secondary">Your browser can’t play this video —
+                                <a href="{{ $product->video_url }}" target="_blank" rel="noopener" class="text-mint-dark underline">open it directly</a>.</span>
+                        </video>
+                    </div>
+                @endif
                 @if ($product->images->count() > 1)
                     <div x-data="{ showAll: false }" class="grid grid-cols-5 gap-2">
                         @foreach ($product->images as $i => $image)
@@ -150,7 +176,7 @@
                             ⚡ Express Air-Import &middot; {{ $product->lead_time_days }}
                         </span>
                         <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-900 bg-canvas border border-border rounded-full px-3 py-1.5">
-                            🇿🇦 Geskik vir rowwe veldtoestande &middot; Built for the practical boer
+                            🇿🇦 Vetted for African Conditions &middot; Built for the working farm
                         </span>
                     </div>
 
@@ -190,6 +216,20 @@
                             </button>
                         </form>
                     @endif
+                </div>
+
+                {{-- Farmtech Assurance — the fixed, store-wide policy promise (every
+                     order, every product), distinct from x-compliance-badges below
+                     which shows only the per-product audit signals actually on file. --}}
+                <div class="mt-4 border border-mint/30 bg-mint/5 rounded-xl p-4">
+                    <p class="text-xs font-bold uppercase tracking-wide text-mint-dark mb-2.5">Farmtech Assurance</p>
+                    <ul class="space-y-1.5 text-sm text-charcoal">
+                        <li class="flex gap-2"><span class="flex-shrink-0">🛡️</span> 1-Year Local Replacement Guarantee</li>
+                        <li class="flex gap-2"><span class="flex-shrink-0">📦</span> Customs, Duties &amp; Door Courier Included (No hidden fees)</li>
+                        <li class="flex gap-2"><span class="flex-shrink-0">⚡</span> South African Power &amp; Frequency Compatibility Verified</li>
+                        <li class="flex gap-2"><span class="flex-shrink-0">💬</span> Direct WhatsApp setup assistance</li>
+                    </ul>
+                    <p class="text-xs text-ink-secondary mt-3 pt-3 border-t border-mint/20">Express Air Freight Delivery: 7&ndash;12 business days directly to your door with end-to-end tracking.</p>
                 </div>
 
                 <x-compliance-badges :product="$product" />

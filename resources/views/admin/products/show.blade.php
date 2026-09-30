@@ -75,6 +75,197 @@
     @csrf
     @method('PATCH')
 
+    {{-- Supplier WhatsApp Outreach Hub — see app/Services/SupplierOutreachMessageBuilder
+         and SupplierContactExtractor::resolve(). The WhatsApp link is built live in the
+         browser from whatever's currently in the phone field below (so it updates before
+         you've even saved), preferring a manually-entered number over the rarely-found
+         auto-extracted one. For the majority of listings with no phone at all, the
+         Alibaba listing link (real scraped source_url, never guessed) and the copy
+         button are always available as the fallback outreach route. --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-4"
+         x-data="{
+            phone: {{ Js::from(old('supplier_phone', $product->supplier_phone ?? '')) }},
+            message: {{ Js::from($outreachMessage) }},
+            copied: false,
+            get waUrl() {
+                let d = (this.phone || '').replace(/[^\d+]/g, '');
+                if (!d) return null;
+                if (d.startsWith('+')) { d = d.slice(1); }
+                else if (d.startsWith('00')) { d = d.slice(2).replace(/^0+/, ''); }
+                else {
+                    d = d.replace(/^0+/, '');
+                    if (!d.startsWith('86')) { d = '86' + d; }
+                }
+                return d.length >= 8 ? 'https://wa.me/' + d + '?text=' + encodeURIComponent(this.message) : null;
+            },
+            async copyMessage() {
+                try {
+                    await navigator.clipboard.writeText(this.message);
+                    this.copied = true;
+                    setTimeout(() => this.copied = false, 2000);
+                } catch (e) {
+                    window.prompt('Copy this message manually (Ctrl/Cmd+C, then Enter):', this.message);
+                }
+            },
+         }">
+        <h2 class="font-semibold text-sm text-gray-900">Supplier WhatsApp Outreach</h2>
+
+        <div>
+            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Supplier WhatsApp / Phone</label>
+            <input type="text" name="supplier_phone" x-model="phone" placeholder="e.g. +86 138 0013 8000"
+                   class="w-full text-sm font-mono border-gray-300 rounded-md shadow-sm">
+            <p class="text-[11px] text-gray-400 mt-1">Spaces, hyphens, and a leading + are all fine — everything else is stripped automatically. A number with no country code is assumed Chinese mainland (+86). Save the form to keep this on file.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+            <a :href="waUrl" x-show="waUrl" x-cloak target="_blank" rel="noopener"
+               class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow-sm transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-6.99A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.1 0 4.08.82 5.57 2.31a7.85 7.85 0 0 1 2.3 5.56c0 4.34-3.53 7.87-7.87 7.87a7.9 7.9 0 0 1-4-1.09l-.29-.17-2.98.78.79-2.9-.19-.3a7.86 7.86 0 0 1-1.2-4.19c0-4.34 3.53-7.87 7.87-7.87zm-4.32 4.5c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.34-.76-1.83-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+                💬 Reach Out on WhatsApp for Raw Video
+            </a>
+            <span x-show="!waUrl" x-cloak class="inline-flex items-center gap-2 bg-gray-100 text-gray-400 font-semibold text-sm px-4 py-2.5 rounded-lg select-none">
+                💬 Enter a phone number above to unlock a direct WhatsApp link
+            </span>
+
+            <button type="button" @click="copyMessage()"
+                    class="inline-flex items-center gap-2 border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition">
+                <span x-show="!copied">📋 Copy Bilingual Outreach Message</span>
+                <span x-show="copied" x-cloak class="text-emerald-700">✓ Copied — paste into TradeManager or WhatsApp</span>
+            </button>
+
+            @if ($product->source_url)
+                <a href="{{ $product->source_url }}" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-2 border border-orange-300 hover:bg-orange-50 text-orange-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Open Alibaba Listing / TradeManager Chat
+                </a>
+            @else
+                <span class="inline-flex items-center gap-2 bg-gray-100 text-gray-400 font-semibold text-sm px-4 py-2.5 rounded-lg select-none">No Alibaba listing URL on file either</span>
+            @endif
+        </div>
+    </div>
+
+
+    {{-- Supplier Direct Connect — quick actions for the direct-contact detail on
+         this product (see App\Services\SupplierContactExtractor). Each field below
+         is a value an admin looked up in Alibaba's own TradeManager / company
+         profile and typed in, OR one `suppliers:extract-contacts` found already
+         sitting in the product's stored listing text. The wa.me / WeChat / mailto
+         actions are built live in the browser from whatever's currently in the
+         fields, so they work before you've even saved. Nothing here is fetched
+         from Alibaba or guessed — empty is the honest default for most listings. --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-4"
+         x-data="{
+            whatsapp: {{ Js::from(old('supplier_whatsapp', $product->supplier_whatsapp ?? '')) }},
+            wechat: {{ Js::from(old('supplier_wechat_id', $product->supplier_wechat_id ?? '')) }},
+            demoMessage: {{ Js::from($demoVideoMessage) }},
+            copiedWechat: false,
+            copiedDemo: false,
+            showDemo: false,
+            get waUrl() {
+                let d = (this.whatsapp || '').replace(/[^\d+]/g, '');
+                if (!d) return null;
+                if (d.startsWith('+')) { d = d.slice(1); }
+                else if (d.startsWith('00')) { d = d.slice(2).replace(/^0+/, ''); }
+                else { d = d.replace(/^0+/, ''); if (!d.startsWith('86')) { d = '86' + d; } }
+                return d.length >= 8 ? 'https://wa.me/' + d : null;
+            },
+            get demoUrl() { return this.waUrl ? this.waUrl + '?text=' + encodeURIComponent(this.demoMessage) : null; },
+            async copy(text, flag) {
+                try { await navigator.clipboard.writeText(text); this[flag] = true; setTimeout(() => this[flag] = false, 2000); }
+                catch (e) { window.prompt('Copy manually (Ctrl/Cmd+C, then Enter):', text); }
+            },
+         }">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h2 class="font-semibold text-sm text-gray-900">Supplier Direct Connect</h2>
+            <span class="text-[11px] text-gray-400">Manually sourced / found in listing text — never fetched from Alibaba</span>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Sales Rep / Manager Name</label>
+                <input type="text" name="supplier_contact_name" value="{{ old('supplier_contact_name', $product->supplier_contact_name) }}"
+                       placeholder="e.g. Lucy Zhang" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">WhatsApp Number</label>
+                <input type="text" name="supplier_whatsapp" x-model="whatsapp" placeholder="e.g. +86 138 0013 8000"
+                       class="w-full text-sm font-mono border-gray-300 rounded-md shadow-sm">
+                @if (empty($product->supplier_whatsapp) && $supplierContact['whatsapp'])
+                    <p class="text-[11px] text-amber-600 mt-1">Found in listing text: <span class="font-mono">{{ $supplierContact['whatsapp'] }}</span> — type it above and save to keep.</p>
+                @endif
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">WeChat ID</label>
+                <input type="text" name="supplier_wechat_id" x-model="wechat" placeholder="e.g. farmtech_lucy"
+                       class="w-full text-sm font-mono border-gray-300 rounded-md shadow-sm">
+                @if (empty($product->supplier_wechat_id) && $supplierContact['wechat_id'])
+                    <p class="text-[11px] text-amber-600 mt-1">Found in listing text: <span class="font-mono">{{ $supplierContact['wechat_id'] }}</span> — type it above and save to keep.</p>
+                @endif
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Direct Sales Email</label>
+                <input type="email" name="supplier_email" value="{{ old('supplier_email', $product->supplier_email) }}"
+                       placeholder="sales@supplier.com" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                @if (empty($product->supplier_email) && $supplierContact['email'])
+                    <p class="text-[11px] text-amber-600 mt-1">Found in listing text: <span class="font-mono">{{ $supplierContact['email'] }}</span> — type it above and save to keep.</p>
+                @endif
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Media Drive URL (Dropbox / Google Drive)</label>
+                <input type="url" name="supplier_media_url" value="{{ old('supplier_media_url', $product->supplier_media_url) }}"
+                       placeholder="https://drive.google.com/..." class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
+            <a :href="waUrl" x-show="waUrl" x-cloak target="_blank" rel="noopener"
+               class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow-sm transition mt-2">
+                💬 Click-to-Chat on WhatsApp
+            </a>
+
+            <a :href="demoUrl" x-show="demoUrl" x-cloak target="_blank" rel="noopener"
+               class="inline-flex items-center gap-2 border border-emerald-300 hover:bg-emerald-50 text-emerald-800 font-semibold text-sm px-4 py-2.5 rounded-lg transition mt-2">
+                🎬 Request High-Res Demo Videos
+            </a>
+            <button type="button" @click="copy(demoMessage, 'copiedDemo')"
+                    class="inline-flex items-center gap-2 border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition mt-2">
+                <span x-show="!copiedDemo">📋 Copy Demo-Video Request</span>
+                <span x-show="copiedDemo" x-cloak class="text-emerald-700">✓ Copied</span>
+            </button>
+            <button type="button" @click="showDemo = !showDemo"
+                    class="text-xs text-gray-500 hover:text-gray-800 underline mt-2" x-text="showDemo ? 'Hide message' : 'Preview message'"></button>
+
+            <button type="button" @click="copy(wechat, 'copiedWechat')" x-show="wechat" x-cloak
+                    class="inline-flex items-center gap-2 border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition mt-2">
+                <span x-show="!copiedWechat">📋 Copy WeChat ID</span>
+                <span x-show="copiedWechat" x-cloak class="text-emerald-700">✓ Copied</span>
+            </button>
+
+            @if ($product->supplier_email || $supplierContact['email'])
+                <a href="mailto:{{ $product->supplier_email ?: $supplierContact['email'] }}?subject={{ rawurlencode('High-res demo videos for '.$product->title) }}"
+                   class="inline-flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition mt-2">
+                    ✉️ Email Sales Rep
+                </a>
+            @endif
+            @if ($product->supplier_media_url)
+                <a href="{{ $product->supplier_media_url }}" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-2 border border-blue-300 hover:bg-blue-50 text-blue-700 font-semibold text-sm px-4 py-2.5 rounded-lg transition mt-2">
+                    📁 Open Media Drive
+                </a>
+            @endif
+        </div>
+
+        <div x-show="showDemo" x-cloak>
+            <textarea readonly rows="6" x-text="demoMessage"
+                      class="w-full text-xs font-mono bg-gray-50 border-gray-200 rounded-md"></textarea>
+        </div>
+
+        <p x-show="!waUrl" x-cloak class="text-[11px] text-gray-400">
+            Enter a WhatsApp number above to unlock the click-to-chat and demo-video request links.
+        </p>
+    </div>
+
 
     <div class="grid lg:grid-cols-3 gap-6">
         <div class="space-y-6">
@@ -95,6 +286,31 @@
                         @endforeach
                     </div>
                 @endif
+
+                {{-- Listing video — URL found by `catalog:extract-videos` in this product's
+                     own stored listing data, or pasted here manually. Saved with the form. --}}
+                <div class="pt-3 border-t border-gray-100 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase text-gray-500">Listing Video</span>
+                        @if ($product->has_video)
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> On file
+                            </span>
+                        @else
+                            <span class="text-[11px] text-gray-400">None</span>
+                        @endif
+                    </div>
+                    @if ($product->video_url)
+                        <video controls preload="none"
+                               @if ($product->images->isNotEmpty()) poster="{{ $product->images->first()->url }}" @endif
+                               class="w-full rounded border border-gray-200 bg-black aspect-video object-contain">
+                            <source src="{{ $product->video_url }}">
+                        </video>
+                    @endif
+                    <input type="url" name="video_url" value="{{ old('video_url', $product->video_url) }}"
+                           placeholder="https://…/clip.mp4"
+                           class="w-full text-xs font-mono border-gray-300 rounded-md shadow-sm">
+                </div>
             </div>
 
             @if ($product->brand_name || $product->model_number || $product->warranty_period || !empty($product->specifications))

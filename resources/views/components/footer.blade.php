@@ -8,7 +8,7 @@
         {{-- Column 1: Brand & Assurance --}}
         <div>
             <p class="font-display font-bold text-lg text-white mb-2">Farm<span class="text-mint">tech</span></p>
-            <p class="text-sm leading-relaxed text-ink-muted">Professional agricultural &amp; industrial equipment, sourced globally and delivered locally — built for the South African boer.</p>
+            <p class="text-sm leading-relaxed text-ink-muted">Professional agricultural &amp; industrial equipment, sourced directly from Tier-1 manufacturers and backed locally — built for South African farms.</p>
             @if ($whatsappUrl)
                 <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener"
                    class="inline-flex items-center gap-2 mt-4 bg-white/10 border border-white/15 hover:bg-white/15 rounded-full px-3.5 py-2 text-xs font-semibold text-white transition">
@@ -56,6 +56,7 @@
         <div>
             <p class="font-display font-semibold text-white text-sm uppercase tracking-wide mb-3">Information</p>
             <ul class="text-sm space-y-2 leading-relaxed">
+                <li><a href="{{ route('about.index') }}" class="hover:text-mint-light transition">Our Promise</a></li>
                 <li><a href="{{ route('how-it-works') }}" class="hover:text-mint-light transition">How importing works</a></li>
                 <li><a href="{{ route('policies.terms') }}#import" class="hover:text-mint-light transition">VAT &amp; duty</a></li>
                 <li><a href="{{ route('policies.icasa') }}" class="hover:text-mint-light transition">Compliance &amp; documentation</a></li>

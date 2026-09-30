@@ -24,7 +24,7 @@
                 <h1 class="font-display font-semibold text-3xl sm:text-4xl text-brand-900">{{ $category->label() }}</h1>
             </div>
             <p class="text-ink-secondary max-w-2xl leading-relaxed text-sm">{{ $category->description() }}</p>
-            <p class="text-xs font-mono uppercase tracking-widest text-mint-dark mt-2">Geskik vir rowwe veldtoestande &middot; Vetted for the South African boer</p>
+            <p class="text-xs font-mono uppercase tracking-widest text-mint-dark mt-2">Vetted for African Conditions &middot; Built for South African farms</p>
 
             @if (count($siblings) > 1)
                 <div class="flex flex-wrap gap-2 mt-5">

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\LandedCostCalculator;
+use App\Services\SupplierContactExtractor;
+use App\Services\SupplierOutreachMessageBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -68,7 +70,24 @@ class ProductController extends Controller
             $marginPct,
         );
 
-        return view('admin.products.show', compact('product', 'breakdown'));
+        $messageBuilder = new SupplierOutreachMessageBuilder();
+        $contactExtractor = new SupplierContactExtractor();
+
+        $outreachMessage = $messageBuilder->message($product);
+        $demoVideoMessage = $messageBuilder->demoVideoMessage($product);
+
+        // Passive contact resolution — a value an admin typed into the
+        // supplier_* column, else one already sitting in this product's own
+        // stored spec/description text. Never fetched, never guessed.
+        $supplierContact = [
+            'whatsapp' => $contactExtractor->resolve($product),
+            'wechat_id' => $contactExtractor->wechatId($product),
+            'email' => $contactExtractor->email($product),
+        ];
+
+        return view('admin.products.show', compact(
+            'product', 'breakdown', 'outreachMessage', 'demoVideoMessage', 'supplierContact',
+        ));
     }
 
     public function update(Request $request, Product $product)
@@ -81,11 +100,21 @@ class ProductController extends Controller
             'retail_price_zar' => 'nullable|numeric',
             'stock_availability_type' => 'nullable|string',
             'lead_time_days' => 'nullable|string|max:100',
+            'supplier_phone' => 'nullable|string|max:32',
+            'supplier_contact_name' => 'nullable|string|max:120',
+            'supplier_whatsapp' => 'nullable|string|max:32',
+            'supplier_wechat_id' => 'nullable|string|max:64',
+            'supplier_email' => 'nullable|email|max:190',
+            'supplier_media_url' => 'nullable|url|max:500',
+            'video_url' => 'nullable|url|max:1000',
         ]);
 
         $product->fill($request->only([
             'title', 'short_description', 'requirements_notes',
             'compatibility_notes', 'retail_price_zar', 'stock_availability_type', 'lead_time_days',
+            'supplier_phone',
+            'supplier_contact_name', 'supplier_whatsapp', 'supplier_wechat_id', 'supplier_email', 'supplier_media_url',
+            'video_url',
         ]));
 
         if ($request->filled('title')) {
