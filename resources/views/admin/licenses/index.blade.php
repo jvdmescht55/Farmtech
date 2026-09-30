@@ -97,7 +97,7 @@
                 @csrf
                 <div>
                     <label class="block font-medium mb-1">Software</label>
-                    <select name="module" class="w-full border rounded-md px-3 py-2">@foreach (\App\Models\License::MODULES as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach</select>
+                    <select name="module" class="w-full border rounded-md px-3 py-2">@foreach (\App\Models\License::modules() as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach</select>
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Reader model</label>

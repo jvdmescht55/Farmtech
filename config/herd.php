@@ -2,6 +2,20 @@
 
 return [
     /*
+     * Herd Management software modules. Each is unlocked by a licence code
+     * shipped with its device (licenses.module = key). Add future devices here.
+     */
+    'modules' => [
+        'rfid' => [
+            'name' => 'RFID Scanner V1',
+            'tagline' => 'Herd register, pedigree tiers, weights and sale catalogues — synced from your Farmtech RFID reader.',
+            'route' => 'rfid.dashboard',
+            'image' => 'lamb-tag',
+            'features' => ['Reader sync (file or direct)', 'Herd register & weights', 'SP / C / B pedigree grading', 'Logix-style sale catalogues'],
+        ],
+    ],
+
+    /*
      * Genetic tier ladder, lowest to highest. An offspring enters one step
      * above the weaker of its two parents, capped at the top tier — so a
      * commercial (CC) ewe x stud ram gives B, B x stud gives C, C x stud

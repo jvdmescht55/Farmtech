@@ -1,9 +1,9 @@
 @extends('layouts.storefront')
 
-@section('title', 'Farmtech — Professional Equipment, Sourced Globally, Delivered Locally')
+@section('title', 'Farmtech Store — Livestock RFID Readers, Tags & Farm Equipment')
 
 @php
-    $heroImage = \App\Enums\ProductCategory::heroFallbackImage();
+    $heroImage = ['url' => \App\Support\SiteImages::url('ear-tagging')];
     $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
     $whatsappUrl = $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null;
 @endphp
@@ -15,17 +15,17 @@
     <section x-data class="bg-white border-b border-border overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 items-center min-h-[600px] lg:min-h-[700px] py-16 lg:py-0 gap-12">
             <div>
-                <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-5">Direct Farm-Tech Procurement</p>
+                <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-5">Livestock RFID · ISO 11784 / 11785</p>
                 <h1 :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:80ms" class="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-charcoal leading-[1.08] mb-6">
-                    Specialist Farm &amp; Industrial Tech.<br><span class="italic font-medium text-brand-900">Direct from Tier-1 Manufacturers to Your Farm Gate.</span>
+                    Tag it. Scan it.<br><span class="italic font-medium text-brand-900">Know every animal in your herd.</span>
                 </h1>
                 <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:140ms" class="text-ink-secondary text-base sm:text-lg max-w-md mb-10 leading-relaxed">
-                    We source, vet, and land high-precision livestock, solar, telemetry, and security equipment directly from global manufacturers — cutting out heavy retail markups while backing everything locally.
+                    RFID stick readers and EID tags for sheep, goats and cattle — and every Farmtech reader includes Herd Management software, so scans become your herd register, weights and sale catalogues.
                 </p>
 
                 <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:200ms" class="flex flex-wrap items-center gap-4">
-                    <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition-all hover:gap-3">
-                        Browse Vetted Equipment
+                    <a href="{{ route('category.show', 'rfid') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition-all hover:gap-3">
+                        Shop RFID readers &amp; tags
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </a>
                     @if ($whatsappUrl ?? null)
@@ -41,9 +41,78 @@
             </div>
 
             <div :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'" style="animation-delay:120ms" class="relative aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[500px] rounded-xl overflow-hidden">
-                <img src="{{ $heroImage['url'] }}" alt="Agricultural drone monitoring crop rows" class="absolute inset-0 w-full h-full object-cover animate-ken-burns">
+                <img src="{{ $heroImage['url'] }}" alt="{{ \App\Support\SiteImages::alt('ear-tagging') }}" class="absolute inset-0 w-full h-full object-cover animate-ken-burns">
                 <div class="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-xl pointer-events-none"></div>
             </div>
+        </div>
+    </section>
+
+
+    {{-- RFID first: the store's lead range, then the software every reader unlocks. --}}
+    <section class="bg-canvas py-20 sm:py-24 border-b border-border">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid lg:grid-cols-3 gap-6 mb-12">
+                @foreach ([
+                    ['eid-eartags', 'EID ear tags', 'FDX-B / HDX tags that read at the crush, the scale and the sale ring.'],
+                    ['lamb-tag', 'Sheep & goats', 'Small-ruminant tags and stick readers built for kraal work.'],
+                    ['nguni', 'Cattle', 'Long-range readers for chutes, crushes and weighbridges.'],
+                ] as [$img, $t, $d])
+                    <a href="{{ route('category.show', 'rfid') }}" class="group relative aspect-[4/3] rounded-xl overflow-hidden">
+                        <img src="{{ \App\Support\SiteImages::url($img, true) }}" alt="{{ \App\Support\SiteImages::alt($img) }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/75 to-transparent"></div>
+                        <div class="absolute bottom-0 p-6 text-white">
+                            <div class="font-display text-2xl font-semibold [text-shadow:0_1px_12px_rgba(0,0,0,.4)]">{{ $t }}</div>
+                            <p class="text-sm text-white/80 mt-1 max-w-xs">{{ $d }}</p>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                    <p class="text-xs font-mono uppercase tracking-[0.25em] text-mint-dark mb-2">The RFID range</p>
+                    <h2 class="font-display font-bold text-3xl sm:text-4xl text-charcoal">Readers, tags &amp; gates</h2>
+                </div>
+                <a href="{{ route('category.show', 'rfid') }}" class="text-sm font-semibold text-brand-900 hover:underline">All RFID equipment →</a>
+            </div>
+            @if ($rfidProducts->isNotEmpty())
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    @foreach ($rfidProducts as $i => $product)
+                        @include('storefront.products._card', ['product' => $product, 'delay' => $i * 70])
+                    @endforeach
+                </div>
+            @else
+                <p class="text-ink-secondary">New RFID stock is being vetted — check back shortly.</p>
+            @endif
+        </div>
+    </section>
+
+    <section class="relative overflow-hidden bg-brand-975 text-white">
+        <img src="{{ \App\Support\SiteImages::url('kraal') }}" alt="{{ \App\Support\SiteImages::alt('kraal') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-40">
+        <div class="absolute inset-0 bg-gradient-to-r from-brand-975 via-brand-975/90 to-brand-975/40"></div>
+        <div class="relative max-w-7xl mx-auto px-4 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <p class="text-xs font-mono uppercase tracking-[0.25em] text-mint mb-4">Included with every reader</p>
+                <h2 class="font-display font-bold text-3xl sm:text-5xl leading-tight">Herd Management software — RFID Scanner V1</h2>
+                <p class="mt-6 text-white/75 text-lg leading-relaxed max-w-xl">Your reader ships with an activation code. Scans sync into a herd register with weights and daily gain, SP / C / B pedigree grading, and print-ready sale catalogues with lot numbers.</p>
+                <div class="mt-8 flex flex-wrap gap-4">
+                    <a href="{{ route('category.show', 'rfid') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition">Get a reader</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center gap-2 border border-white/30 hover:border-white text-white text-sm font-semibold px-7 py-3.5 rounded-full transition">Already have one? Sign in</a>
+                </div>
+            </div>
+            <dl class="grid sm:grid-cols-2 gap-4">
+                @foreach ([
+                    ['Scan → record', 'Session files or direct sync. Unknown tags become new animals automatically.'],
+                    ['Weights & ADG', 'Every weighing tracked with grams-per-day gain between sessions.'],
+                    ['Pedigree tiers', 'SP, C and B worked out from three generations — with the reason shown.'],
+                    ['Sale catalogues', '66A, 66B… lot numbering and a veiling-ready printed layout.'],
+                ] as [$t, $d])
+                    <div class="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-5">
+                        <dt class="font-semibold">{{ $t }}</dt>
+                        <dd class="text-sm text-white/65 mt-1 leading-relaxed">{{ $d }}</dd>
+                    </div>
+                @endforeach
+            </dl>
         </div>
     </section>
 
@@ -268,4 +337,7 @@
             </div>
         </div>
     </section>
+    <div class="max-w-7xl mx-auto px-4 pb-8">
+        <x-photo-credits :keys="['ear-tagging', 'eid-eartags', 'lamb-tag', 'nguni', 'kraal']" />
+    </div>
 @endsection

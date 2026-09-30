@@ -35,7 +35,7 @@ class LicenseController extends Controller
     {
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:200'],
-            'module' => ['required', 'in:'.implode(',', array_keys(License::MODULES))],
+            'module' => ['required', 'in:'.implode(',', array_keys(License::modules()))],
             'device_model' => ['nullable', 'string', 'max:64'],
             'device_serials' => ['nullable', 'string', 'max:10000'],
             'notes' => ['nullable', 'string', 'max:255'],

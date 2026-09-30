@@ -8,7 +8,11 @@ use Illuminate\Support\Str;
 
 class License extends Model
 {
-    public const MODULES = ['rfid' => 'RFID Herd Manager'];
+    /** @return array<string, string> module key => display name */
+    public static function modules(): array
+    {
+        return collect(config('herd.modules'))->map(fn ($m) => $m['name'])->all();
+    }
 
     protected $fillable = ['code', 'module', 'device_serial', 'device_model', 'user_id', 'activated_at', 'revoked_at', 'notes'];
 
@@ -54,6 +58,6 @@ class License extends Model
 
     public function moduleLabel(): string
     {
-        return self::MODULES[$this->module] ?? $this->module;
+        return self::modules()[$this->module] ?? $this->module;
     }
 }

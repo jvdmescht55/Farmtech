@@ -93,7 +93,7 @@ class CustomerAuthController extends Controller
         $license = $this->availableLicense($data['code']);
         DB::transaction(fn () => $this->redeem($license, $request->user()));
 
-        return redirect()->route('rfid.dashboard')->with('status', $license->moduleLabel().' unlocked.');
+        return redirect()->route('herd.hub')->with('status', $license->moduleLabel().' unlocked.');
     }
 
     public function logout(Request $request)
@@ -134,6 +134,6 @@ class CustomerAuthController extends Controller
 
     private function home(User $user): string
     {
-        return $user->canAccessAdminPanel() ? route('admin.orders.index') : route('rfid.dashboard');
+        return $user->canAccessAdminPanel() ? route('admin.orders.index') : route('herd.hub');
     }
 }

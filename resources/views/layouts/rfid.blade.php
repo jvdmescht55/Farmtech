@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     @include('partials.head')
-    <title>@yield('title', 'Dashboard') — Farmtech RFID</title>
+    <title>@yield('title', 'Dashboard') — RFID Scanner V1 · Farmtech Herd</title>
 </head>
 <body class="bg-canvas text-charcoal antialiased font-body" x-data="{ nav: false }">
 @php
@@ -21,8 +21,9 @@
         <div class="px-6 pt-6 pb-5 border-b border-white/10" style="padding-top: max(1.5rem, env(safe-area-inset-top, 0px))">
             <a href="{{ route('rfid.dashboard') }}" class="block">
                 <div class="font-display text-2xl font-semibold text-white tracking-tight">Farm<span class="text-mint">tech</span></div>
-                <div class="text-[11px] uppercase tracking-[0.2em] text-white/50 mt-0.5">RFID Herd Manager</div>
+                <div class="text-[11px] uppercase tracking-[0.2em] text-white/50 mt-0.5">RFID Scanner V1</div>
             </a>
+            <a href="{{ route('herd.hub') }}" class="mt-3 inline-flex items-center gap-1 text-xs text-white/60 hover:text-white">← All herd software</a>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
             @foreach ($links as [$route, $pattern, $label, $icon])

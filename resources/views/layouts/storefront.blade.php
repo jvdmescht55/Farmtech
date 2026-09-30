@@ -87,6 +87,7 @@
                 </div>
 
                 <a href="{{ route('home') }}#shop-by-application" class="hidden md:inline-block text-sm font-semibold text-charcoal hover:text-brand-900 px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 border-transparent">Solutions</a>
+                <a href="{{ route('login') }}" class="hidden md:inline-block text-sm font-semibold px-3 py-2 rounded-lg hover:bg-canvas transition text-mint-dark border-b-2 border-transparent">Herd Management</a>
                 <a href="{{ route('how-it-works') }}" class="hidden md:inline-block text-sm font-semibold px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 {{ request()->routeIs('how-it-works') ? 'text-brand-900 border-mint' : 'text-charcoal hover:text-brand-900 border-transparent' }}">How it works</a>
                 <a href="{{ route('about.index') }}" class="hidden md:inline-block text-sm font-semibold px-3 py-2 rounded-lg hover:bg-canvas transition border-b-2 {{ request()->routeIs('about.index') ? 'text-brand-900 border-mint' : 'text-charcoal hover:text-brand-900 border-transparent' }}">Our Promise</a>
 
@@ -224,6 +225,7 @@
                     <a href="{{ route('equipment.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-mint-dark border-b border-border">Browse full catalogue</a>
                     <a href="{{ route('finder.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Equipment Finder</a>
                     <a href="{{ route('home') }}#shop-by-application" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Solutions</a>
+                    <a href="{{ route('login') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-mint-dark border-b border-border">Herd Management</a>
                     <a href="{{ route('how-it-works') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">How it works</a>
                     <a href="{{ route('about.index') }}" @click="mobileMenuOpen = false" class="block px-5 py-3.5 text-sm font-semibold text-charcoal border-b border-border">Our Promise</a>
                     @if ($whatsappUrl)

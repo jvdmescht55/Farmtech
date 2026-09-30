@@ -21,7 +21,7 @@ class EnsureUserIsAdmin
         if (! $request->user()->canAccessAdminPanel()) {
             abort_unless($request->user()->isCustomer(), 403);
 
-            return redirect()->route('rfid.dashboard');
+            return redirect()->route('herd.hub');
         }
 
         return $next($request);

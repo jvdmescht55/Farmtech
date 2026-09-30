@@ -24,8 +24,11 @@ use App\Http\Controllers\Storefront\PolicyController;
 use App\Http\Controllers\Storefront\SearchController;
 use App\Http\Controllers\Storefront\SupportController;
 use App\Http\Controllers\Storefront\TrackOrderController;
+use App\Http\Controllers\Admin\InsightsController as AdminInsightsController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Auth\CustomerAuthController;
+use App\Http\Controllers\HerdHubController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\Rfid\AnimalController as RfidAnimalController;
 use App\Http\Controllers\Rfid\CatalogueController as RfidCatalogueController;
 use App\Http\Controllers\Rfid\DashboardController as RfidDashboardController;
@@ -36,11 +39,12 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Public: RFID landing + customer accounts
+| Public: portal (Store or Herd Management) + herd customer accounts
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [CustomerAuthController::class, 'landing'])->name('landing');
+Route::get('/', [PortalController::class, 'index'])->name('portal');
+Route::get('/herd', [CustomerAuthController::class, 'landing'])->name('landing');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [CustomerAuthController::class, 'landing'])->name('login');
     Route::post('/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1');
@@ -56,11 +60,14 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| RFID Herd Manager (customer software, unlocked by a reader licence)
+| Herd Management — a hub of software modules, each unlocked by the
+| licence that ships with its device. Only RFID Scanner V1 exists today.
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('app')->name('rfid.')->middleware(['auth', 'module:rfid'])->group(function () {
+Route::get('/app', [HerdHubController::class, 'index'])->middleware('auth')->name('herd.hub');
+
+Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])->group(function () {
     Route::get('/', [RfidDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/animals', [RfidAnimalController::class, 'index'])->name('animals.index');
@@ -100,13 +107,12 @@ Route::prefix('app')->name('rfid.')->middleware(['auth', 'module:rfid'])->group(
 
 /*
 |--------------------------------------------------------------------------
-| Former public storefront — now admin-only, under /admin/shop. Route names
-| are unchanged so every existing view/link keeps working.
+| Store (public). Home is /store because / is the portal.
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin/shop')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::group([], function () {
+    Route::get('/store', [HomeController::class, 'index'])->name('home');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index')->middleware('throttle:search');
     Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest')->middleware('throttle:search');
     Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
@@ -226,6 +232,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::middleware('can:view-financials')->group(function () {
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/insights', [AdminInsightsController::class, 'index'])->name('insights');
         });
     });
 });

@@ -28,7 +28,18 @@ class HomeController extends Controller
         // run), so this section doesn't just disappear on a fresh catalog.
         $costSample = $featured->concat($trending)->first(fn (Product $p) => $p->landed_cost_zar && $p->retail_price_zar);
 
+        // The store now leads with livestock RFID — the device family that
+        // unlocks Herd Management software.
+        $rfidProducts = Product::query()
+            ->where('status', 'approved')->where('is_active', true)
+            ->whereIn('category', [\App\Enums\ProductCategory::Rfid->value, \App\Enums\ProductCategory::IndustrialRfid->value])
+            ->with(['thumbnail', 'complianceAudit', 'specs'])
+            ->orderByDesc('featured_score')
+            ->limit(8)
+            ->get();
+
         return view('storefront.home', [
+            'rfidProducts' => $rfidProducts,
             'industries' => Industry::activeCases(),
             'featured' => $featured,
             'trending' => $trending,
