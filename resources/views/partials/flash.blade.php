@@ -1,8 +1,8 @@
 @if (session('status'))
-    <div class="mb-6 rounded-lg border border-mint/40 bg-mint/10 px-4 py-3 text-sm text-brand-950">{{ session('status') }}</div>
+    <div class="mb-6 rounded-xl border border-hairline bg-white px-4 py-3 text-sm text-char flex gap-3"><span class="text-ochre">●</span>{{ session('status') }}</div>
 @endif
 @if ($errors->any())
-    <div class="mb-6 rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
+    <div class="mb-6 rounded-xl border border-[#B0452F]/25 bg-[#B0452F]/5 px-4 py-3 text-sm text-[#B0452F]">
         @foreach ($errors->all() as $e)<div>{{ $e }}</div>@endforeach
     </div>
 @endif

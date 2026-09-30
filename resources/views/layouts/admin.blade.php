@@ -25,9 +25,11 @@
                 @can('manage-users')
                     <a href="{{ route('admin.licenses.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.licenses.*') ? 'bg-white/10 font-semibold' : '' }}">Licences &amp; Customers</a>
                 @endcan
-                <a href="{{ route('rfid.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10">Open Herd Manager ↗</a>
+                <a href="{{ route('admin.leads.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.leads.*') ? 'bg-white/10 font-semibold' : '' }}">Leads @php($openLeads = \App\Models\Lead::whereNull('handled_at')->count())@if($openLeads)<span class="ml-1 rounded-full bg-farmtech-gold px-1.5 text-[10px]">{{ $openLeads }}</span>@endif</a>
+                <a href="{{ route('rfid.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10">Open Kuddebestuur ↗</a>
+                <a href="{{ route('portal') }}" target="_blank" class="block px-3 py-2 rounded hover:bg-white/10">View public site ↗</a>
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-white/40">Store</div>
-                <a href="{{ route('home') }}" target="_blank" class="block px-3 py-2 rounded hover:bg-white/10">View store ↗</a>
+                <a href="{{ route('home') }}" target="_blank" class="block px-3 py-2 rounded hover:bg-white/10">Product store (preview) ↗</a>
                 @can('view-financials')
                     <a href="{{ route('admin.insights') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.insights') ? 'bg-white/10 font-semibold' : '' }}">★ Insights</a>
                     <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.dashboard') ? 'bg-white/10 font-semibold' : '' }}">Dashboard</a>

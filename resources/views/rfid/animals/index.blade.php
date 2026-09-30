@@ -1,7 +1,9 @@
 @extends('layouts.rfid')
-@section('title', 'Herd register')
+@section('title', 'Kudde')
+@section('eyebrow')Jou kuddeboek @endsection
 @section('actions')
-    <a href="{{ route('rfid.animals.create') }}" class="btn-primary">+ Animal</a>
+    <a href="{{ route('rfid.import.create') }}" class="btn-secondary">Voer in (CSV)</a>
+    <a href="{{ route('rfid.animals.create') }}" class="btn-primary">+ Dier</a>
 @endsection
 @section('content')
 <form method="GET" class="app-card p-4 flex flex-wrap items-end gap-3 mb-6">
@@ -40,7 +42,7 @@
 </form>
 
 <div class="app-card overflow-hidden">
-    <div class="px-5 py-3 text-sm text-ink-secondary border-b border-border">{{ number_format($animals->total()) }} animals</div>
+    <div class="px-5 py-3 text-sm text-stone border-b border-hairline">{{ number_format($animals->total()) }} animals</div>
     <div class="overflow-x-auto">
         <table class="app-table">
             <thead><tr><th>Animal ID</th><th>EID</th><th>Sex</th><th>Born</th><th>Tier</th><th>Sire</th><th>Dam</th><th class="text-right">Last weight</th><th>Last seen</th></tr></thead>
@@ -49,21 +51,21 @@
                 @php($w = $latestWeights->get($a->id))
                 <tr>
                     <td class="whitespace-nowrap">
-                        <a href="{{ route('rfid.animals.show', $a) }}" class="font-mono font-semibold text-brand-900 hover:underline">{{ $a->visual_id }}</a>
-                        @if ($a->registered)<span class="ml-1 text-[10px] font-bold text-ink-muted">REG</span>@endif
-                        @if ($a->status !== 'active')<span class="ml-1 text-[10px] uppercase font-semibold text-error">{{ $a->status }}</span>@endif
+                        <a href="{{ route('rfid.animals.show', $a) }}" class="font-mono font-medium text-char hover:underline">{{ $a->visual_id }}</a>
+                        @if ($a->registered)<span class="ml-1 text-[10px] font-bold text-stone-light">REG</span>@endif
+                        @if ($a->status !== 'active')<span class="ml-1 text-[10px] uppercase font-medium text-[#B0452F]">{{ $a->status }}</span>@endif
                     </td>
-                    <td class="font-mono text-xs text-ink-secondary whitespace-nowrap">{{ $a->eid ?? '—' }}</td>
+                    <td class="font-mono text-xs text-stone whitespace-nowrap">{{ $a->eid ?? '—' }}</td>
                     <td>{{ $a->sexLabel() }}</td>
-                    <td class="whitespace-nowrap">{{ $a->birth_date?->format('d/m/Y') ?? '—' }}@if($a->birth_type)<sup class="text-ink-muted ml-0.5">{{ $a->birth_type }}</sup>@endif</td>
+                    <td class="whitespace-nowrap">{{ $a->birth_date?->format('d/m/Y') ?? '—' }}@if($a->birth_type)<sup class="text-stone-light ml-0.5">{{ $a->birth_type }}</sup>@endif</td>
                     <td><x-tier :tier="$a->computed_tier" /></td>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $a->sire?->visual_id ?? '—' }}</td>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $a->dam?->visual_id ?? '—' }}</td>
                     <td class="text-right font-mono whitespace-nowrap">{{ $w ? $w->weight_kg.' kg' : '—' }}</td>
-                    <td class="text-ink-secondary whitespace-nowrap text-xs">{{ $a->last_seen_at?->diffForHumans() ?? 'Never' }}</td>
+                    <td class="text-stone whitespace-nowrap text-xs">{{ $a->last_seen_at?->diffForHumans() ?? 'Never' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="text-center py-12 text-ink-secondary">No animals match. <a class="text-brand-900 font-semibold" href="{{ route('rfid.import.create') }}">Import your herd</a> or sync a reader.</td></tr>
+                <tr><td colspan="9" class="text-center py-12 text-stone">No animals match. <a class="text-char font-medium" href="{{ route('rfid.import.create') }}">Import your herd</a> or sync a reader.</td></tr>
             @endforelse
             </tbody>
         </table>

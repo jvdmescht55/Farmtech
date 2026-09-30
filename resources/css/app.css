@@ -119,23 +119,59 @@
     }
 }
 
-/* RFID Herd Manager — shared form/table primitives */
+/* v2 "Karoo" — public site + herd app primitives */
 @layer components {
-    .app-card { @apply bg-white border border-border rounded-xl; }
-    .app-input { @apply w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-charcoal placeholder:text-ink-muted focus:border-mint focus:ring-2 focus:ring-mint/20 focus:outline-none; }
-    .app-label { @apply block text-xs font-semibold uppercase tracking-wide text-ink-secondary mb-1.5; }
-    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-950 disabled:opacity-50; }
-    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-charcoal transition hover:border-brand-900; }
-    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-error/30 bg-white px-3 py-1.5 text-xs font-semibold text-error transition hover:bg-error/5; }
-    .app-table { @apply w-full text-sm; }
-    .app-table th { @apply px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-muted bg-canvas border-b border-border whitespace-nowrap; }
-    .app-table td { @apply px-4 py-3 border-b border-border/70 align-middle; }
-    .app-table tbody tr:hover { @apply bg-canvas/60; }
-    .tier { @apply inline-flex items-center justify-center min-w-[2.25rem] rounded-md px-1.5 py-0.5 text-[11px] font-bold font-mono; }
-    .tier-SP { @apply bg-brand-900 text-white; }
-    .tier-C { @apply bg-mint/15 text-brand-900; }
-    .tier-B { @apply bg-alert/15 text-alert-dark; }
-    .tier-CC { @apply bg-slate-200 text-slate-700; }
-    .tier-unknown { @apply bg-white border border-dashed border-ink-muted text-ink-muted; }
-    .stat-num { @apply font-display text-3xl font-semibold text-charcoal; font-variant-numeric: tabular-nums; }
+    .wrap { @apply mx-auto w-full max-w-[1320px] px-5 sm:px-8 lg:px-12; }
+    .eyebrow { @apply font-ui text-[11px] font-medium uppercase tracking-[0.22em] text-stone; }
+    .h-display { @apply font-headline font-normal tracking-[-0.02em] leading-[0.95]; }
+    .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 text-[15px] font-medium transition-all duration-300 ease-out select-none; }
+    .btn-dark { @apply btn bg-char text-sand hover:bg-char-soft; }
+    .btn-light { @apply btn bg-sand text-char hover:bg-white; }
+    .btn-line { @apply btn border border-char/15 text-char hover:border-char/60; }
+    .btn-line-light { @apply btn border border-white/30 text-white hover:border-white hover:bg-white/5; }
+    .btn-sm { @apply h-9 px-4 text-sm; }
+    .link-u { @apply relative after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:scale-x-100; }
+    .field { @apply w-full h-11 rounded-xl border border-hairline bg-white px-4 text-[15px] text-char placeholder:text-stone-light transition focus:border-char focus:outline-none focus:ring-4 focus:ring-char/5; }
+    textarea.field { @apply h-auto py-3; }
+    .field-label { @apply block text-[13px] font-medium text-stone mb-1.5; }
+
+    /* herd app */
+    .panel { @apply bg-white rounded-2xl border border-hairline; }
+    .panel-head { @apply flex items-center justify-between gap-4 px-6 py-4 border-b border-hairline; }
+    .panel-title { @apply font-medium text-char; }
+    .kpi-label { @apply text-[12px] font-medium uppercase tracking-[0.14em] text-stone; }
+    .kpi-num { @apply font-headline text-[44px] leading-none text-char; font-variant-numeric: tabular-nums; }
+    .tbl { @apply w-full text-sm; }
+    .tbl th { @apply px-5 py-3 text-left text-[11px] font-medium uppercase tracking-[0.12em] text-stone-light border-b border-hairline whitespace-nowrap bg-sand-light; }
+    .tbl td { @apply px-5 py-3 border-b border-hairline/70 align-middle; }
+    .tbl tbody tr { @apply transition-colors; }
+    .tbl tbody tr:hover { @apply bg-sand-light; }
+    .num { @apply font-num tabular-nums; }
+    .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[12px] font-medium; }
+    .up { @apply text-[#3F7A3A]; }
+    .down { @apply text-[#B0452F]; }
+
+    /* legacy class names still used by some herd views — mapped to the v2 look */
+    .app-card { @apply panel; }
+    .app-input { @apply field; }
+    .app-label { @apply field-label; }
+    .btn-primary { @apply btn-dark h-10 px-5 text-sm; }
+    .btn-secondary { @apply btn-line h-10 px-5 text-sm; }
+    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-full border border-[#B0452F]/30 px-3 h-8 text-xs font-medium text-[#B0452F] transition hover:bg-[#B0452F]/5; }
+    .app-table { @apply tbl; }
+    .tier { @apply inline-flex items-center justify-center min-w-[2.25rem] rounded-full px-2 h-6 text-[11px] font-semibold font-num; }
+    .tier-SP { @apply bg-char text-sand; }
+    .tier-C { @apply bg-ochre/15 text-ochre-dark; }
+    .tier-B { @apply bg-[#B0452F]/10 text-[#B0452F]; }
+    .tier-CC { @apply bg-sand-deep text-stone; }
+    .tier-unknown { @apply border border-dashed border-stone-light text-stone-light; }
+    .stat-num { @apply font-headline text-4xl text-char; font-variant-numeric: tabular-nums; }
+}
+
+@layer utilities {
+    .img-grade { filter: saturate(0.92) contrast(1.03); }
+    .reveal-up { animation: v2-up .9s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes v2-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .reveal-up { animation: none; } }
+    .scrollbar-none { scrollbar-width: none; } .scrollbar-none::-webkit-scrollbar { display: none; }
 }

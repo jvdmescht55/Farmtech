@@ -90,8 +90,18 @@ class AnimalController extends Controller
             $gains[$w->id] = $prev ? round((($w->weight_kg - $prev->weight_kg) * 1000) / $days) : null;
         }
 
+        $target = (float) $request->input('target', 0) ?: null;
+        $last = $weights->last();
+        $recentAdg = $last && $gains[$last->id] !== null ? $gains[$last->id] : null;
+
         return view('rfid.animals.show', [
             'animal' => $animal,
+            'weightPoints' => $weights->map(fn ($w) => ['label' => $w->scanned_at->toDateString(), 'value' => (float) $w->weight_kg])->values()->all(),
+            'target' => $target,
+            'daysToTarget' => $target && $last ? \App\Services\Herd\WeighStats::daysToTarget((float) $last->weight_kg, $recentAdg, $target) : null,
+            'recentAdg' => $recentAdg,
+            'lifeAdg' => $weights->count() > 1 ? (int) round(($last->weight_kg - $weights->first()->weight_kg) * 1000 / max(1, $weights->first()->scanned_at->diffInDays($last->scanned_at))) : null,
+            'kg100' => \App\Services\Herd\WeighStats::weightAtAge($weights->map(fn ($w) => (object) ['date' => $w->scanned_at->toDateString(), 'kg' => (float) $w->weight_kg]), $animal->birth_date, 100),
             'tier' => $tiers->resolve($animal),
             'computed' => $tiers->computed($animal),
             'weights' => $weights,

@@ -124,7 +124,7 @@ document.addEventListener('alpine:init', () => {
             this.loading = true;
             try {
                 const ids = this.items.map((item) => item.id).join(',');
-                const response = await fetch(`/compare?ids=${ids}`, { headers: { Accept: 'application/json' } });
+                const response = await fetch(`/admin/shop/compare?ids=${ids}`, { headers: { Accept: 'application/json' } });
                 this.data = response.ok ? await response.json() : null;
             } catch (e) {
                 this.data = null;
@@ -203,13 +203,13 @@ document.addEventListener('alpine:init', () => {
             body.append('_method', 'PATCH');
             body.append('quantity', quantity);
             if (item.variant_id) body.append('variant_id', item.variant_id);
-            await this.request(`/cart/${item.product_id}`, body);
+            await this.request(`/admin/shop/cart/${item.product_id}`, body);
         },
         async removeItem(item) {
             const body = new FormData();
             body.append('_method', 'DELETE');
             if (item.variant_id) body.append('variant_id', item.variant_id);
-            await this.request(`/cart/${item.product_id}`, body);
+            await this.request(`/admin/shop/cart/${item.product_id}`, body);
         },
     });
 });

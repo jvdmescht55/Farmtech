@@ -8,10 +8,10 @@ return [
     'modules' => [
         'rfid' => [
             'name' => 'RFID Scanner V1',
-            'tagline' => 'Herd register, pedigree tiers, weights and sale catalogues — synced from your Farmtech RFID reader.',
+            'tagline' => 'Alles wat jou leser en skaal jou kan vertel — kuddeboek, gewigte, groei, vergelykings, sortering en katalogusse.',
             'route' => 'rfid.dashboard',
-            'image' => 'lamb-tag',
-            'features' => ['Reader sync (file or direct)', 'Herd register & weights', 'SP / C / B pedigree grading', 'Logix-style sale catalogues'],
+            'image' => 'merino-rams',
+            'features' => ['Weegsessies & groei (g/dag)', 'Vergelyk groepe & sessies', 'Sorteer op gewig', 'SP / C / B stamboom', 'Veilingkatalogusse', 'Leser-sinch'],
         ],
     ],
 

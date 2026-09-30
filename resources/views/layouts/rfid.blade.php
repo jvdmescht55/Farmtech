@@ -2,66 +2,76 @@
 <html lang="en">
 <head>
     @include('partials.head')
-    <title>@yield('title', 'Dashboard') — RFID Scanner V1 · Farmtech Herd</title>
+    <title>@yield('title', 'Oorsig') — Kuddebestuur · Farmtech</title>
 </head>
-<body class="bg-canvas text-charcoal antialiased font-body" x-data="{ nav: false }">
+<body class="bg-sand text-char font-ui antialiased min-h-screen">
 @php
-    $links = [
-        ['rfid.dashboard', 'rfid.dashboard', 'Overview', 'M3 12l9-9 9 9M5 10v10h14V10'],
-        ['rfid.animals.index', 'rfid.animals.*', 'Herd register', 'M4 6h16M4 12h16M4 18h10'],
-        ['rfid.readers.index', 'rfid.readers.*|rfid.sync.*', 'Readers & sync', 'M4 7h16v10H4zM8 11h.01M12 11h4'],
-        ['rfid.catalogues.index', 'rfid.catalogues.*', 'Sale catalogues', 'M6 4h9l3 3v13H6zM9 10h6M9 14h6'],
-        ['rfid.import.create', 'rfid.import.*', 'Import herd', 'M12 4v12m0 0l-4-4m4 4l4-4M4 20h16'],
-        ['rfid.settings.edit', 'rfid.settings.*', 'Farm settings', 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-2-4-2 1-2-2V4h-4v2L9 7 7 6 5 10l2 1v2l-2 1 2 4 2-1 2 2v2h4v-2l2-2 2 1 2-4-2-1z'],
+    $tabs = [
+        ['rfid.dashboard', 'rfid.dashboard', 'Oorsig'],
+        ['rfid.animals.index', 'rfid.animals.*|rfid.import.*', 'Kudde'],
+        ['rfid.weighings.index', 'rfid.weighings.*', 'Weegsessies'],
+        ['rfid.compare', 'rfid.compare', 'Vergelyk'],
+        ['rfid.draft', 'rfid.draft*', 'Sorteer'],
+        ['rfid.catalogues.index', 'rfid.catalogues.*', 'Katalogusse'],
+        ['rfid.readers.index', 'rfid.readers.*|rfid.sync.*', 'Lesers & sinch'],
     ];
+    $u = auth()->user();
 @endphp
-<div class="min-h-screen lg:flex">
-    <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-brand-975 text-white/85 flex flex-col transform transition lg:translate-x-0 lg:static"
-           :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
-        <div class="px-6 pt-6 pb-5 border-b border-white/10" style="padding-top: max(1.5rem, env(safe-area-inset-top, 0px))">
-            <a href="{{ route('rfid.dashboard') }}" class="block">
-                <div class="font-display text-2xl font-semibold text-white tracking-tight">Farm<span class="text-mint">tech</span></div>
-                <div class="text-[11px] uppercase tracking-[0.2em] text-white/50 mt-0.5">RFID Scanner V1</div>
-            </a>
-            <a href="{{ route('herd.hub') }}" class="mt-3 inline-flex items-center gap-1 text-xs text-white/60 hover:text-white">← All herd software</a>
+
+<header class="sticky z-40 bg-char text-sand" style="top: 0; padding-top: env(safe-area-inset-top, 0px)">
+    <div class="wrap h-16 flex items-center gap-4">
+        <a href="{{ route('herd.hub') }}" class="flex items-baseline gap-1.5 shrink-0">
+            <span class="font-headline text-[26px] leading-none">farmtech</span><span class="w-1.5 h-1.5 rounded-full bg-ochre"></span>
+        </a>
+        <span class="hidden sm:block text-sand/30">/</span>
+        <span class="hidden sm:block text-sm text-sand/70 truncate">Kuddebestuur <span class="text-sand/30 mx-1">·</span> RFID Scanner V1</span>
+
+        <div class="ml-auto relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
+            <button type="button" @click="open = !open" :aria-expanded="open" class="flex items-center gap-3 rounded-full pl-1 pr-3 h-10 hover:bg-white/5 transition">
+                <span class="w-8 h-8 rounded-full bg-ochre text-char grid place-items-center text-sm font-semibold">{{ mb_strtoupper(mb_substr($u->farm_name ?: $u->name, 0, 1)) }}</span>
+                <span class="hidden md:block text-sm max-w-[16rem] truncate">{{ $u->farm_name ?: $u->name }}</span>
+                <svg class="w-3.5 h-3.5 text-sand/60 transition-transform" :class="open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div x-show="open" x-cloak x-transition.origin.top.right
+                 class="absolute right-0 mt-2 w-64 rounded-2xl bg-white text-char border border-hairline shadow-[0_24px_60px_-20px_rgba(0,0,0,.35)] p-2">
+                <div class="px-3 py-2.5 border-b border-hairline mb-1">
+                    <div class="text-sm font-medium truncate">{{ $u->name }}</div>
+                    <div class="text-xs text-stone truncate">{{ $u->email }}</div>
+                </div>
+                <a href="{{ route('herd.hub') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">My kraal · alle sagteware</a>
+                <a href="{{ route('rfid.settings.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Plaas-instellings</a>
+                <a href="{{ route('rfid.import.create') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Voer stamregister in</a>
+                <a href="{{ route('account.activate') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Aktiveer nog 'n toestel</a>
+                @if ($u->canAccessAdminPanel())<a href="{{ route('admin.orders.index') }}" class="block rounded-lg px-3 py-2 text-sm text-ochre-dark hover:bg-sand-light">Admin</a>@endif
+                <form method="POST" action="{{ route('logout') }}" class="border-t border-hairline mt-1 pt-1">@csrf
+                    <button class="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Teken uit</button>
+                </form>
+            </div>
         </div>
-        <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-            @foreach ($links as [$route, $pattern, $label, $icon])
-                @php($active = collect(explode('|', $pattern))->contains(fn ($p) => request()->routeIs($p)))
-                <a href="{{ route($route) }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ $active ? 'bg-white/10 text-white font-semibold' : 'hover:bg-white/5' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ $active ? 'text-mint' : 'text-white/50' }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $icon }}"/></svg>
+    </div>
+    <nav class="border-t border-white/10">
+        <div class="wrap flex gap-7 overflow-x-auto scrollbar-none">
+            @foreach ($tabs as [$route, $pattern, $label])
+                @php($on = collect(explode('|', $pattern))->contains(fn ($p) => request()->routeIs($p)))
+                <a href="{{ route($route) }}" class="relative shrink-0 py-3.5 text-[14px] transition-colors {{ $on ? 'text-sand' : 'text-sand/55 hover:text-sand' }}">
                     {{ $label }}
+                    @if ($on)<span class="absolute inset-x-0 -bottom-px h-[2px] bg-ochre rounded-full"></span>@endif
                 </a>
             @endforeach
-            @if (auth()->user()->canAccessAdminPanel())
-                <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 text-alert-light mt-4">← Admin panel</a>
-            @endif
-        </nav>
-        <div class="px-6 py-4 border-t border-white/10 text-xs" style="padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px))">
-            <div class="text-white font-medium truncate">{{ auth()->user()->farm_name ?: auth()->user()->name }}</div>
-            <div class="text-white/50 truncate">{{ auth()->user()->email }}</div>
-            <form method="POST" action="{{ route('logout') }}" class="mt-3">@csrf
-                <button class="text-white/60 hover:text-white">Sign out</button>
-            </form>
         </div>
-    </aside>
-    <div x-show="nav" x-cloak @click="nav = false" class="fixed inset-0 bg-black/40 z-30 lg:hidden"></div>
+    </nav>
+</header>
 
-    <div class="flex-1 min-w-0">
-        <header class="sticky z-20 bg-white/90 backdrop-blur border-b border-border" style="top: env(safe-area-inset-top, 0px)">
-            <div class="px-4 sm:px-8 h-16 flex items-center gap-4">
-                <button class="lg:hidden -ml-1 p-2 rounded-md hover:bg-canvas" @click="nav = true" aria-label="Menu">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <h1 class="font-display text-xl font-semibold truncate">@yield('title', 'Overview')</h1>
-                <div class="ml-auto flex items-center gap-2">@yield('actions')</div>
-            </div>
-        </header>
-        <main class="px-4 sm:px-8 py-8 max-w-[1400px]">
-            @include('partials.flash')
-            @yield('content')
-        </main>
+<main class="wrap py-10 sm:py-14" style="padding-bottom: max(3.5rem, env(safe-area-inset-bottom, 0px))">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
+        <div>
+            @hasSection('eyebrow')<p class="eyebrow mb-3">@yield('eyebrow')</p>@endif
+            <h1 class="h-display text-[clamp(2.6rem,5vw,4rem)]">@yield('title', 'Oorsig')</h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">@yield('actions')</div>
     </div>
-</div>
+    @include('partials.flash')
+    @yield('content')
+</main>
 </body>
 </html>

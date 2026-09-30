@@ -25,12 +25,16 @@ use App\Http\Controllers\Storefront\SearchController;
 use App\Http\Controllers\Storefront\SupportController;
 use App\Http\Controllers\Storefront\TrackOrderController;
 use App\Http\Controllers\Admin\InsightsController as AdminInsightsController;
+use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\HerdHubController;
-use App\Http\Controllers\PortalController;
+use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Rfid\AnimalController as RfidAnimalController;
 use App\Http\Controllers\Rfid\CatalogueController as RfidCatalogueController;
+use App\Http\Controllers\Rfid\CompareController as RfidCompareController;
+use App\Http\Controllers\Rfid\DraftController as RfidDraftController;
+use App\Http\Controllers\Rfid\WeighingController as RfidWeighingController;
 use App\Http\Controllers\Rfid\DashboardController as RfidDashboardController;
 use App\Http\Controllers\Rfid\ImportController as RfidImportController;
 use App\Http\Controllers\Rfid\ReaderController as RfidReaderController;
@@ -43,7 +47,18 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [PortalController::class, 'index'])->name('portal');
+Route::get('/', [SiteController::class, 'home'])->name('portal');
+Route::get('/store', [SiteController::class, 'store'])->name('site.store');
+Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.interest')->middleware('throttle:6,1');
+Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
+Route::post('/contact', [SiteController::class, 'sendContact'])->middleware('throttle:6,1');
+
+// Legal pages stay public, rendered in the new site layout.
+Route::get('/policies/shipping', [PolicyController::class, 'shipping'])->name('policies.shipping');
+Route::get('/policies/returns', [PolicyController::class, 'returns'])->name('policies.returns');
+Route::get('/policies/terms', [PolicyController::class, 'terms'])->name('policies.terms');
+Route::get('/policies/icasa-compliance', [PolicyController::class, 'icasaCompliance'])->name('policies.icasa');
+Route::get('/policies/privacy', [PolicyController::class, 'privacy'])->name('policies.privacy');
 Route::get('/herd', [CustomerAuthController::class, 'landing'])->name('landing');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [CustomerAuthController::class, 'landing'])->name('login');
@@ -78,6 +93,13 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
     Route::put('/animals/{animal}', [RfidAnimalController::class, 'update'])->name('animals.update');
     Route::post('/animals/{animal}/weights', [RfidAnimalController::class, 'addWeight'])->name('animals.weights.store');
 
+    Route::get('/weighings', [RfidWeighingController::class, 'index'])->name('weighings.index');
+    Route::get('/weighings/{date}', [RfidWeighingController::class, 'show'])->where('date', '\d{4}-\d{2}-\d{2}')->name('weighings.show');
+    Route::get('/weighings/{date}/export', [RfidWeighingController::class, 'export'])->where('date', '\d{4}-\d{2}-\d{2}')->name('weighings.export');
+    Route::get('/compare', [RfidCompareController::class, 'index'])->name('compare');
+    Route::get('/draft', [RfidDraftController::class, 'index'])->name('draft');
+    Route::get('/draft/export', [RfidDraftController::class, 'export'])->name('draft.export');
+
     Route::get('/readers', [RfidReaderController::class, 'index'])->name('readers.index');
     Route::post('/readers', [RfidReaderController::class, 'store'])->name('readers.store');
     Route::post('/readers/{reader}/token', [RfidReaderController::class, 'regenerateToken'])->name('readers.token');
@@ -107,12 +129,13 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
 
 /*
 |--------------------------------------------------------------------------
-| Store (public). Home is /store because / is the portal.
+| Product storefront — admin-only preview while the catalogue is being
+| reworked (the public site is marketing only). Route names unchanged.
 |--------------------------------------------------------------------------
 */
 
-Route::group([], function () {
-    Route::get('/store', [HomeController::class, 'index'])->name('home');
+Route::prefix('admin/shop')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index')->middleware('throttle:search');
     Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest')->middleware('throttle:search');
     Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
@@ -153,12 +176,6 @@ Route::group([], function () {
 
     Route::get('/support', [SupportController::class, 'index'])->name('support.index');
     Route::post('/support', [SupportController::class, 'store'])->name('support.store')->middleware('throttle:support');
-
-    Route::get('/policies/shipping', [PolicyController::class, 'shipping'])->name('policies.shipping');
-    Route::get('/policies/returns', [PolicyController::class, 'returns'])->name('policies.returns');
-    Route::get('/policies/terms', [PolicyController::class, 'terms'])->name('policies.terms');
-    Route::get('/policies/icasa-compliance', [PolicyController::class, 'icasaCompliance'])->name('policies.icasa');
-    Route::get('/policies/privacy', [PolicyController::class, 'privacy'])->name('policies.privacy');
 });
 
 Route::post('/webhooks/payfast', [PaymentWebhookController::class, 'handle'])
@@ -213,6 +230,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/outreach', [AdminSupplierOutreachDashboardController::class, 'index'])->name('outreach.index');
             Route::patch('/outreach/{product}', [AdminSupplierOutreachDashboardController::class, 'update'])->name('outreach.update');
         });
+
+        Route::get('/leads', [AdminLeadController::class, 'index'])->name('leads.index');
+        Route::get('/leads/export', [AdminLeadController::class, 'export'])->name('leads.export');
+        Route::post('/leads/{lead}/toggle', [AdminLeadController::class, 'toggle'])->name('leads.toggle');
 
         Route::middleware('can:manage-users')->group(function () {
             Route::get('/licenses', [AdminLicenseController::class, 'index'])->name('licenses.index');

@@ -3,7 +3,7 @@
 @section('title', 'Farmtech Store — Livestock RFID Readers, Tags & Farm Equipment')
 
 @php
-    $heroImage = ['url' => \App\Support\SiteImages::url('ear-tagging')];
+    $heroImage = ['url' => \App\Support\SiteImages::url('windpomp-storm')];
     $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
     $whatsappUrl = $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null;
 @endphp
@@ -41,7 +41,7 @@
             </div>
 
             <div :class="$store.intro.alreadyPlayed ? '' : 'animate-scale-in'" style="animation-delay:120ms" class="relative aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[500px] rounded-xl overflow-hidden">
-                <img src="{{ $heroImage['url'] }}" alt="{{ \App\Support\SiteImages::alt('ear-tagging') }}" class="absolute inset-0 w-full h-full object-cover animate-ken-burns">
+                <img src="{{ $heroImage['url'] }}" alt="{{ \App\Support\SiteImages::alt('windpomp-storm') }}" class="absolute inset-0 w-full h-full object-cover animate-ken-burns">
                 <div class="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-xl pointer-events-none"></div>
             </div>
         </div>
@@ -53,9 +53,9 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="grid lg:grid-cols-3 gap-6 mb-12">
                 @foreach ([
-                    ['eid-eartags', 'EID ear tags', 'FDX-B / HDX tags that read at the crush, the scale and the sale ring.'],
-                    ['lamb-tag', 'Sheep & goats', 'Small-ruminant tags and stick readers built for kraal work.'],
-                    ['nguni', 'Cattle', 'Long-range readers for chutes, crushes and weighbridges.'],
+                    ['koppie-dawn', 'EID ear tags', 'FDX-B / HDX tags that read at the crush, the scale and the sale ring.'],
+                    ['sheep-portrait', 'Sheep & goats', 'Small-ruminant tags and stick readers built for kraal work.'],
+                    ['merino-rams', 'Cattle', 'Long-range readers for chutes, crushes and weighbridges.'],
                 ] as [$img, $t, $d])
                     <a href="{{ route('category.show', 'rfid') }}" class="group relative aspect-[4/3] rounded-xl overflow-hidden">
                         <img src="{{ \App\Support\SiteImages::url($img, true) }}" alt="{{ \App\Support\SiteImages::alt($img) }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
@@ -88,7 +88,7 @@
     </section>
 
     <section class="relative overflow-hidden bg-brand-975 text-white">
-        <img src="{{ \App\Support\SiteImages::url('kraal') }}" alt="{{ \App\Support\SiteImages::alt('kraal') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-40">
+        <img src="{{ \App\Support\SiteImages::url('dirt-road') }}" alt="{{ \App\Support\SiteImages::alt('dirt-road') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-40">
         <div class="absolute inset-0 bg-gradient-to-r from-brand-975 via-brand-975/90 to-brand-975/40"></div>
         <div class="relative max-w-7xl mx-auto px-4 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -338,6 +338,6 @@
         </div>
     </section>
     <div class="max-w-7xl mx-auto px-4 pb-8">
-        <x-photo-credits :keys="['ear-tagging', 'eid-eartags', 'lamb-tag', 'nguni', 'kraal']" />
+        <x-photo-credits :keys="['windpomp-storm', 'koppie-dawn', 'sheep-portrait', 'merino-rams', 'dirt-road']" />
     </div>
 @endsection

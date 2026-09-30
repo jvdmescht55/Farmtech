@@ -87,7 +87,7 @@ class InsightsController extends Controller
         $pendingOldest = Product::where('status', 'pending_review')->min('created_at');
         $rejectionReasons = Product::where('status', 'rejected')->whereNotNull('rejection_reason')
             ->get(['rejection_reason'])
-            ->map(fn ($p) => mb_strimwidth(trim(strtok($p->rejection_reason, ".\n")), 0, 70, '…'))
+            ->map(fn ($p) => mb_strimwidth(trim((string) strtok((string) $p->rejection_reason, ".\n")), 0, 70, "…"))
             ->countBy()->sortDesc()->take(6);
         $approvedPerWeek = Product::whereNotNull('approved_at')->where('approved_at', '>=', now()->subWeeks(8))
             ->get(['approved_at'])->groupBy(fn ($p) => $p->approved_at->startOfWeek()->format('d M'))->map->count();
@@ -138,6 +138,7 @@ class InsightsController extends Controller
             $zeroClickLive->count() ? ['low', $zeroClickLive->count().' live products have never been clicked — improve titles/images or archive.', route('admin.products.live'), 'Live products'] : null,
             $herd['neverSynced'] ? ['medium', $herd['neverSynced'].' Herd Management customers have never synced a reader — reach out with setup help.', route('admin.licenses.index'), 'Customers'] : null,
             $unusedOld ? ['low', "{$unusedOld} activation codes unused for 30+ days — check the readers were delivered.", route('admin.licenses.index', ['filter' => 'unused']), 'Licences'] : null,
+            ($openLeads = \App\Models\Lead::whereNull('handled_at')->count()) ? ['high', "{$openLeads} open leads from the public site (scanner interest / contact) — follow up.", route('admin.leads.index', ['status' => 'open']), 'Leads'] : null,
             (int) ($licences->total ?? 0) === 0 ? ['medium', 'No activation codes generated yet — create one per RFID reader before shipping.', route('admin.licenses.index'), 'Licences'] : null,
         ])->filter()->values();
 

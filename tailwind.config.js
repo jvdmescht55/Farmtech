@@ -7,6 +7,15 @@ export default {
     theme: {
         extend: {
             colors: {
+                // v2 "Karoo" system — premium/minimal: sand grounds, charcoal
+                // type, one warm accent (ochre, from a Karoo sunset) and one
+                // deep neutral (bush). Used by the public site + herd app.
+                sand: { DEFAULT: '#F4F1EA', deep: '#EAE4D8', light: '#FAF8F3' },
+                char: { DEFAULT: '#15140F', soft: '#2A2822' },
+                stone: { DEFAULT: '#5E5A50', light: '#918C80' },
+                hairline: '#E2DCCE',
+                ochre: { DEFAULT: '#B8732E', dark: '#94591F', light: '#E3B27A' },
+                bush: { DEFAULT: '#1E2A1E', light: '#2E3D2C' },
                 // rev. 11 — LOCKED design-system palette. Every green on the
                 // site must come from this list (brand.* / mint) — no other
                 // green hex should appear anywhere in the codebase. Only
@@ -62,6 +71,9 @@ export default {
                 },
             },
             fontFamily: {
+                headline: ['"Instrument Serif"', 'ui-serif', 'Georgia', 'serif'],
+                ui: ['"Geist"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                num: ['"Geist Mono"', 'ui-monospace', 'monospace'],
                 // rev. 12 — premium-catalogue typography: Fraunces (a soft-serif with
                 // an optical-size axis, so it reads well both huge on a hero and small
                 // on a card title) for `font-display` — hero/section headings, product

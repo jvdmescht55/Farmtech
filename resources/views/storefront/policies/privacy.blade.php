@@ -1,8 +1,8 @@
-@extends('layouts.storefront')
+@extends('layouts.legal')
 
 @section('title', 'Privacy Policy — Farmtech')
 
-@section('content')
+@section('policy')
     <div class="max-w-3xl mx-auto px-4 py-16 prose prose-slate prose-headings:font-display max-w-none">
         <p class="text-xs uppercase tracking-widest text-mint-dark font-semibold mb-1 not-prose">Legal &amp; Compliance</p>
         <h1 class="font-display font-bold text-2xl sm:text-3xl text-charcoal mb-1 not-prose">Privacy Policy</h1>
