@@ -19,7 +19,9 @@ class EnsureUserIsAdmin
         // manage-catalog/manage-settings/manage-users Gates registered in
         // AppServiceProvider, applied to those specific route groups.
         if (! $request->user()->canAccessAdminPanel()) {
-            abort(403);
+            abort_unless($request->user()->isCustomer(), 403);
+
+            return redirect()->route('rfid.dashboard');
         }
 
         return $next($request);

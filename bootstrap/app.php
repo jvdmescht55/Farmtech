@@ -15,13 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'pipeline.secret' => \App\Http\Middleware\VerifyPipelineSecret::class,
+            'module' => \App\Http\Middleware\EnsureModuleAccess::class,
         ]);
 
-        // No storefront customer accounts exist — the only guarded area is
-        // /admin, so an unauthenticated hit there should land on the admin
-        // login screen rather than Laravel's default (nonexistent) `login`
-        // route.
-        $middleware->redirectGuestsTo('/admin/login');
+        // Staff land on the admin login; device customers on the public one.
+        $middleware->redirectGuestsTo(fn ($request) => $request->is('admin', 'admin/*') ? '/admin/login' : '/login');
+        $middleware->redirectUsersTo(fn ($request) => $request->user()?->canAccessAdminPanel() ? '/admin' : '/app');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

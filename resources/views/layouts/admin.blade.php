@@ -21,6 +21,13 @@
                 </div>
             @endcan
             <nav class="px-2 py-4 text-sm space-y-1">
+                <div class="px-3 pt-1 pb-1 text-[10px] uppercase tracking-widest text-white/40">RFID platform</div>
+                @can('manage-users')
+                    <a href="{{ route('admin.licenses.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.licenses.*') ? 'bg-white/10 font-semibold' : '' }}">Licences &amp; Customers</a>
+                @endcan
+                <a href="{{ route('rfid.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10">Open Herd Manager ↗</a>
+                <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-white/40">Shop (admin-only)</div>
+                <a href="{{ route('home') }}" class="block px-3 py-2 rounded hover:bg-white/10">Storefront preview ↗</a>
                 @can('view-financials')
                     <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.dashboard') ? 'bg-white/10 font-semibold' : '' }}">Dashboard</a>
                 @endcan

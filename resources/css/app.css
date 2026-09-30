@@ -118,3 +118,24 @@
         }
     }
 }
+
+/* RFID Herd Manager — shared form/table primitives */
+@layer components {
+    .app-card { @apply bg-white border border-border rounded-xl; }
+    .app-input { @apply w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-charcoal placeholder:text-ink-muted focus:border-mint focus:ring-2 focus:ring-mint/20 focus:outline-none; }
+    .app-label { @apply block text-xs font-semibold uppercase tracking-wide text-ink-secondary mb-1.5; }
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-950 disabled:opacity-50; }
+    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-charcoal transition hover:border-brand-900; }
+    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-error/30 bg-white px-3 py-1.5 text-xs font-semibold text-error transition hover:bg-error/5; }
+    .app-table { @apply w-full text-sm; }
+    .app-table th { @apply px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-muted bg-canvas border-b border-border whitespace-nowrap; }
+    .app-table td { @apply px-4 py-3 border-b border-border/70 align-middle; }
+    .app-table tbody tr:hover { @apply bg-canvas/60; }
+    .tier { @apply inline-flex items-center justify-center min-w-[2.25rem] rounded-md px-1.5 py-0.5 text-[11px] font-bold font-mono; }
+    .tier-SP { @apply bg-brand-900 text-white; }
+    .tier-C { @apply bg-mint/15 text-brand-900; }
+    .tier-B { @apply bg-alert/15 text-alert-dark; }
+    .tier-CC { @apply bg-slate-200 text-slate-700; }
+    .tier-unknown { @apply bg-white border border-dashed border-ink-muted text-ink-muted; }
+    .stat-num { @apply font-display text-3xl font-semibold text-charcoal; font-variant-numeric: tabular-nums; }
+}
