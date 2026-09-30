@@ -34,6 +34,8 @@ class DraftController extends Controller
     private function build(Request $request, WeighStats $stats): array
     {
         $userId = $request->user()->id;
+        $speciesList = WeighStats::speciesIn($userId);
+        $stats->forSpecies($speciesList->count() > 1 ? $request->input('species', $speciesList->keys()->first()) : null);
         $sessions = $stats->sessions($userId);
         $source = $request->input('source', 'latest');
         $sex = $request->input('sex');
@@ -44,7 +46,9 @@ class DraftController extends Controller
             $rows = $sessions[$source]->rows->map(fn ($r) => clone $r);
         } else {
             $source = 'latest';
-            $rows = $stats->latest($userId)->map(fn ($l) => (object) ['animal_id' => $l->animal_id, 'kg' => $l->kg, 'date' => $l->date, 'adg' => $l->adg])->values();
+            // Only weights recent enough to act on.
+            $rows = $stats->latest($userId)->filter(fn ($l) => \Carbon\Carbon::parse($l->date)->gte(now()->subDays(120)))
+                ->map(fn ($l) => (object) ['animal_id' => $l->animal_id, 'kg' => $l->kg, 'date' => $l->date, 'adg' => $l->adg])->values();
         }
 
         $rows = $rows->map(function ($r) use ($graph, $target) {

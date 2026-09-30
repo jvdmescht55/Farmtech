@@ -18,8 +18,10 @@
             <div><label class="app-label">EID (15 digits)</label><input name="eid" value="{{ $v('eid', $animal->eid) }}" inputmode="numeric" placeholder="982000123456789" class="app-input font-mono"></div>
             <div><label class="app-label">Name</label><input name="name" value="{{ $v('name', $animal->name) }}" class="app-input"></div>
             <div><label class="app-label">Breed</label><input name="breed" value="{{ $v('breed', $animal->breed) }}" class="app-input"></div>
+            <div><label class="app-label">Spesie</label>
+                <select name="species" class="app-input">@foreach (config('herd.species') as $k => $sp)<option value="{{ $k }}" @selected($v('species', $animal->species ?? 'sheep') === $k)>{{ $sp['label'] }}</option>@endforeach</select></div>
             <div><label class="app-label">Sex</label>
-                <select name="sex" class="app-input"><option value="">—</option><option value="F" @selected($v('sex', $animal->sex)==='F')>Ewe (F)</option><option value="M" @selected($v('sex', $animal->sex)==='M')>Ram (M)</option></select></div>
+                <select name="sex" class="app-input"><option value="">—</option><option value="F" @selected($v('sex', $animal->sex)==='F')>Vroulik (F)</option><option value="M" @selected($v('sex', $animal->sex)==='M')>Manlik (M)</option></select></div>
             <div><label class="app-label">Birth date</label><input type="date" name="birth_date" value="{{ $v('birth_date', $animal->birth_date?->toDateString()) }}" class="app-input"></div>
             <div><label class="app-label">Birth type</label>
                 <select name="birth_type" class="app-input"><option value="">—</option>@foreach (config('herd.birth_types') as $k => $l)<option value="{{ $k }}" @selected($v('birth_type', $animal->birth_type)===$k)>{{ $k }} · {{ $l }}</option>@endforeach</select></div>

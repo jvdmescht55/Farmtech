@@ -11,6 +11,7 @@ class WeighingController extends Controller
 {
     public function index(Request $request, WeighStats $stats)
     {
+        $this->species($request, $stats);
         $sessions = $stats->sessions($request->user()->id);
 
         return view('rfid.weighings.index', [
@@ -21,6 +22,7 @@ class WeighingController extends Controller
 
     public function show(Request $request, string $date, WeighStats $stats)
     {
+        $this->species($request, $stats);
         $sessions = $stats->sessions($request->user()->id);
         $session = $sessions->get($date) ?? abort(404);
         $graph = PedigreeTier::graph($request->user()->id);
@@ -66,5 +68,11 @@ class WeighingController extends Controller
             }
             fclose($out);
         }, "weigh-session-{$date}.csv", ['Content-Type' => 'text/csv']);
+    }
+
+    private function species(Request $request, WeighStats $stats): void
+    {
+        $list = WeighStats::speciesIn($request->user()->id);
+        $stats->forSpecies($list->count() > 1 ? $request->input('species', $list->keys()->first()) : null);
     }
 }

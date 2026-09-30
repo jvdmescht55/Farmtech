@@ -24,6 +24,7 @@ class AnimalController extends Controller
         $animals = $graph->where('in_herd', true)
             ->when($status !== 'all', fn ($c) => $c->where('status', $status))
             ->when($request->filled('sex'), fn ($c) => $c->where('sex', $request->input('sex')))
+            ->when($request->filled('species'), fn ($c) => $c->where('species', $request->input('species')))
             ->when($request->filled('q'), function ($c) use ($request) {
                 $q = mb_strtoupper(trim($request->input('q')));
                 $digits = preg_replace('/\D/', '', $q);
@@ -60,12 +61,17 @@ class AnimalController extends Controller
             ->unique('animal_id')
             ->keyBy('animal_id');
 
-        return view('rfid.animals.index', ['animals' => $paginator, 'latestWeights' => $latestWeights, 'graph' => $graph]);
+        $alertMap = app(\App\Services\Herd\HerdAlerts::class)->forUser($request->user()->id)
+            ->filter(fn ($a) => $a['animal'])->groupBy(fn ($a) => $a['animal']->id)
+            ->map(fn ($g) => $g->sortBy(fn ($a) => ['critical' => 0, 'warning' => 1, 'info' => 2][$a['severity']])->first());
+
+        return view('rfid.animals.index', ['animals' => $paginator, 'latestWeights' => $latestWeights, 'graph' => $graph, 'alertMap' => $alertMap,
+            'totals' => ['all' => $graph->where('in_herd', true)->where('status', 'active')->count()]]);
     }
 
     public function create(Request $request)
     {
-        return view('rfid.animals.form', ['animal' => new Animal(['status' => 'active', 'breed' => $request->user()->breed]), 'parents' => $this->parentOptions($request)]);
+        return view('rfid.animals.form', ['animal' => new Animal(['status' => 'active', 'breed' => $request->user()->breed, 'species' => $request->user()->species ?: 'sheep']), 'parents' => $this->parentOptions($request)]);
     }
 
     public function store(Request $request)
@@ -109,6 +115,8 @@ class AnimalController extends Controller
             'scans' => $animal->scans()->with('sync.reader')->limit(25)->get(),
             'offspring' => $graph->filter(fn ($a) => $a->sire_id === $animal->id || $a->dam_id === $animal->id)->sortByDesc('birth_date'),
             'lots' => SaleLot::with('catalogue')->where('animal_id', $animal->id)->get(),
+            'alerts' => app(\App\Services\Herd\HerdAlerts::class)->forAnimal($request->user()->id, $animal->id),
+            'events' => $animal->events()->with('mate')->get(),
         ]);
     }
 
@@ -152,6 +160,7 @@ class AnimalController extends Controller
             'eid' => ['nullable', 'digits_between:8,20', Rule::unique('animals')->where('user_id', $userId)->ignore($animal->id)],
             'name' => ['nullable', 'string', 'max:255'],
             'sex' => ['nullable', 'in:M,F'],
+            'species' => ['required', Rule::in(array_keys(config('herd.species')))],
             'breed' => ['nullable', 'string', 'max:64'],
             'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'birth_type' => ['nullable', Rule::in(array_keys(config('herd.birth_types')))],
@@ -186,6 +195,7 @@ class AnimalController extends Controller
             'eid' => $data['eid'],
             'name' => $data['name'] ?? null,
             'sex' => $data['sex'] ?? null,
+            'species' => $data['species'],
             'breed' => $data['breed'] ?? null,
             'birth_date' => $data['birth_date'] ?? null,
             'birth_type' => $data['birth_type'] ?? null,
@@ -194,6 +204,7 @@ class AnimalController extends Controller
             'tier' => $data['tier'] ?? null,
             'gen_score' => $data['gen_score'] ?? null,
             'status' => $data['status'],
+            'status_date' => $data['status'] === 'active' ? null : ($animal->status === $data['status'] ? $animal->status_date : now()->toDateString()),
             'notes' => $data['notes'] ?? null,
             'ebvs' => $ebvs ?: null,
             'dam_record' => $record ?: null,

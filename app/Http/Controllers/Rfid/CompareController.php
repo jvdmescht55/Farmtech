@@ -14,6 +14,8 @@ class CompareController extends Controller
     {
         $userId = $request->user()->id;
         $mode = $request->input('mode', 'groups');
+        $list = WeighStats::speciesIn($userId);
+        $stats->forSpecies($list->count() > 1 ? $request->input('species', $list->keys()->first()) : null);
         $sessions = $stats->sessions($userId);
 
         $data = ['mode' => $mode, 'sessionDates' => $sessions->keys()];

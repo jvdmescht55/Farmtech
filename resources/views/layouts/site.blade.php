@@ -5,9 +5,11 @@
 @php
     $overHero = trim($__env->yieldContent('hero_dark')) !== '';
     $nav = [
-        ['site.store', 'Die Skandeerder', 'site.store'],
-        ['landing', 'Kuddebestuur', 'landing|login|register'],
-        ['site.contact', 'Kontak', 'site.contact'],
+        [route('site.store').'#skandeerder', 'Die Skandeerder'],
+        [route('site.store').'#app', 'Die App'],
+        [route('site.store').'#hoe', 'Hoe dit werk'],
+        [route('site.store').'#vrae', 'Vrae'],
+        [route('site.contact'), 'Kontak'],
     ];
 @endphp
 <!DOCTYPE html>
@@ -28,24 +30,19 @@
         :class="(scrolled || menu || {{ $overHero ? 'false' : 'true' }}) ? 'bg-sand/85 backdrop-blur-xl border-b border-hairline text-char' : 'bg-transparent border-b border-transparent {{ $overHero ? 'text-white' : 'text-char' }}'"
         style="padding-top: env(safe-area-inset-top, 0px)">
     <div class="wrap h-[76px] flex items-center gap-8">
-        <a href="{{ route('portal') }}" class="shrink-0 flex items-baseline gap-1.5" aria-label="Farmtech home">
+        <a href="{{ route('site.store') }}" class="shrink-0 flex items-baseline gap-1.5" aria-label="Farmtech winkel">
             <span class="font-headline text-[30px] leading-none tracking-[-0.02em]">farmtech</span>
             <span class="w-1.5 h-1.5 rounded-full bg-ochre translate-y-[-2px]"></span>
         </a>
 
         <nav class="hidden md:flex items-center gap-8 text-[15px] mx-auto">
-            @foreach ($nav as [$route, $label, $active])
-                @php($on = collect(explode('|', $active))->contains(fn ($r) => request()->routeIs($r)))
-                <a href="{{ route($route) }}" class="link-u {{ $on ? 'after:scale-x-100' : 'opacity-80 hover:opacity-100' }} transition-opacity">{{ $label }}</a>
+            @foreach ($nav as [$href, $label])
+                <a href="{{ $href }}" class="link-u opacity-80 hover:opacity-100 transition-opacity">{{ $label }}</a>
             @endforeach
         </nav>
 
         <div class="hidden md:flex items-center gap-5 shrink-0">
-            @auth
-                <a href="{{ auth()->user()->canAccessAdminPanel() ? route('admin.orders.index') : route('herd.hub') }}" class="text-[15px] opacity-80 hover:opacity-100">My kraal</a>
-            @else
-                <a href="{{ route('login') }}" class="text-[15px] opacity-80 hover:opacity-100">Teken in</a>
-            @endauth
+            <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">Kuddebestuur →</a>
             <a href="{{ route('site.store') }}#bestel"
                class="btn btn-sm"
                :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Bestel vroeg</a>
@@ -64,13 +61,13 @@
          class="md:hidden fixed inset-x-0 bottom-0 top-[calc(76px+env(safe-area-inset-top,0px))] bg-sand text-char overflow-y-auto">
         <div class="wrap py-10 flex flex-col min-h-full" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px))">
             <nav class="flex flex-col">
-                @foreach ([['portal', 'Tuis'], ...array_map(fn ($n) => [$n[0], $n[1]], $nav)] as [$route, $label])
-                    <a href="{{ route($route) }}" @click="menu = false" class="font-headline text-5xl py-3 border-b border-hairline">{{ $label }}</a>
+                @foreach ([[route('site.store'), 'Winkel'], ...$nav] as [$href, $label])
+                    <a href="{{ $href }}" @click="menu = false" class="font-headline text-5xl py-3 border-b border-hairline">{{ $label }}</a>
                 @endforeach
             </nav>
             <div class="mt-auto pt-10 grid gap-3">
                 <a href="{{ route('site.store') }}#bestel" @click="menu = false" class="btn-dark w-full">Bestel vroeg</a>
-                <a href="{{ auth()->check() ? route('herd.hub') : route('login') }}" class="btn-line w-full">{{ auth()->check() ? 'My kraal' : 'Teken in' }}</a>
+                <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Kuddebestuur →</a>
             </div>
         </div>
     </div>
@@ -91,7 +88,8 @@
                 <div>
                     <div class="eyebrow text-sand/40 mb-4">Farmtech</div>
                     <ul class="space-y-2.5">
-                        <li><a class="hover:text-sand" href="{{ route('site.store') }}">Die Skandeerder</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('portal') }}">Voorblad</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.store') }}">Winkel</a></li>
                         <li><a class="hover:text-sand" href="{{ route('landing') }}">Kuddebestuur</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.contact') }}">Kontak</a></li>
                     </ul>

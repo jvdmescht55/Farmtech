@@ -6,16 +6,19 @@
 </head>
 <body class="bg-sand text-char font-ui antialiased min-h-screen">
 @php
-    $tabs = [
-        ['rfid.dashboard', 'rfid.dashboard', 'Oorsig'],
-        ['rfid.animals.index', 'rfid.animals.*|rfid.import.*', 'Kudde'],
-        ['rfid.weighings.index', 'rfid.weighings.*', 'Weegsessies'],
-        ['rfid.compare', 'rfid.compare', 'Vergelyk'],
-        ['rfid.draft', 'rfid.draft*', 'Sorteer'],
-        ['rfid.catalogues.index', 'rfid.catalogues.*', 'Katalogusse'],
-        ['rfid.readers.index', 'rfid.readers.*|rfid.sync.*', 'Lesers & sinch'],
-    ];
     $u = auth()->user();
+    $alertCount = \Illuminate\Support\Facades\Cache::remember("alert-count:{$u->id}", 60, fn () => app(\App\Services\Herd\HerdAlerts::class)->forUser($u->id)->whereIn('severity', ['critical', 'warning'])->count());
+    $tabs = [
+        ['rfid.dashboard', 'rfid.dashboard', 'Oorsig', null],
+        ['rfid.live', 'rfid.live', 'Lewendig', 'live'],
+        ['rfid.animals.index', 'rfid.animals.*', 'Kudde', null],
+        ['rfid.weighings.index', 'rfid.weighings.*|rfid.compare|rfid.draft*', 'Wegings', null],
+        ['rfid.alerts', 'rfid.alerts*', 'Waarskuwings', $alertCount ?: null],
+        ['rfid.events.index', 'rfid.events.*', 'Logboek', null],
+        ['rfid.catalogues.index', 'rfid.catalogues.*', 'Katalogusse', null],
+        ['rfid.readers.index', 'rfid.readers.*|rfid.sync.*', 'Toestelle', null],
+        ['rfid.data', 'rfid.data*|rfid.import.*', 'Data', null],
+    ];
 @endphp
 
 <header class="sticky z-40 bg-char text-sand" style="top: 0; padding-top: env(safe-area-inset-top, 0px)">
@@ -40,7 +43,7 @@
                 </div>
                 <a href="{{ route('herd.hub') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">My kraal · alle sagteware</a>
                 <a href="{{ route('rfid.settings.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Plaas-instellings</a>
-                <a href="{{ route('rfid.import.create') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Voer stamregister in</a>
+                <a href="{{ route('rfid.data') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Data — invoer &amp; uitvoer</a>
                 <a href="{{ route('account.activate') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Aktiveer nog 'n toestel</a>
                 @if ($u->canAccessAdminPanel())<a href="{{ route('admin.orders.index') }}" class="block rounded-lg px-3 py-2 text-sm text-ochre-dark hover:bg-sand-light">Admin</a>@endif
                 <form method="POST" action="{{ route('logout') }}" class="border-t border-hairline mt-1 pt-1">@csrf
@@ -51,10 +54,12 @@
     </div>
     <nav class="border-t border-white/10">
         <div class="wrap flex gap-7 overflow-x-auto scrollbar-none">
-            @foreach ($tabs as [$route, $pattern, $label])
+            @foreach ($tabs as [$route, $pattern, $label, $badge])
                 @php($on = collect(explode('|', $pattern))->contains(fn ($p) => request()->routeIs($p)))
-                <a href="{{ route($route) }}" class="relative shrink-0 py-3.5 text-[14px] transition-colors {{ $on ? 'text-sand' : 'text-sand/55 hover:text-sand' }}">
+                <a href="{{ route($route) }}" class="relative shrink-0 py-3.5 text-[14px] transition-colors flex items-center gap-1.5 {{ $on ? 'text-sand' : 'text-sand/55 hover:text-sand' }}">
+                    @if ($badge === 'live')<span class="w-1.5 h-1.5 rounded-full bg-[#7FB069]"></span>@endif
                     {{ $label }}
+                    @if (is_int($badge))<span class="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-ochre text-char text-[11px] font-semibold grid place-items-center">{{ $badge }}</span>@endif
                     @if ($on)<span class="absolute inset-x-0 -bottom-px h-[2px] bg-ochre rounded-full"></span>@endif
                 </a>
             @endforeach
@@ -70,7 +75,23 @@
         </div>
         <div class="flex flex-wrap items-center gap-2">@yield('actions')</div>
     </div>
+    @php($speciesIn = request()->routeIs('rfid.dashboard', 'rfid.weighings.*', 'rfid.compare', 'rfid.draft') ? \App\Services\Herd\WeighStats::speciesIn($u->id) : collect())
+    @if ($speciesIn->count() > 1)
+        @php($curSpecies = request('species', $speciesIn->keys()->first()))
+        <div class="flex flex-wrap gap-2 -mt-4 mb-8">
+            @foreach ($speciesIn as $sp => $n)
+                <a href="{{ request()->fullUrlWithQuery(['species' => $sp]) }}" class="chip h-9 px-4 border {{ $curSpecies === $sp ? 'bg-char text-sand border-char' : 'bg-white border-hairline hover:border-char' }}">{{ config("herd.species.$sp.plural") }} <span class="opacity-60">{{ $n }}</span></a>
+            @endforeach
+        </div>
+    @endif
     @include('partials.flash')
+    @if (request()->routeIs('rfid.weighings.*', 'rfid.compare', 'rfid.draft*'))
+        <div class="inline-flex rounded-full bg-white border border-hairline p-1 mb-8">
+            @foreach ([['rfid.weighings.index', 'rfid.weighings.*', 'Sessies'], ['rfid.compare', 'rfid.compare', 'Vergelyk'], ['rfid.draft', 'rfid.draft*', 'Sorteer']] as [$r, $p, $l])
+                <a href="{{ route($r) }}" class="rounded-full px-5 h-9 inline-flex items-center text-sm {{ request()->routeIs($p) ? 'bg-char text-sand' : 'text-stone hover:text-char' }}">{{ $l }}</a>
+            @endforeach
+        </div>
+    @endif
     @yield('content')
 </main>
 </body>

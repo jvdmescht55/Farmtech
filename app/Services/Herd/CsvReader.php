@@ -24,8 +24,8 @@ class CsvReader
         $rows = array_values($rows);
 
         // Headerless reader dumps: first cell is a 15-digit ISO 11784 tag.
-        if (preg_match('/^\d{3}\s?\d{12}$/', str_replace(' ', '', $rows[0][0] ?? ''))) {
-            $headers = ['eid', 'date', 'weight'];
+        if (preg_match('/^\d{15}$/', str_replace([' ', '.'], '', $rows[0][0] ?? ''))) {
+            $headers = self::sniffHeaderless($rows[0]);
         } else {
             $headers = array_map([self::class, 'key'], array_shift($rows));
         }
@@ -40,6 +40,25 @@ class CsvReader
         }
 
         return ['headers' => $headers, 'rows' => $out];
+    }
+
+    /** Guess the columns of a headerless line from what each value looks like. */
+    private static function sniffHeaderless(array $first): array
+    {
+        $headers = [];
+        foreach ($first as $i => $v) {
+            $v = trim($v);
+            $digits = str_replace([' ', '.'], '', $v);
+            $headers[] = match (true) {
+                $i === 0 => 'eid',
+                ! in_array('date', $headers, true) && (ctype_digit($v) && strlen($v) >= 9 || preg_match('#\d{1,4}[-/]\d{1,2}[-/]\d{1,4}#', $v)) => 'date',
+                ! in_array('weight', $headers, true) && is_numeric(str_replace(',', '.', $v)) && (float) str_replace(',', '.', $v) < 5000 => 'weight',
+                ! in_array('visual_id', $headers, true) && $v !== '' && ! is_numeric($digits) => 'visual_id',
+                default => 'col'.$i,
+            };
+        }
+
+        return $headers;
     }
 
     public static function key(string $header): string

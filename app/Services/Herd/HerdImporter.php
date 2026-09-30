@@ -48,6 +48,15 @@ class HerdImporter
                 $animal->exists ? $updated++ : $created++;
 
                 $attrs = ['in_herd' => true];
+                if (($sp = strtolower((string) CsvReader::pick($row, ['species', 'spesie']))) !== '') {
+                    $attrs['species'] = match (true) {
+                        in_array($sp, ['cattle', 'bees', 'beeste', 'cow', 'bovine'], true) => 'cattle',
+                        in_array($sp, ['goat', 'bok', 'bokke', 'caprine'], true) => 'goat',
+                        default => 'sheep',
+                    };
+                } elseif (! $animal->exists) {
+                    $attrs['species'] = $user->species ?: 'sheep';
+                }
                 if ($eid = preg_replace('/\D/', '', (string) CsvReader::pick($row, ScanImporter::EID))) {
                     $attrs['eid'] = $eid;
                 }

@@ -9,7 +9,7 @@ class Scan extends Model
 {
     public const WEIGH_TYPES = ['birth' => 'Birth', 'wean' => 'Wean', 'post_wean' => 'Post-wean', 'routine' => 'Routine'];
 
-    protected $fillable = ['user_id', 'reader_sync_id', 'animal_id', 'eid', 'visual_id', 'weight_kg', 'weigh_type', 'scanned_at'];
+    protected $fillable = ['user_id', 'reader_sync_id', 'client_ref', 'animal_id', 'eid', 'visual_id', 'weight_kg', 'weigh_type', 'scanned_at'];
 
     protected function casts(): array
     {

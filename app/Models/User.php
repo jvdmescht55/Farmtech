@@ -21,6 +21,7 @@ class User extends Authenticatable
         'stud_prefix',
         'farm_address',
         'breed',
+        'species',
         'phone',
     ];
 

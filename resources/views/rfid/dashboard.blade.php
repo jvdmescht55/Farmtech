@@ -49,17 +49,23 @@
 </div>
 
 {{-- Alerts --}}
-@php($alerts = array_filter([
-    $lost ? [$lost.' diere het gewig verloor in die laaste sessie', route('rfid.weighings.show', $latestSession->date).'?sort=change', 'down'] : null,
-    $stale ? [$stale.' diere nie in 60 dae geweeg nie', route('rfid.animals.index', ['sort' => 'last_seen']), ''] : null,
-    $noPedigree ? [$noPedigree.' sonder volledige stamboom', route('rfid.animals.index'), ''] : null,
-    $noEid ? [$noEid.' sonder EID-oormerk', route('rfid.animals.index'), ''] : null,
-]))
-@if ($alerts)
-    <div class="mt-6 flex flex-wrap gap-2">
-        @foreach ($alerts as [$t, $href, $cls])
-            <a href="{{ $href }}" class="chip h-9 px-4 bg-white border border-hairline hover:border-char transition {{ $cls }}"><span class="w-1.5 h-1.5 rounded-full {{ $cls === 'down' ? 'bg-[#B0452F]' : 'bg-ochre' }}"></span>{{ $t }} →</a>
-        @endforeach
+@if ($alerts->isNotEmpty())
+    @php
+        $dot = ['critical' => 'bg-[#B0452F]', 'warning' => 'bg-ochre', 'info' => 'bg-stone-light'];
+    @endphp
+    <div class="panel mt-6 overflow-hidden">
+        <div class="panel-head"><div class="panel-title">Aandag nodig</div><a href="{{ route('rfid.alerts') }}" class="text-sm link-u">Alle waarskuwings →</a></div>
+        <ul class="grid md:grid-cols-2 divide-y md:divide-y-0 divide-hairline">
+            @foreach ($alerts as $a)
+                <li class="px-6 py-4 flex gap-4 md:[&:nth-child(n+3)]:border-t md:border-hairline md:[&:nth-child(even)]:border-l">
+                    <span class="mt-2 w-2 h-2 shrink-0 rounded-full {{ $dot[$a['severity']] }}"></span>
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-baseline gap-x-2"><span class="font-medium">{{ $a['title'] }}</span>@if ($a['animal'])<a href="{{ route('rfid.animals.show', $a['animal']) }}" class="font-num text-sm link-u">{{ $a['animal']->visual_id }}</a>@endif</div>
+                        <p class="text-sm text-stone truncate">{{ $a['detail'] }}</p>
+                    </div>
+                </li>
+            @endforeach
+        </ul>
     </div>
 @endif
 

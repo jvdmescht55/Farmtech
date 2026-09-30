@@ -121,10 +121,71 @@ class SeedHerdDemo extends Command
             foreach ($ewes as $ewe) {
                 $ewe->update(['last_seen_at' => $sessionDates->last()]);
             }
+
+            $this->recentActivity($user, $ewes, $sires);
         });
 
+        $this->info('Alerts now: '.app(\App\Services\Herd\HerdAlerts::class)->forUser($user->id)->count());
         $this->info('Demo herd ready: '.Animal::where('user_id', $user->id)->where('in_herd', true)->count().' animals, '.Scan::where('user_id', $user->id)->whereNotNull('weight_kg')->count().' weighings.');
 
         return self::SUCCESS;
+    }
+
+    /** The last few weeks on the farm — enough going on for the alerts engine to have something to say. */
+    private function recentActivity(User $user, array $ewes, array $sires): void
+    {
+        $today = now()->startOfDay();
+        $sync = ReaderSync::create(['user_id' => $user->id, 'source' => 'api', 'filename' => null, 'created_at' => $today->copy()->subDays(3)->setTime(9, 0)]);
+        $weighDay = $today->copy()->subDays(3)->setTime(8, 0);
+
+        // Re-weigh this year's lambs; a handful lose condition.
+        $lambs = Animal::where('user_id', $user->id)->where('in_herd', true)->where('status', 'active')->where('visual_id', 'like', 'DVS 25 %')->get();
+        foreach ($lambs as $i => $lamb) {
+            $last = Scan::where('animal_id', $lamb->id)->whereNotNull('weight_kg')->orderByDesc('scanned_at')->first();
+            if (! $last) {
+                continue;
+            }
+            $delta = match (true) {
+                $i % 17 === 3 => -round($last->weight_kg * 0.07, 1),   // sharp drop
+                $i % 13 === 5 => -mt_rand(5, 15) / 10,                   // mild loss
+                $i % 11 === 7 => mt_rand(0, 3) / 10,                     // barely growing
+                default => mt_rand(20, 45) / 10,
+            };
+            Scan::create(['user_id' => $user->id, 'reader_sync_id' => $sync->id, 'animal_id' => $lamb->id, 'eid' => $lamb->eid,
+                'weight_kg' => round($last->weight_kg + $delta, 1), 'weigh_type' => 'routine', 'scanned_at' => $weighDay->copy()->addMinutes($i * 2)]);
+            $lamb->update(['last_seen_at' => $weighDay]);
+        }
+        $sync->update(['scan_count' => $lambs->count(), 'matched_count' => $lambs->count()]);
+
+        // Spring lambing has started.
+        $births = [[0, '01', 5.2], [1, '02', 3.9], [1, '02', 3.6], [2, '03', 3.3], [2, '03', 2.7], [2, '03', 3.1], [3, '01', 2.8]];
+        foreach ($births as $k => [$ei, $type, $kg]) {
+            $dam = $ewes[$ei];
+            $born = $today->copy()->subDays(4 + $ei * 3);
+            $lamb = Animal::create(['user_id' => $user->id, 'in_herd' => true, 'species' => 'sheep', 'visual_id' => sprintf('DVS 26 %04d', 100 + $k),
+                'eid' => '98200020'.sprintf('%07d', 100 + $k), 'sex' => $k % 2 ? 'F' : 'M', 'breed' => 'Meatmaster', 'registered' => true,
+                'birth_date' => $born, 'birth_type' => $type, 'sire_id' => $sires[$ei % 4][0]->id, 'dam_id' => $dam->id, 'last_seen_at' => $born]);
+            Scan::create(['user_id' => $user->id, 'animal_id' => $lamb->id, 'eid' => $lamb->eid, 'weight_kg' => $kg, 'weigh_type' => 'birth', 'scanned_at' => $born->copy()->setTime(10, 0)]);
+        }
+        \App\Models\AnimalEvent::create(['user_id' => $user->id, 'animal_id' => $ewes[2]->id, 'type' => 'birth', 'date' => $today->copy()->subDays(10), 'count' => 3, 'notes' => 'Drieling, een swak']);
+
+        // Matings — some ewes due soon, one overdue.
+        foreach ([[5, 140], [6, 145], [7, 146], [8, 170]] as [$ei, $daysAgo]) {
+            \App\Models\AnimalEvent::create(['user_id' => $user->id, 'animal_id' => $ewes[$ei]->id, 'type' => 'mating', 'date' => $today->copy()->subDays($daysAgo), 'mate_id' => $sires[0][0]->id]);
+        }
+        \App\Models\AnimalEvent::create(['user_id' => $user->id, 'animal_id' => $ewes[6]->id, 'type' => 'pregnancy_scan', 'date' => $today->copy()->subDays(80), 'result' => 'twins']);
+        \App\Models\AnimalEvent::create(['user_id' => $user->id, 'animal_id' => $ewes[9]->id, 'type' => 'pregnancy_scan', 'date' => $today->copy()->subDays(80), 'result' => 'triplets']);
+        \App\Models\AnimalEvent::create(['user_id' => $user->id, 'animal_id' => $ewes[11]->id, 'type' => 'pregnancy_scan', 'date' => $today->copy()->subDays(80), 'result' => 'empty']);
+
+        // A dosing with a withholding period, and a treatment.
+        foreach ($lambs->take(3) as $lamb) {
+            \App\Models\AnimalEvent::create(['user_id' => $user->id, 'animal_id' => $lamb->id, 'type' => 'dosing', 'date' => $today->copy()->subDays(5), 'product' => 'Closantel', 'dose' => '5 ml', 'withdrawal_until' => $today->copy()->addDays(23)]);
+        }
+
+        // One ewe not seen for months; one lamb from a half-sib mating.
+        $ewes[20]->update(['last_seen_at' => $today->copy()->subDays(140)]);
+        $ewes[30]->update(['sire_id' => $sires[1][0]->sire_id]);
+        Animal::create(['user_id' => $user->id, 'in_herd' => true, 'species' => 'sheep', 'visual_id' => 'DVS 26 0200', 'eid' => '982000200000200', 'sex' => 'M', 'breed' => 'Meatmaster',
+            'birth_date' => $today->copy()->subDays(20), 'birth_type' => '01', 'sire_id' => $sires[1][0]->id, 'dam_id' => $ewes[30]->id, 'last_seen_at' => $today->copy()->subDays(20)]);
     }
 }

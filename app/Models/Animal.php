@@ -15,8 +15,8 @@ class Animal extends Model
     public const STATUSES = ['active' => 'Active', 'sold' => 'Sold', 'dead' => 'Dead', 'culled' => 'Culled'];
 
     protected $fillable = [
-        'user_id', 'in_herd', 'eid', 'visual_id', 'name', 'sex', 'breed', 'birth_date', 'birth_type',
-        'registered', 'is_commercial', 'tier', 'gen_score', 'sire_id', 'dam_id', 'status',
+        'user_id', 'in_herd', 'species', 'eid', 'visual_id', 'name', 'sex', 'breed', 'birth_date', 'birth_type',
+        'registered', 'is_commercial', 'tier', 'gen_score', 'sire_id', 'dam_id', 'status', 'status_date',
         'ebvs', 'dam_record', 'notes', 'last_seen_at',
     ];
 
@@ -27,6 +27,7 @@ class Animal extends Model
             'registered' => 'boolean',
             'is_commercial' => 'boolean',
             'birth_date' => 'date',
+            'status_date' => 'date',
             'ebvs' => 'array',
             'dam_record' => 'array',
             'last_seen_at' => 'datetime',
@@ -56,6 +57,19 @@ class Animal extends Model
     public function offspring(): Builder
     {
         return static::query()->where(fn ($q) => $q->where('sire_id', $this->id)->orWhere('dam_id', $this->id));
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(AnimalEvent::class)->orderByDesc('date');
+    }
+
+    /** Species biology from config('herd.species'). */
+    public function bio(?string $key = null): mixed
+    {
+        $bio = config('herd.species.'.($this->species ?: 'sheep')) ?? config('herd.species.sheep');
+
+        return $key ? ($bio[$key] ?? null) : $bio;
     }
 
     public function scopeHerd(Builder $q): Builder
@@ -128,6 +142,10 @@ class Animal extends Model
 
     public function sexLabel(): string
     {
-        return ['M' => 'Ram', 'F' => 'Ewe'][$this->sex] ?? '—';
+        return match ($this->sex) {
+            'M' => $this->bio('male'),
+            'F' => $this->bio('female'),
+            default => '—',
+        };
     }
 }

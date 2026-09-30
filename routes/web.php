@@ -34,6 +34,10 @@ use App\Http\Controllers\Rfid\AnimalController as RfidAnimalController;
 use App\Http\Controllers\Rfid\CatalogueController as RfidCatalogueController;
 use App\Http\Controllers\Rfid\CompareController as RfidCompareController;
 use App\Http\Controllers\Rfid\DraftController as RfidDraftController;
+use App\Http\Controllers\Rfid\LiveController as RfidLiveController;
+use App\Http\Controllers\Rfid\AlertController as RfidAlertController;
+use App\Http\Controllers\Rfid\EventController as RfidEventController;
+use App\Http\Controllers\Rfid\DataController as RfidDataController;
 use App\Http\Controllers\Rfid\WeighingController as RfidWeighingController;
 use App\Http\Controllers\Rfid\DashboardController as RfidDashboardController;
 use App\Http\Controllers\Rfid\ImportController as RfidImportController;
@@ -47,7 +51,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [SiteController::class, 'home'])->name('portal');
+Route::get('/', [SiteController::class, 'gateway'])->name('portal');
 Route::get('/store', [SiteController::class, 'store'])->name('site.store');
 Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.interest')->middleware('throttle:6,1');
 Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
@@ -92,6 +96,23 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
     Route::get('/animals/{animal}/edit', [RfidAnimalController::class, 'edit'])->name('animals.edit');
     Route::put('/animals/{animal}', [RfidAnimalController::class, 'update'])->name('animals.update');
     Route::post('/animals/{animal}/weights', [RfidAnimalController::class, 'addWeight'])->name('animals.weights.store');
+
+    Route::get('/alerts', [RfidAlertController::class, 'index'])->name('alerts');
+    Route::post('/alerts/dismiss', [RfidAlertController::class, 'dismiss'])->name('alerts.dismiss');
+    Route::post('/alerts/restore', [RfidAlertController::class, 'restore'])->name('alerts.restore');
+    Route::get('/alerts/export', [RfidAlertController::class, 'export'])->name('alerts.export');
+    Route::get('/log', [RfidEventController::class, 'index'])->name('events.index');
+    Route::post('/log', [RfidEventController::class, 'store'])->name('events.store');
+    Route::delete('/log/{event}', [RfidEventController::class, 'destroy'])->name('events.destroy');
+
+    Route::get('/data', [RfidDataController::class, 'index'])->name('data');
+    Route::post('/data/preview', [RfidDataController::class, 'preview'])->name('data.preview');
+    Route::post('/data/import', [RfidDataController::class, 'import'])->name('data.import');
+    Route::get('/data/backup', [RfidDataController::class, 'backup'])->name('data.backup');
+    Route::get('/data/template/{kind}', [RfidDataController::class, 'template'])->name('data.template');
+
+    Route::get('/live', [RfidLiveController::class, 'index'])->name('live');
+    Route::get('/live/feed', [RfidLiveController::class, 'feed'])->name('live.feed');
 
     Route::get('/weighings', [RfidWeighingController::class, 'index'])->name('weighings.index');
     Route::get('/weighings/{date}', [RfidWeighingController::class, 'show'])->where('date', '\d{4}-\d{2}-\d{2}')->name('weighings.show');

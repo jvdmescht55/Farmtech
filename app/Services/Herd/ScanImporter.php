@@ -17,21 +17,26 @@ use Illuminate\Support\Facades\DB;
  */
 class ScanImporter
 {
-    public const EID = ['eid', 'tag', 'rfid', 'electronic_id', 'eid_tag', 'tag_number', 'eid_number', 'electronic_tag'];
+    public const EID = ['eid', 'tag', 'rfid', 'electronic_id', 'eid_tag', 'tag_number', 'eid_number', 'electronic_tag', 'uid', 'code', 'tag_id', 'number'];
 
     public const VID = ['visual_id', 'vid', 'animal_id', 'dier_id', 'id', 'visual_tag', 'management_tag'];
 
-    public const WEIGHT = ['weight', 'weight_kg', 'kg', 'mass', 'massa', 'gewig'];
+    public const WEIGHT = ['weight', 'weight_kg', 'kg', 'mass', 'massa', 'gewig', 'w'];
 
-    public const DATE = ['scanned_at', 'date', 'datetime', 'date_time', 'time', 'datum'];
+    public const DATE = ['scanned_at', 'date', 'datetime', 'date_time', 'time', 'datum', 'ts', 'timestamp'];
+
+    public const REF = ['id', 'ref', 'client_ref', 'scan_id', 'uuid', 'seq'];
+
+    /** @var array<int, array> per-scan outcome of the last import() call (API replies use this). */
+    public array $results = [];
 
     public const TYPE = ['weigh_type', 'type', 'event'];
 
     /** @param array<int, array<string, mixed>> $rows */
-    public function import(User $user, ?Reader $reader, string $source, array $rows, ?string $filename = null): ReaderSync
+    public function import(User $user, ?Reader $reader, string $source, array $rows, ?string $filename = null, ?ReaderSync $into = null): ReaderSync
     {
-        return DB::transaction(function () use ($user, $reader, $source, $rows, $filename) {
-            $sync = ReaderSync::create([
+        return DB::transaction(function () use ($user, $reader, $source, $rows, $filename, $into) {
+            $sync = $into ?? ReaderSync::create([
                 'user_id' => $user->id,
                 'reader_id' => $reader?->id,
                 'source' => $source,
@@ -39,12 +44,22 @@ class ScanImporter
             ]);
 
             $matched = $new = $count = 0;
+            $this->results = [];
 
             foreach ($rows as $row) {
                 $row = array_change_key_case(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $row));
                 $eid = $this->normalizeEid(CsvReader::pick($row, self::EID));
                 $vid = Animal::normalizeVisualId(CsvReader::pick($row, self::VID));
                 if (! $eid && ! $vid) {
+                    $this->results[] = ['status' => 'skipped', 'reason' => 'no tag or animal id'];
+
+                    continue;
+                }
+                // Devices retry when the network drops — the same ref is only stored once.
+                $ref = $source === 'api' ? CsvReader::pick($row, self::REF) : null;
+                if ($ref && Scan::where('user_id', $user->id)->where('client_ref', $ref)->exists()) {
+                    $this->results[] = ['status' => 'duplicate', 'ref' => $ref, 'eid' => $eid];
+
                     continue;
                 }
 
@@ -57,6 +72,11 @@ class ScanImporter
                 }
 
                 $scannedAt = $this->parseDate(CsvReader::pick($row, self::DATE));
+                // A device whose clock was never set reports 1970/2000 or the far future.
+                if ($scannedAt->year < 2015 || $scannedAt->gt(now()->addHours(2))) {
+                    $scannedAt = now();
+                }
+                $isNew = ! $animal;
 
                 if ($animal) {
                     $matched++;
@@ -72,6 +92,7 @@ class ScanImporter
                         'eid' => $eid,
                         'visual_id' => $vid ?? $eid,
                         'breed' => $user->breed,
+                        'species' => $user->species ?: 'sheep',
                         'last_seen_at' => $scannedAt,
                     ]);
                 }
@@ -80,20 +101,52 @@ class ScanImporter
                 $weight = $weight !== null && is_numeric(str_replace(',', '.', $weight)) ? (float) str_replace(',', '.', $weight) : null;
                 $type = CsvReader::pick($row, self::TYPE);
 
+                $weightKg = $weight && $weight > 0 && $weight < 5000 ? round($weight, 1) : null;
+
+                // Same animal, same weight, within a few seconds = a double read, not a new weighing.
+                $double = Scan::where('animal_id', $animal->id)
+                    ->whereBetween('scanned_at', [$scannedAt->copy()->subSeconds(20), $scannedAt->copy()->addSeconds(20)])
+                    ->where(fn ($q) => $weightKg === null ? $q->whereNull('weight_kg') : $q->where('weight_kg', $weightKg))
+                    ->exists();
+                if ($double) {
+                    $this->results[] = ['status' => 'duplicate', 'eid' => $eid, 'animal' => $animal->visual_id];
+
+                    continue;
+                }
+
+                $previous = $weightKg !== null
+                    ? Scan::where('animal_id', $animal->id)->whereNotNull('weight_kg')->where('scanned_at', '<', $scannedAt->copy()->startOfDay())->orderByDesc('scanned_at')->first()
+                    : null;
+
                 Scan::create([
                     'user_id' => $user->id,
                     'reader_sync_id' => $sync->id,
+                    'client_ref' => $ref,
                     'animal_id' => $animal->id,
                     'eid' => $eid,
                     'visual_id' => $vid,
-                    'weight_kg' => $weight && $weight > 0 && $weight < 5000 ? $weight : null,
+                    'weight_kg' => $weightKg,
                     'weigh_type' => array_key_exists($type ?? '', Scan::WEIGH_TYPES) ? $type : ($weight ? 'routine' : null),
                     'scanned_at' => $scannedAt,
                 ]);
                 $count++;
+
+                $days = $previous ? max(1, (int) $previous->scanned_at->startOfDay()->diffInDays($scannedAt->copy()->startOfDay())) : null;
+                $this->results[] = array_filter([
+                    'status' => 'ok',
+                    'ref' => $ref,
+                    'eid' => $eid,
+                    'animal_id' => $animal->id,
+                    'animal' => $animal->visual_id,
+                    'new_animal' => $isNew,
+                    'weight' => $weightKg,
+                    'previous_weight' => $previous ? (float) $previous->weight_kg : null,
+                    'change' => $previous ? round($weightKg - $previous->weight_kg, 1) : null,
+                    'adg' => $previous ? (int) round(($weightKg - $previous->weight_kg) * 1000 / $days) : null,
+                ], fn ($v) => $v !== null);
             }
 
-            $sync->update(['scan_count' => $count, 'matched_count' => $matched, 'new_count' => $new]);
+            $sync->update(['scan_count' => $sync->scan_count * (int) (bool) $into + $count, 'matched_count' => $sync->matched_count * (int) (bool) $into + $matched, 'new_count' => $sync->new_count * (int) (bool) $into + $new]);
             $reader?->update(['last_synced_at' => now()]);
 
             return $sync;
@@ -112,6 +165,12 @@ class ScanImporter
     {
         if (! $value) {
             return now();
+        }
+        // Unix epoch from a microcontroller clock (seconds or milliseconds).
+        if (ctype_digit($value) && strlen($value) >= 9) {
+            $ts = (int) $value;
+
+            return Carbon::createFromTimestamp(strlen($value) >= 12 ? intdiv($ts, 1000) : $ts, config('app.timezone'));
         }
         foreach (['d/m/Y H:i:s', 'd/m/Y H:i', 'd/m/Y', 'Y-m-d H:i:s', 'Y-m-d H:i', 'Y-m-d'] as $format) {
             try {

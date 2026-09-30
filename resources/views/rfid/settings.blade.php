@@ -11,6 +11,7 @@
             <div><label class="app-label">Breeder number</label><input name="breeder_number" value="{{ old('breeder_number', $user->breeder_number) }}" placeholder="0696358" class="app-input font-mono"></div>
             <div class="sm:col-span-2"><label class="app-label">Postal address</label><input name="farm_address" value="{{ old('farm_address', $user->farm_address) }}" placeholder="Posbus 42, Kenhardt, 8900" class="app-input"></div>
             <div><label class="app-label">Stud prefix</label><input name="stud_prefix" value="{{ old('stud_prefix', $user->stud_prefix) }}" placeholder="DVS" class="app-input font-mono"></div>
+            <div><label class="app-label">Hoofspesie</label><select name="species" class="app-input">@foreach (config('herd.species') as $k => $sp)<option value="{{ $k }}" @selected(old('species', $user->species) === $k)>{{ $sp['plural'] }}</option>@endforeach</select></div>
             <div><label class="app-label">Main breed</label><input name="breed" value="{{ old('breed', $user->breed) }}" placeholder="Meatmaster" class="app-input"></div>
         </div>
         @if ($user->breederLine())<div class="mt-5 rounded-lg bg-char text-white px-4 py-2 font-mono text-xs">{{ $user->breederLine() }}</div>@endif

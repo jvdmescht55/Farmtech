@@ -17,8 +17,25 @@ use Illuminate\Support\Collection;
  */
 class WeighStats
 {
-    /** @var array<int, Collection> per-user memo of weighing rows */
+    /** @var array<string, Collection> memo of weighing rows per user+species */
     private array $rows = [];
+
+    private ?string $species = null;
+
+    /** Limit every figure to one species — sheep and cattle must never be averaged together. */
+    public function forSpecies(?string $species): static
+    {
+        $this->species = $species && array_key_exists($species, config('herd.species')) ? $species : null;
+
+        return $this;
+    }
+
+    /** Species present in the herd (for the switcher), most common first. */
+    public static function speciesIn(int $userId): Collection
+    {
+        return Animal::where('user_id', $userId)->where('in_herd', true)->groupBy('species')
+            ->selectRaw('species, count(*) c')->orderByDesc('c')->pluck('c', 'species');
+    }
 
     public function __construct(private readonly PedigreeTier $tiers) {}
 
@@ -29,11 +46,14 @@ class WeighStats
      */
     public function rows(int $userId): Collection
     {
-        if (isset($this->rows[$userId])) {
-            return $this->rows[$userId];
+        $memo = $userId.'|'.$this->species;
+        if (isset($this->rows[$memo])) {
+            return $this->rows[$memo];
         }
 
-        $herdIds = Animal::where('user_id', $userId)->where('in_herd', true)->pluck('id')->flip();
+        $herdIds = Animal::where('user_id', $userId)->where('in_herd', true)
+            ->when($this->species, fn ($q) => $q->where('species', $this->species))
+            ->pluck('id')->flip();
 
         $scans = Scan::where('user_id', $userId)
             ->whereNotNull('weight_kg')->whereNotNull('animal_id')
@@ -66,13 +86,14 @@ class WeighStats
             }
         }
 
-        return $this->rows[$userId] = $rows;
+        return $this->rows[$memo] = $rows;
     }
 
     /** Sessions newest first, each with its summary stats. */
     public function sessions(int $userId): Collection
     {
-        $sessions = $this->rows($userId)->groupBy('date')->map(function (Collection $rows, $date) {
+        // Birth weights belong to each animal's curve, not to a "weigh day".
+        $sessions = $this->rows($userId)->where('type', '!=', 'birth')->groupBy('date')->map(function (Collection $rows, $date) {
             $kgs = $rows->pluck('kg')->all();
             $adgs = $rows->pluck('adg')->filter(fn ($v) => $v !== null)->all();
 

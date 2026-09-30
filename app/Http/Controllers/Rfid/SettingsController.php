@@ -25,6 +25,7 @@ class SettingsController extends Controller
             'stud_prefix' => ['nullable', 'string', 'max:16'],
             'farm_address' => ['nullable', 'string', 'max:255'],
             'breed' => ['nullable', 'string', 'max:64'],
+            'species' => ['required', 'in:'.implode(',', array_keys(config('herd.species')))],
             'current_password' => ['nullable', 'required_with:password', 'current_password'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
         ]);

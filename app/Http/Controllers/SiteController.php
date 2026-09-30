@@ -10,9 +10,10 @@ class SiteController extends Controller
 {
     public const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape', 'Outside South Africa'];
 
-    public function home()
+    /** The front door: choose the shop or herd management. */
+    public function gateway()
     {
-        return view('site.home');
+        return view('site.gateway');
     }
 
     public function store()

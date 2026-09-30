@@ -11,7 +11,7 @@ class ImportController extends Controller
 {
     public function create()
     {
-        return view('rfid.import', ['headers' => HerdImporter::templateHeaders()]);
+        return redirect()->route('rfid.data');
     }
 
     public function store(Request $request, HerdImporter $importer)

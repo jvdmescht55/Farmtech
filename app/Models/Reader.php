@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Reader extends Model
 {
-    protected $fillable = ['user_id', 'license_id', 'name', 'serial', 'model', 'api_token', 'last_synced_at'];
+    protected $fillable = ['user_id', 'license_id', 'name', 'serial', 'model', 'firmware', 'battery_pct', 'api_token', 'last_synced_at', 'last_ip'];
 
     protected $hidden = ['api_token'];
 

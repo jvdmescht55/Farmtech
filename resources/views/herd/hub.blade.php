@@ -35,12 +35,12 @@
     <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
         <div>
             <p class="eyebrow">Kuddebestuur</p>
-            <h2 class="h-display mt-3 text-5xl">Jou sagteware</h2>
+            <h2 class="h-display mt-3 text-5xl">Kies 'n toestel</h2>
         </div>
         <a href="{{ route('account.activate') }}" class="btn-line btn-sm">+ Aktiveer 'n toestel</a>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-6">
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
         @foreach ($modules as $m)
             <a href="{{ $m['unlocked'] ? route($m['route']) : route('account.activate') }}" class="group panel overflow-hidden flex flex-col hover:border-char transition-colors">
                 <div class="relative aspect-[16/9] overflow-hidden bg-char">
@@ -62,11 +62,21 @@
             </a>
         @endforeach
 
-        <div class="rounded-2xl border border-dashed border-hairline p-10 flex flex-col justify-center">
-            <p class="eyebrow">Binnekort</p>
-            <div class="h-display text-4xl mt-3">Meer toestelle op pad.</div>
-            <p class="mt-3 text-stone max-w-sm">Nuwe Farmtech-toestelle kom hier met hul eie sagteware — alles op dieselfde kuddeboek.</p>
-        </div>
+        @foreach (config('herd.upcoming') as $up)
+            <div class="panel overflow-hidden flex flex-col opacity-80">
+                <div class="relative aspect-[16/9] overflow-hidden bg-char">
+                    <img src="{{ Img::url($up['image'], true) }}" alt="{{ Img::alt($up['image']) }}" loading="lazy" class="absolute inset-0 h-full w-full object-cover grayscale-[60%] opacity-70">
+                    <div class="absolute inset-0 bg-gradient-to-t from-char/85 to-char/10"></div>
+                    <span class="absolute top-5 left-5 chip bg-char/70 text-sand">Binnekort</span>
+                    <h3 class="absolute bottom-5 left-6 right-6 h-display text-5xl text-sand">{{ $up['name'] }}</h3>
+                </div>
+                <div class="p-7 flex-1 flex flex-col">
+                    <p class="text-stone leading-relaxed">{{ $up['tagline'] }}</p>
+                    <div class="mt-auto pt-6 border-t border-hairline mt-8 text-sm text-stone">Kom kyk weer — dit verskyn hier sodra dit beskikbaar is.</div>
+                </div>
+            </div>
+        @endforeach
+</div>
     </div>
     <x-photo-credits :keys="['tafelberg', 'merino-rams']" class="mt-12" />
 </main>
