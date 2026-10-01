@@ -21,7 +21,7 @@ class DraftController extends Controller
 
         return response()->streamDownload(function () use ($d) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Group', 'Animal ID', 'EID', 'Sex', 'Weight kg', 'Weighed', 'ADG g/day', 'Days to target', 'Target date']);
+            fputcsv($out, ['Group', 'Animal ID', 'EID', 'Sex', 'Weight kg', 'Weighed', 'Gain g/day', 'Days to target', 'Target date']);
             foreach ($d['bands'] as $band) {
                 foreach ($band['animals'] as $r) {
                     fputcsv($out, [$band['label'], $r->animal->visual_id, $r->animal->eid, $r->animal->sex, $r->kg, $r->date, $r->adg, $r->days_to_target, $r->target_date]);
@@ -72,7 +72,7 @@ class DraftController extends Controller
             [$lo, $hi] = [$edges[$i], $edges[$i + 1]];
             $in = $rows->filter(fn ($r) => ($lo === null || $r->kg >= $lo) && ($hi === null || $r->kg < $hi))->values();
             $bands[] = [
-                'label' => $lo === null ? "Under {$hi} kg" : ($hi === null ? "{$lo} kg +" : "{$lo} – {$hi} kg"),
+                'label' => $lo === null ? "Under {$hi} kg" : ($hi === null ? "{$lo} kg +" : "{$lo}–{$hi} kg"),
                 'animals' => $in,
                 'stats' => WeighStats::summary($in->pluck('kg')->all()),
             ];

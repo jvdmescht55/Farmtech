@@ -2,7 +2,7 @@
 @props(['bins' => [], 'unit' => 'kg', 'height' => 180, 'highlightFrom' => null])
 @php($max = max(1, collect($bins)->max('count') ?? 1))
 @if (empty($bins))
-    <div class="grid place-items-center text-sm text-stone" style="height: {{ $height }}px">Nog nie genoeg data nie.</div>
+    <div class="grid place-items-center text-sm text-stone" style="height: {{ $height }}px">Not enough data yet.</div>
 @else
 <div>
     <div class="flex items-end gap-[3px]" style="height: {{ $height }}px">

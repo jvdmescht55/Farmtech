@@ -20,7 +20,7 @@ class ReaderController extends Controller
         $user = $request->user();
 
         return view('rfid.readers.index', [
-            'readers' => $user->readers()->withCount('syncs')->get(),
+            'readers' => $user->readers()->where('kind', 'handheld')->withCount('syncs')->get(),
             'syncs' => ReaderSync::with('reader')->where('user_id', $user->id)->latest()->paginate(20),
             'shownToken' => session('shownToken'),
         ]);
@@ -33,20 +33,25 @@ class ReaderController extends Controller
             'serial' => ['nullable', 'string', 'max:64'],
             'model' => ['nullable', 'string', 'max:64'],
         ]);
-        $reader = $request->user()->readers()->create($data);
+        $reader = $request->user()->readers()->create($data + ['kind' => 'handheld']);
 
-        return back()->with('status', "Toestel \"{$reader->name}\" bygevoeg.")->with('shownToken', [$reader->id => $reader->plainToken]);
+        return back()->with('status', "Device \"{$reader->name}\" added.")->with('shownToken', [$reader->id => $reader->plainToken]);
     }
 
     /** Farmer types the 6-digit code the device is showing. */
     public function pair(Request $request)
     {
-        $data = $request->validate(['code' => ['required', 'string'], 'name' => ['nullable', 'string', 'max:255']]);
+        $data = $request->validate([
+            'code' => ['required', 'string'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'kind' => ['nullable', 'in:'.implode(',', array_keys(Reader::KINDS))],
+            'location' => ['nullable', 'string', 'max:160'],
+        ]);
         $code = preg_replace('/\D/', '', $data['code']);
         $pairing = \App\Models\DevicePairing::open()->where('code', $code)->first();
 
         if (! $pairing) {
-            return back()->withErrors(['code' => 'Daai kode is ongeldig of het verval. Begin weer koppel op die toestel.']);
+            return back()->withErrors(['code' => 'That code isn\'t valid or has expired. Start pairing again on the device.']);
         }
 
         $user = $request->user();
@@ -55,8 +60,11 @@ class ReaderController extends Controller
             $plain = $reader->rotateToken();
             $reader->update(array_filter(['model' => $pairing->model, 'firmware' => $pairing->firmware]));
         } else {
+            $kind = $data['kind'] ?? (str_contains(strtolower((string) $pairing->model), 'watch') ? 'watch' : 'handheld');
             $reader = $user->readers()->create([
-                'name' => ($data['name'] ?? null) ?: ($pairing->model ?: 'Farmtech-skandeerder').($pairing->serial ? ' · '.$pairing->serial : ''),
+                'kind' => $kind,
+                'location' => $data['location'] ?? null,
+                'name' => ($data['name'] ?? null) ?: ($pairing->model ?: ($kind === 'watch' ? 'KraalTrac Watch' : 'KraalTrac Pro')).($pairing->serial ? ' · '.$pairing->serial : ''),
                 'serial' => $pairing->serial,
                 'model' => $pairing->model,
                 'firmware' => $pairing->firmware,
@@ -66,7 +74,7 @@ class ReaderController extends Controller
 
         $pairing->update(['reader_id' => $reader->id, 'token_encrypted' => $plain, 'claimed_at' => now()]);
 
-        return back()->with('status', "Gekoppel! \"{$reader->name}\" haal nou sy sleutel — dit neem 'n paar sekondes.");
+        return back()->with('status', "Paired! \"{$reader->name}\" is collecting its key — give it a few seconds.");
     }
 
     public function regenerateToken(Reader $reader)
@@ -74,7 +82,7 @@ class ReaderController extends Controller
         $this->own($reader);
         $plain = $reader->rotateToken();
 
-        return back()->with('status', 'Nuwe sinch-sleutel uitgereik — sit dit op die toestel. Die ou sleutel werk nie meer nie.')
+        return back()->with('status', 'New device key issued — put it on the device. The old one has stopped working.')
             ->with('shownToken', [$reader->id => $plain]);
     }
 
@@ -83,7 +91,7 @@ class ReaderController extends Controller
         $this->own($reader);
         $reader->delete();
 
-        return back()->with('status', 'Toestel verwyder. Sy skanderings bly gestoor.');
+        return back()->with('status', 'Device removed. Its scans are kept.');
     }
 
     public function upload(Request $request, ScanImporter $importer)
@@ -126,8 +134,10 @@ class ReaderController extends Controller
     }
 
     /** Reference ESP32 firmware, ready to adapt. */
-    public function firmware()
+    public function firmware(Request $request)
     {
-        return response()->download(resource_path('firmware/farmtech_scanner.ino'), 'farmtech_scanner.ino', ['Content-Type' => 'text/plain']);
+        $file = $request->query('device') === 'watch' ? 'kraaltrac_watch.ino' : 'kraaltrac_pro.ino';
+
+        return response()->download(resource_path('firmware/'.$file), $file, ['Content-Type' => 'text/plain']);
     }
 }

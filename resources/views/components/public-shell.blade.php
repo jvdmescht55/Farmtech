@@ -14,8 +14,8 @@
         <div class="relative h-full flex flex-col justify-between p-12">
             <a href="{{ route('portal') }}" class="flex items-baseline gap-1.5"><span class="font-headline text-[30px] leading-none">farmtech</span><span class="w-1.5 h-1.5 rounded-full bg-ochre"></span></a>
             <div>
-                <p class="eyebrow text-white/60">Kuddebestuur · RFID Scanner V1</p>
-                <h2 class="h-display mt-5 text-[clamp(3rem,5.5vw,5.5rem)]">{!! $headline ?? 'Welkom terug<br><em class="text-ochre-light">in die kraal.</em>' !!}</h2>
+                <p class="eyebrow text-white/60">Kuddebestuur · built around your farm</p>
+                <h2 class="h-display mt-5 text-[clamp(3rem,5.5vw,5.5rem)]">{!! $headline ?? 'Welcome back<br><em class="text-ochre-light">to the kraal.</em>' !!}</h2>
                 <x-photo-credits :keys="[$image]" dark class="mt-10" />
             </div>
         </div>
@@ -24,7 +24,7 @@
     <section class="flex flex-col px-5 sm:px-12 lg:px-20" style="padding-top: max(1.5rem, env(safe-area-inset-top, 0px)); padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px))">
         <div class="h-14 flex items-center justify-between">
             <a href="{{ route('portal') }}" class="lg:invisible flex items-baseline gap-1.5"><span class="font-headline text-[28px] leading-none">farmtech</span><span class="w-1.5 h-1.5 rounded-full bg-ochre"></span></a>
-            <a href="{{ route('portal') }}" class="text-sm text-stone hover:text-char">← Terug na die webwerf</a>
+            <a href="{{ route('portal') }}" class="text-sm text-stone hover:text-char">← Back to the website</a>
         </div>
         <div class="flex-1 flex items-center py-12">
             <div class="w-full max-w-md mx-auto">{{ $slot }}</div>

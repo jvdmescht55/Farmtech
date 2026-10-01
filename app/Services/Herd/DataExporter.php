@@ -9,11 +9,11 @@ use App\Models\User;
 class DataExporter
 {
     public const TYPES = [
-        'herd' => ['Kuddeboek', 'Alle diere met stamboom, EBV\'s en lamrekord — dieselfde kolomme as die invoer-sjabloon.'],
-        'weighings' => ['Alle wegings', 'Elke gewig met vorige gewig, verandering en groei per dag.'],
-        'sessions' => ['Weegsessie-opsomming', 'Een ry per weegdag: n, gemiddeld, mediaan, SD, groei.'],
-        'events' => ['Logboek', 'Behandelings, paring, geboortes, verkope en sterftes.'],
-        'alerts' => ['Waarskuwings', 'Alles wat die stelsel tans uitlig, met aanbevole aksie.'],
+        'herd' => ['Herd book', 'Every animal with pedigree, EBVs and lambing record — same columns as the import template.'],
+        'weighings' => ['All weighings', 'Every weight with the previous one, the change and daily gain.'],
+        'sessions' => ['Weigh-session summary', 'One row per weigh day: count, average, median, spread, gain.'],
+        'events' => ['Records', 'Treatments, matings, births, sales and deaths.'],
+        'alerts' => ['Alerts', 'Everything flagged right now, with what to do.'],
     ];
 
     public function __construct(private readonly WeighStats $stats, private readonly HerdAlerts $alerts) {}

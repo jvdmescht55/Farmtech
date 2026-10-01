@@ -18,12 +18,14 @@ use Illuminate\Support\Collection;
 class HerdAlerts
 {
     public const CATEGORIES = [
-        'health' => 'Gesondheid & groei',
-        'birth' => 'Geboortes & lammers',
-        'breeding' => 'Teling',
-        'movement' => 'Waar is hy?',
-        'withdrawal' => 'Onttrekkingstydperk',
-        'data' => 'Rekords',
+        'health' => 'Health & growth',
+        'water' => 'Water & movement',
+        'birth' => 'Births & youngstock',
+        'breeding' => 'Breeding',
+        'movement' => 'Where is it?',
+        'withdrawal' => 'Withdrawal periods',
+        'devices' => 'Devices',
+        'data' => 'Records',
     ];
 
     /** @var array<string, Collection> per-request memo (layout badge + page share one run) */
@@ -80,9 +82,9 @@ class HerdAlerts
                 $prev = $l->kg - $l->change;
                 $pct = $prev > 0 ? abs($l->change) / $prev * 100 : 0;
                 if ($pct >= 5) {
-                    $add('weight_drop', 'critical', 'health', $a, 'Skerp gewigsverlies', sprintf('%s kg verloor (%.1f%%) sedert %s. Gewigsverlies is die vroegste teken van siekte.', abs($l->change), $pct, date('j M', strtotime($l->series->slice(-2, 1)->first()->date ?? $l->date))), 'Ondersoek vandag — kyk vir interne parasiete (FAMACHA), kreupelheid of siekte.');
+                    $add('weight_drop', 'critical', 'health', $a, 'Sharp weight loss', sprintf('Lost %s kg (%.1f%%) since %s. Weight loss is the earliest sign of illness.', abs($l->change), $pct, date('j M', strtotime($l->series->slice(-2, 1)->first()->date ?? $l->date))), 'Check today — worms (FAMACHA), lameness or illness.');
                 } else {
-                    $add('weight_loss', 'warning', 'health', $a, 'Verloor gewig', abs($l->change).' kg minder as by die vorige weging ('.$l->adg.' g/dag).', 'Hou dop by die volgende weging; kontroleer weiding en parasiete.');
+                    $add('weight_loss', 'warning', 'health', $a, 'Losing weight', abs($l->change).' kg down on the last weighing ('.$l->adg.' g/day).', 'Keep an eye on it next weighing; check grazing and worms.');
                 }
             }
 
@@ -91,7 +93,7 @@ class HerdAlerts
             if ($recent && $l->adg !== null && $l->adg >= 0 && $cohort && $cohort->count() >= 8) {
                 $median = WeighStats::summary($cohort->pluck('adg')->all())['median'];
                 if ($median > 0 && $l->adg < $median * 0.5) {
-                    $add('ill_thrift', 'warning', 'health', $a, 'Groei sukkel (ill-thrift)', "Groei {$l->adg} g/dag teenoor die groep se mediaan van ".round($median).' g/dag.', 'Tande, parasiete en voeding nagaan; oorweeg om te skei.');
+                    $add('ill_thrift', 'warning', 'health', $a, 'Not thriving', "Growing {$l->adg} g/day against ".round($median).' g/day for others its age.', 'Check teeth, worms and feed; consider separating it.');
                 }
             }
 
@@ -101,7 +103,7 @@ class HerdAlerts
                 $days = max(1, $dayOf($l->date) - $prevRow->day);
                 $pct = $prevRow->kg > 0 ? abs($l->change) / $prevRow->kg * 100 : 0;
                 if ($days <= 21 && $pct > $a->bio('max_jump_pct')) {
-                    $add('weight_jump', 'info', 'data', $a, 'Ongewone gewigsprong', round($pct).'% verandering in '.$days.' dae — moontlik \'n foutiewe lesing of verkeerde dier op die skaal.', 'Herweeg om te bevestig.');
+                    $add('weight_jump', 'info', 'data', $a, 'Odd weight jump', round($pct).'% change in '.$days.' days — probably a misread or the wrong animal on the scale.', 'Weigh again to confirm.');
                 }
             }
         }
@@ -110,9 +112,9 @@ class HerdAlerts
         foreach ($active as $a) {
             $seen = $a->last_seen_at;
             if ($seen && $seen->lt($today->copy()->subDays(120))) {
-                $add('missing', 'warning', 'movement', $a, 'Lanklaas gesien', 'Laas geskandeer '.$seen->diffForHumans().'.', 'Tel die kamp — verlore, gesteel of dood?');
+                $add('missing', 'warning', 'movement', $a, 'Not seen in ages', 'Last scanned '.$seen->diffForHumans().'.', 'Count the camp — lost, stolen or dead?');
             } elseif ($seen && $seen->lt($today->copy()->subDays(60))) {
-                $add('not_seen', 'info', 'movement', $a, 'Nie onlangs geskandeer nie', 'Laas geskandeer '.$seen->diffForHumans().'.');
+                $add('not_seen', 'info', 'movement', $a, 'Not scanned lately', 'Last scanned '.$seen->diffForHumans().'.');
             }
         }
         foreach ($herd->whereIn('status', ['dead', 'sold']) as $a) {
@@ -123,7 +125,7 @@ class HerdAlerts
             $sinceDay = $dayOf($since->toDateString());
             $after = $rowsByAnimal->get($a->id, collect())->filter(fn ($r) => $r->day > $sinceDay);
             if ($after->isNotEmpty()) {
-                $add('ghost_scan', 'warning', 'movement', $a, 'Geskandeer ná '.($a->status === 'dead' ? 'dood' : 'verkoop'), 'Gemerk as '.$a->status.' op '.$since->format('j M').', maar weer gelees op '.date('j M', strtotime($after->last()->date)).'.', 'Kontroleer die oormerk — dalk op die verkeerde dier of hergebruik.');
+                $add('ghost_scan', 'warning', 'movement', $a, 'Scanned after it was '.($a->status === 'dead' ? 'marked dead' : 'sold'), 'Marked '.$a->status.' on '.$since->format('j M').', but read again on '.date('j M', strtotime($after->last()->date)).'.', 'Check the tag — it may be on the wrong animal or reused.');
             }
         }
 
@@ -132,12 +134,12 @@ class HerdAlerts
             $birthLimit = $dayOf($a->birth_date->toDateString()) + 3;
             $birthRow = $rowsByAnimal->get($a->id, collect())->first(fn ($r) => $r->day <= $birthLimit);
             if ($birthRow && $birthRow->kg < $a->bio('low_birth_kg')) {
-                $add('low_birth_weight', 'critical', 'birth', $a, 'Lae geboortegewig', "{$birthRow->kg} kg by geboorte — onder {$a->bio('low_birth_kg')} kg is oorlewing baie laer.", 'Sorg vir biesmelk (colostrum) binne 6 uur, warmte en skuiling; oorweeg bottel.');
+                $add('low_birth_weight', 'critical', 'birth', $a, 'Low birth weight', "{$birthRow->kg} kg at birth — below {$a->bio('low_birth_kg')} kg survival drops a lot.", 'Colostrum within 6 hours, warmth and shelter; consider bottle-feeding.');
             }
             if ((int) $a->birth_type >= 3) {
-                $add('triplet', 'warning', 'birth', $a, 'Drieling', 'Drielinge het omtrent 33% sterfte teenoor 10% vir enkelinge.', 'Skei die ooi met haar lammers; ekstra voer en biesmelk vir elke lam.');
+                $add('triplet', 'warning', 'birth', $a, 'Triplet', 'Triplets lose about 1 in 3 against 1 in 10 for singles.', 'Pen the dam with her lambs; extra feed and colostrum for each.');
             } elseif ($a->birth_type === '02') {
-                $add('twin', 'info', 'birth', $a, 'Tweeling', 'Tweelinge is ligter by geboorte en het ~15% sterfte.', 'Maak seker albei suip; hou die ooi se kondisie dop.');
+                $add('twin', 'info', 'birth', $a, 'Twin', 'Twins are lighter at birth and lose about 15%.', 'Make sure both are drinking; watch the dam\'s condition.');
             }
         }
         foreach ($active->filter(fn ($a) => $a->birth_date) as $a) {
@@ -145,17 +147,17 @@ class HerdAlerts
             $weaned = $eventsByAnimal->get($a->id, collect())->where('type', 'weaning')->isNotEmpty()
                 || $rowsByAnimal->get($a->id, collect())->where('type', 'wean')->isNotEmpty();
             if (! $weaned && $age > $a->bio('wean_age') + 30 && $age < $a->bio('wean_age') + 200) {
-                $add('wean_overdue', 'info', 'birth', $a, 'Speen agterstallig', "{$age} dae oud en nog nie as gespeen aangeteken nie.", 'Speen of teken die speengewig aan.');
+                $add('wean_overdue', 'info', 'birth', $a, 'Weaning overdue', "{$age} days old and not recorded as weaned.", 'Wean, or record the weaning weight.');
             }
             $years = $age / 365;
             if ($a->sex === 'F' && $years > $a->bio('old_age_years')) {
-                $add('old_dam', 'info', 'breeding', $a, 'Oorweeg uitskot', round($years, 1).' jaar oud.', 'Kyk na tande, uier en lamrekord voor die volgende paarseisoen.');
+                $add('old_dam', 'info', 'breeding', $a, 'Time to think about culling', round($years, 1).' years old.', 'Check teeth, udder and lambing record before the next mating season.');
             }
         }
         // Dams that lost young stock in the first 30 days.
         foreach ($herd->where('status', 'dead')->filter(fn ($a) => $a->birth_date && $a->dam_id && $a->status_date && $a->birth_date->diffInDays($a->status_date) <= 30 && $a->status_date->gte($today->copy()->subDays(60))) as $lamb) {
             if ($dam = $active->get($lamb->dam_id)) {
-                $add('lamb_loss', 'warning', 'birth', $dam, 'Het lam verloor', $lamb->visual_id.' het binne '.$lamb->birth_date->diffInDays($lamb->status_date).' dae gevrek.', 'Kontroleer die ooi se uier en melkproduksie.');
+                $add('lamb_loss', 'warning', 'birth', $dam, 'Lost a lamb', $lamb->visual_id.' died at '.$lamb->birth_date->diffInDays($lamb->status_date).' days old.', 'Check the dam\'s udder and milk.');
             }
         }
 
@@ -174,19 +176,19 @@ class HerdAlerts
             }
             $days = (int) $today->diffInDays($due, false);
             if ($days >= 0 && $days <= 14) {
-                $add('due', $days <= 3 ? 'warning' : 'info', 'breeding', $a, 'Moet binnekort '.($a->species === 'cattle' ? 'kalf' : 'lam'), 'Verwag omtrent '.$due->format('j M').' ('.$days.' dae).', 'Skuif na die lamkamp en hou dop.');
+                $add('due', $days <= 3 ? 'warning' : 'info', 'breeding', $a, 'Due to '.($a->species === 'cattle' ? 'calve' : 'give birth').' soon', 'Expected around '.$due->format('j M').' ('.$days.' days).', 'Move to the maternity camp and keep watch.');
             } elseif ($days < -10 && $days > -60) {
-                $add('overdue', 'warning', 'breeding', $a, 'Oor tyd', 'Was verwag op '.$due->format('j M').' — '.abs($days).' dae gelede.', 'Kontroleer of sy dragtig is; dalk leeg.');
+                $add('overdue', 'warning', 'breeding', $a, 'Overdue', 'Was expected '.$due->format('j M').' — '.abs($days).' days ago.', 'Check whether she\'s actually pregnant.');
             }
         }
         foreach ($events->where('type', 'pregnancy_scan')->whereIn('result', ['twins', 'triplets']) as $e) {
             if (($a = $active->get($e->animal_id)) && $e->date->gte($today->copy()->subDays(150))) {
-                $add('multiple_pregnancy', $e->result === 'triplets' ? 'warning' : 'info', 'breeding', $a, $e->result === 'triplets' ? 'Dra drieling' : 'Dra tweeling', 'Geskandeer op '.$e->date->format('j M').'.', 'Groepeer volgens vrugte en voer daarvolgens in laat dragtigheid.');
+                $add('multiple_pregnancy', $e->result === 'triplets' ? 'warning' : 'info', 'breeding', $a, $e->result === 'triplets' ? 'Carrying triplets' : 'Carrying twins', 'Scanned '.$e->date->format('j M').'.', 'Group by litter size and feed for it in late pregnancy.');
             }
         }
         foreach ($events->where('type', 'pregnancy_scan')->where('result', 'empty') as $e) {
             if (($a = $active->get($e->animal_id)) && $e->date->gte($today->copy()->subDays(120))) {
-                $add('empty', 'info', 'breeding', $a, 'Leeg geskandeer', 'Nie dragtig by die skandering op '.$e->date->format('j M').' nie.', 'Herpaar of oorweeg uitskot as dit herhaal.');
+                $add('empty', 'info', 'breeding', $a, 'Scanned empty', 'Not pregnant at the scan on '.$e->date->format('j M').'.', 'Re-mate, or cull if it keeps happening.');
             }
         }
         // Close relatives mated (from recorded pedigree).
@@ -194,28 +196,62 @@ class HerdAlerts
             $s = $a->sire;
             $d = $a->dam;
             $why = match (true) {
-                $d->sire_id && $d->sire_id === $s->id => 'die vader is ook die ma se vader',
-                $s->dam_id && $s->dam_id === $d->id => 'die ma is ook die vader se ma',
-                $s->sire_id && $s->sire_id === $d->sire_id => 'ouers het dieselfde vader (halfsibbe)',
-                $s->dam_id && $s->dam_id === $d->dam_id => 'ouers het dieselfde ma (halfsibbe)',
+                $d->sire_id && $d->sire_id === $s->id => 'the sire is also the dam\'s sire',
+                $s->dam_id && $s->dam_id === $d->id => 'the dam is also the sire\'s dam',
+                $s->sire_id && $s->sire_id === $d->sire_id => 'the parents share a sire (half-siblings)',
+                $s->dam_id && $s->dam_id === $d->dam_id => 'the parents share a dam (half-siblings)',
                 default => null,
             };
             if ($why) {
-                $add('inbreeding', 'warning', 'breeding', $a, 'Inteling', 'Nabye familie gepaar: '.$why.'.', 'Vermy hierdie paring in die toekoms; hou die dier se groei en vrugbaarheid dop.');
+                $add('inbreeding', 'warning', 'breeding', $a, 'Inbreeding', 'Close relatives were mated: '.$why.'.', 'Avoid this pairing in future; watch this animal\'s growth and fertility.');
             }
         }
 
         // ── Withdrawal periods ──────────────────────────────────────────
         foreach ($events->filter(fn ($e) => $e->withdrawal_until && $e->withdrawal_until->gte($today)) as $e) {
             if ($a = $herd->get($e->animal_id)) {
-                $add('withdrawal', 'info', 'withdrawal', $a, 'Onttrekking tot '.$e->withdrawal_until->format('j M'), ($e->product ?: $e->label()).' op '.$e->date->format('j M').'.', 'Moenie verkoop of slag voor '.$e->withdrawal_until->format('j M Y').' nie.');
+                $add('withdrawal', 'info', 'withdrawal', $a, 'Withdrawal until '.$e->withdrawal_until->format('j M'), ($e->product ?: $e->label()).' on '.$e->date->format('j M').'.', 'Don\'t sell or slaughter before '.$e->withdrawal_until->format('j M Y').'.');
+            }
+        }
+
+        // ── KraalTrac Watch: who hasn't been to the water ───────────────
+        $watch = app(WatchStats::class);
+        if ($watch->points($userId)->isNotEmpty()) {
+            foreach ($watch->animals($userId)->where('missed', true) as $w) {
+                $add('missed_drink', $w->hours_since > $w->limit * 2 ? 'critical' : 'warning', 'water', $w->animal,
+                    'Hasn\'t been to drink', 'Last at '.$w->last_point.' '.$w->last_at->diffForHumans().' (limit '.$w->limit.' h).',
+                    'Go find it — check the camp, fences and the animal itself.');
+            }
+            foreach ($watch->points($userId) as $p) {
+                if ($p->last_synced_at && $p->last_synced_at->lt(now()->subHours(6))) {
+                    $add('point_offline:'.$p->id, 'warning', 'devices', null, ($p->location ?: $p->name).' is quiet', 'No data from this water point since '.$p->last_synced_at->diffForHumans().'.', 'Check power, Wi-Fi and that the antenna is still in place.');
+                }
+            }
+        }
+
+        // ── Custom devices: readings outside the farmer's own limits ────
+        foreach (\App\Models\Reader::where('user_id', $userId)->where('kind', 'custom')->get() as $dev) {
+            $latest = \App\Models\DeviceReading::where('reader_id', $dev->id)->where('recorded_at', '>=', now()->subDay())
+                ->orderByDesc('recorded_at')->get()->unique('metric')->keyBy('metric');
+            foreach ($dev->metrics ?? [] as $m) {
+                $r = $latest->get($m['key']);
+                if (! $r) {
+                    continue;
+                }
+                $low = $m['min'] !== null && $r->value < $m['min'];
+                $high = $m['max'] !== null && $r->value > $m['max'];
+                if ($low || $high) {
+                    $add('device_limit:'.$dev->id.':'.$m['key'], 'warning', 'devices', null, $dev->name.': '.$m['label'].' '.($low ? 'low' : 'high'),
+                        $r->value.($m['unit'] ? ' '.$m['unit'] : '').' at '.$r->recorded_at->format('H:i').' — your limit is '.($low ? 'min '.$m['min'] : 'max '.$m['max']).'.',
+                        'Have a look at '.($dev->location ?: 'the device').'.');
+                }
             }
         }
 
         // ── Records ─────────────────────────────────────────────────────
         foreach ($herd->whereNotNull('eid')->groupBy('eid')->filter(fn ($g) => $g->count() > 1) as $eid => $dupes) {
             foreach ($dupes as $a) {
-                $add('duplicate_eid', 'critical', 'data', $a, 'Dubbele EID', "Oormerk {$eid} is op {$dupes->count()} diere.", 'Maak die rekords reg — skanderings kan by die verkeerde dier beland.');
+                $add('duplicate_eid', 'critical', 'data', $a, 'Duplicate EID', "Tag {$eid} is on {$dupes->count()} animals.", 'Fix the records — scans may land on the wrong animal.');
             }
         }
 

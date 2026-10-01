@@ -19,9 +19,9 @@ use Illuminate\Support\Str;
 class DataController extends Controller
 {
     public const KINDS = [
-        'herd' => ['Kuddeboek / stamregister', 'Diere word bygevoeg of opgedateer (dieselfde ID = opdateer, nooit dupliseer nie). Ouers en grootouers word gekoppel.'],
-        'scans' => ['Wegings / skanderings', 'Elke ry word \'n skandering, met gewig indien daar is. Onbekende oormerke word nuwe diere.'],
-        'events' => ['Logboek', 'Behandelings, paring, geboortes, verkope en sterftes — gekoppel aan diere volgens ID of EID.'],
+        'herd' => ['Herd book / stud register', 'Animals are added or updated (same ID = update, never a duplicate). Parents and grandparents get linked.'],
+        'scans' => ['Weights / scans', 'Each row becomes a scan, with its weight if there is one. Unknown tags become new animals.'],
+        'events' => ['Records', 'Treatments, matings, births, sales and deaths — matched to animals by ID or EID.'],
     ];
 
     public function index(Request $request, DataExporter $exporter)
@@ -53,7 +53,7 @@ class DataController extends Controller
         if (! $parsed['rows']) {
             @unlink($this->path($token));
 
-            return back()->withErrors(['file' => 'Die lêer is leeg of kon nie gelees word nie.']);
+            return back()->withErrors(['file' => 'That file is empty or couldn\'t be read.']);
         }
 
         $kind = $this->sniff($parsed['headers']);
@@ -73,7 +73,7 @@ class DataController extends Controller
     {
         $data = $request->validate(['token' => ['required', 'alpha_num', 'size:32'], 'kind' => ['required', 'in:'.implode(',', array_keys(self::KINDS))]]);
         $path = $this->path($data['token']);
-        abort_unless(is_file($path), 410, 'Die oplaai het verval — laai asseblief weer op.');
+        abort_unless(is_file($path), 410, 'That upload expired — please upload it again.');
 
         $rows = CsvReader::read($path)['rows'];
         $user = $request->user();
@@ -82,17 +82,17 @@ class DataController extends Controller
             'herd' => (function () use ($herd, $user, $rows) {
                 $r = $herd->import($user, $rows);
 
-                return "Kuddeboek: {$r['created']} nuut, {$r['updated']} opgedateer, {$r['skipped']} oorgeslaan.";
+                return "Herd book: {$r['created']} added, {$r['updated']} updated, {$r['skipped']} skipped.";
             })(),
             'scans' => (function () use ($scans, $user, $rows, $request) {
                 $s = $scans->import($user, null, 'csv', $rows, $request->input('name'));
 
-                return "Skanderings: {$s->scan_count} gestoor — {$s->matched_count} bekende diere, {$s->new_count} nuwe diere.";
+                return "Scans: {$s->scan_count} saved — {$s->matched_count} known animals, {$s->new_count} new.";
             })(),
             'events' => (function () use ($events, $user, $rows) {
                 $r = $events->import($user, $rows);
 
-                return "Logboek: {$r['created']} inskrywings, {$r['skipped']} oorgeslaan".($r['unknown'] ? ' (onbekende diere: '.implode(', ', array_slice($r['unknown'], 0, 5)).')' : '').'.';
+                return "Records: {$r['created']} entries added, {$r['skipped']} skipped".($r['unknown'] ? ' (animals we don\'t know: '.implode(', ', array_slice($r['unknown'], 0, 5)).')' : '').'.';
             })(),
         };
         @unlink($path);
@@ -104,7 +104,7 @@ class DataController extends Controller
     {
         $path = $exporter->backup($request->user());
 
-        return response()->download($path, 'farmtech-rugsteun-'.now()->format('Y-m-d').'.zip')->deleteFileAfterSend();
+        return response()->download($path, 'farmtech-backup-'.now()->format('Y-m-d').'.zip')->deleteFileAfterSend();
     }
 
     public function template(string $kind)
@@ -128,7 +128,7 @@ class DataController extends Controller
                 fputcsv($out, $r);
             }
             fclose($out);
-        }, "farmtech-sjabloon-{$kind}.csv", ['Content-Type' => 'text/csv']);
+        }, "farmtech-template-{$kind}.csv", ['Content-Type' => 'text/csv']);
     }
 
     /** Decide what a file is from its columns. */

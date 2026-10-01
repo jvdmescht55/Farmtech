@@ -23,6 +23,7 @@ class User extends Authenticatable
         'breed',
         'species',
         'phone',
+        'terms_accepted_at',
     ];
 
     protected $hidden = [
@@ -36,6 +37,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'terms_accepted_at' => 'datetime',
         ];
     }
 
@@ -62,7 +64,7 @@ class User extends Authenticatable
         if (! $this->is_active) {
             return false;
         }
-        if ($this->isAdmin()) {
+        if ($this->isAdmin() || config("herd.modules.{$module}.open")) {
             return true;
         }
 

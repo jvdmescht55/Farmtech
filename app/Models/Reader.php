@@ -9,13 +9,13 @@ use Illuminate\Support\Str;
 
 class Reader extends Model
 {
-    protected $fillable = ['user_id', 'license_id', 'name', 'serial', 'model', 'firmware', 'battery_pct', 'api_token', 'last_synced_at', 'last_ip'];
+    protected $fillable = ['user_id', 'license_id', 'kind', 'location', 'alert_hours', 'metrics', 'name', 'serial', 'model', 'firmware', 'battery_pct', 'api_token', 'last_synced_at', 'last_ip'];
 
     protected $hidden = ['api_token'];
 
     protected function casts(): array
     {
-        return ['last_synced_at' => 'datetime'];
+        return ['last_synced_at' => 'datetime', 'metrics' => 'array'];
     }
 
     /** The plain key, only available right after it was issued (shown to the farmer once). */
@@ -58,6 +58,18 @@ class Reader extends Model
     public function license(): BelongsTo
     {
         return $this->belongsTo(License::class);
+    }
+
+    public const KINDS = ['handheld' => 'KraalTrac Pro (handheld)', 'watch' => 'KraalTrac Watch (gate / water point)', 'custom' => 'Custom device'];
+
+    public function readings(): HasMany
+    {
+        return $this->hasMany(DeviceReading::class);
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->last_synced_at && $this->last_synced_at->gt(now()->subMinutes(15));
     }
 
     public function syncs(): HasMany

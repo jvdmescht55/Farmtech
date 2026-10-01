@@ -26,11 +26,17 @@ use App\Http\Controllers\Storefront\SupportController;
 use App\Http\Controllers\Storefront\TrackOrderController;
 use App\Http\Controllers\Admin\InsightsController as AdminInsightsController;
 use App\Http\Controllers\Admin\LeadController as AdminLeadController;
+use App\Http\Controllers\Admin\ListingController as AdminListingController;
+use App\Http\Controllers\Admin\SuggestionAdminController as AdminSuggestionController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\HerdHubController;
+use App\Http\Controllers\Watch\WatchController;
+use App\Http\Controllers\Custom\CustomDeviceController;
 use App\Http\Controllers\SiteController;
+use App\Http\Controllers\LegalController;
+use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\Rfid\AnimalController as RfidAnimalController;
 use App\Http\Controllers\Rfid\CatalogueController as RfidCatalogueController;
 use App\Http\Controllers\Rfid\CompareController as RfidCompareController;
@@ -55,15 +61,20 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [SiteController::class, 'gateway'])->name('portal');
 Route::get('/store', [SiteController::class, 'store'])->name('site.store');
 Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.interest')->middleware('throttle:6,1');
+Route::get('/store/{listing}', [SiteController::class, 'product'])->name('site.product');
+Route::get('/suggest', [SiteController::class, 'suggest'])->name('site.suggest');
+Route::post('/suggest', [SuggestionController::class, 'store'])->name('site.suggest.store')->middleware('throttle:6,1');
 Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
 Route::post('/contact', [SiteController::class, 'sendContact'])->middleware('throttle:6,1');
 
-// Legal pages stay public, rendered in the new site layout.
-Route::get('/policies/shipping', [PolicyController::class, 'shipping'])->name('policies.shipping');
-Route::get('/policies/returns', [PolicyController::class, 'returns'])->name('policies.returns');
-Route::get('/policies/terms', [PolicyController::class, 'terms'])->name('policies.terms');
-Route::get('/policies/icasa-compliance', [PolicyController::class, 'icasaCompliance'])->name('policies.icasa');
-Route::get('/policies/privacy', [PolicyController::class, 'privacy'])->name('policies.privacy');
+// Legal — every page under /legal; the old /policies/* URLs redirect there.
+Route::get('/legal', [LegalController::class, 'index'])->name('legal.index');
+Route::get('/legal/{page}', [LegalController::class, 'show'])->name('legal.show');
+Route::redirect('/policies/shipping', '/legal/shipping')->name('policies.shipping');
+Route::redirect('/policies/returns', '/legal/returns')->name('policies.returns');
+Route::redirect('/policies/terms', '/legal/terms')->name('policies.terms');
+Route::redirect('/policies/icasa-compliance', '/legal/icasa')->name('policies.icasa');
+Route::redirect('/policies/privacy', '/legal/privacy')->name('policies.privacy');
 Route::get('/herd', [CustomerAuthController::class, 'landing'])->name('landing');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [CustomerAuthController::class, 'landing'])->name('login');
@@ -90,6 +101,29 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::get('/app', [HerdHubController::class, 'index'])->middleware('auth')->name('herd.hub');
+Route::middleware('auth')->group(function () {
+    Route::get('/app/suggest', [SuggestionController::class, 'index'])->name('herd.suggest');
+    Route::post('/app/suggest', [SuggestionController::class, 'store'])->name('herd.suggest.store')->middleware('throttle:10,1');
+});
+
+// KraalTrac Watch — gate & water-point counters.
+Route::prefix('app/watch')->name('watch.')->middleware(['auth', 'module:watch'])->group(function () {
+    Route::get('/', [WatchController::class, 'dashboard'])->name('dashboard');
+    Route::get('/animals', [WatchController::class, 'animals'])->name('animals');
+    Route::get('/points', [WatchController::class, 'points'])->name('points');
+    Route::post('/points', [WatchController::class, 'store'])->name('points.store');
+    Route::put('/points/{reader}', [WatchController::class, 'update'])->name('points.update');
+});
+
+// Custom devices — any farmer, any sensor.
+Route::prefix('app/devices')->name('custom.')->middleware(['auth', 'module:custom'])->group(function () {
+    Route::get('/', [CustomDeviceController::class, 'index'])->name('index');
+    Route::post('/', [CustomDeviceController::class, 'store'])->name('store');
+    Route::get('/{device}', [CustomDeviceController::class, 'show'])->name('show');
+    Route::put('/{device}', [CustomDeviceController::class, 'update'])->name('update');
+    Route::post('/{device}/token', [CustomDeviceController::class, 'token'])->name('token');
+    Route::delete('/{device}', [CustomDeviceController::class, 'destroy'])->name('destroy');
+});
 
 Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])->group(function () {
     Route::get('/', [RfidDashboardController::class, 'index'])->name('dashboard');
@@ -257,6 +291,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::get('/outreach', [AdminSupplierOutreachDashboardController::class, 'index'])->name('outreach.index');
             Route::patch('/outreach/{product}', [AdminSupplierOutreachDashboardController::class, 'update'])->name('outreach.update');
+        });
+
+        Route::get('/suggestions', [AdminSuggestionController::class, 'index'])->name('suggestions.index');
+        Route::patch('/suggestions/{suggestion}', [AdminSuggestionController::class, 'update'])->name('suggestions.update');
+
+        Route::middleware('can:manage-catalog')->group(function () {
+            Route::get('/listings', [AdminListingController::class, 'index'])->name('listings.index');
+            Route::get('/listings/create', [AdminListingController::class, 'create'])->name('listings.create');
+            Route::post('/listings', [AdminListingController::class, 'store'])->name('listings.store');
+            Route::get('/listings/{listing}/edit', [AdminListingController::class, 'edit'])->name('listings.edit');
+            Route::put('/listings/{listing}', [AdminListingController::class, 'update'])->name('listings.update');
+            Route::post('/listings/{listing}/toggle', [AdminListingController::class, 'toggle'])->name('listings.toggle');
+            Route::post('/listings/{listing}/images', [AdminListingController::class, 'uploadImage'])->name('listings.images.store');
+            Route::delete('/listings/{listing}/images', [AdminListingController::class, 'removeImage'])->name('listings.images.destroy');
         });
 
         Route::get('/leads', [AdminLeadController::class, 'index'])->name('leads.index');

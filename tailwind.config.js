@@ -72,7 +72,7 @@ export default {
             },
             fontFamily: {
                 headline: ['"Instrument Serif"', 'ui-serif', 'Georgia', 'serif'],
-                ui: ['"Geist"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                ui: ['"Geist Variable"', '"Geist"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
                 num: ['"Geist Mono"', 'ui-monospace', 'monospace'],
                 // rev. 12 — premium-catalogue typography: Fraunces (a soft-serif with
                 // an optical-size axis, so it reads well both huge on a hero and small

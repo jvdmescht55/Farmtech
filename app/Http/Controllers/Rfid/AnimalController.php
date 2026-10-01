@@ -117,6 +117,7 @@ class AnimalController extends Controller
             'lots' => SaleLot::with('catalogue')->where('animal_id', $animal->id)->get(),
             'alerts' => app(\App\Services\Herd\HerdAlerts::class)->forAnimal($request->user()->id, $animal->id),
             'events' => $animal->events()->with('mate')->get(),
+            'water' => app(\App\Services\Herd\WatchStats::class)->animals($request->user()->id)->first(fn ($w) => $w->animal->id === $animal->id),
         ]);
     }
 

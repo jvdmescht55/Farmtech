@@ -80,6 +80,6 @@ class LicenseController extends Controller
         abort_unless($user->isCustomer(), 404);
         $url = route('password.reset', ['token' => \Illuminate\Support\Facades\Password::createToken($user), 'email' => $user->email]);
 
-        return back()->with('status', "Herstel-skakel vir {$user->email} (geldig 60 min.):")->with('resetLink', $url);
+        return back()->with('status', "Password reset link for {$user->email} (valid 60 min):")->with('resetLink', $url);
     }
 }

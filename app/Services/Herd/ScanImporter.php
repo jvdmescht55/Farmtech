@@ -30,7 +30,13 @@ class ScanImporter
     /** @var array<int, array> per-scan outcome of the last import() call (API replies use this). */
     public array $results = [];
 
-    public const TYPE = ['weigh_type', 'type', 'event'];
+    public const TYPE = ['weigh_type', 'weight_type', 'wtype', 'type', 'event'];
+
+    public const SEX = ['sex', 'gender', 'geslag'];
+
+    public const SIRE = ['sire', 'sire_id', 'vaar', 'father', 'ram'];
+
+    public const DAM = ['dam', 'dam_id', 'moer', 'mother', 'ewe'];
 
     /** @param array<int, array<string, mixed>> $rows */
     public function import(User $user, ?Reader $reader, string $source, array $rows, ?string $filename = null, ?ReaderSync $into = null): ReaderSync
@@ -97,9 +103,12 @@ class ScanImporter
                     ]);
                 }
 
+                // Extra details a terminal like the KraalTrac Pro can capture on its keypad.
+                $this->fillDetails($user, $animal, $row);
+
                 $weight = CsvReader::pick($row, self::WEIGHT);
                 $weight = $weight !== null && is_numeric(str_replace(',', '.', $weight)) ? (float) str_replace(',', '.', $weight) : null;
-                $type = CsvReader::pick($row, self::TYPE);
+                $type = $this->weighType(CsvReader::pick($row, self::TYPE));
 
                 $weightKg = $weight && $weight > 0 && $weight < 5000 ? round($weight, 1) : null;
 
@@ -151,6 +160,43 @@ class ScanImporter
 
             return $sync;
         });
+    }
+
+    private function weighType(?string $raw): ?string
+    {
+        $t = strtolower(trim((string) $raw));
+
+        return match (true) {
+            $t === '' => null,
+            in_array($t, ['birth', 'geboorte', 'b', '1'], true) => 'birth',
+            in_array($t, ['wean', 'weaning', 'speen', 'w', '2'], true) => 'wean',
+            in_array($t, ['post_wean', 'post-wean', 'postwean', 'naspeen', 'p', '3'], true) => 'post_wean',
+            in_array($t, ['mature', 'adult', 'volwasse', 'm', '4'], true) => 'mature',
+            default => 'routine',
+        };
+    }
+
+    /** Sex, sire and dam from the device — only fills what's still blank, never overwrites the herd book. */
+    private function fillDetails(User $user, Animal $animal, array $row): void
+    {
+        $updates = [];
+        $sex = strtolower((string) CsvReader::pick($row, self::SEX));
+        if ($sex !== '' && ! $animal->sex) {
+            $updates['sex'] = in_array($sex, ['m', 'male', 'ram', 'bull', 'buck', 'r', 'manlik', '1'], true) ? 'M' : 'F';
+        }
+        foreach (['sire_id' => self::SIRE, 'dam_id' => self::DAM] as $col => $aliases) {
+            if (! $animal->{$col} && ($id = CsvReader::pick($row, $aliases))) {
+                $parent = ctype_digit(preg_replace('/\s/', '', $id)) && strlen(preg_replace('/\D/', '', $id)) === 15
+                    ? Animal::where('user_id', $user->id)->where('eid', preg_replace('/\D/', '', $id))->first()
+                    : Animal::findOrReference($user->id, $id);
+                if ($parent && $parent->id !== $animal->id) {
+                    $updates[$col] = $parent->id;
+                }
+            }
+        }
+        if ($updates) {
+            $animal->update($updates);
+        }
     }
 
     /** ISO 11784 tags come as "982 000123456789", "982000123456789" or "982.000123456789". */

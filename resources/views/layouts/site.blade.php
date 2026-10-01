@@ -5,19 +5,18 @@
 @php
     $overHero = trim($__env->yieldContent('hero_dark')) !== '';
     $nav = [
-        [route('site.store').'#skandeerder', 'Die Skandeerder'],
-        [route('site.store').'#app', 'Die App'],
-        [route('site.store').'#hoe', 'Hoe dit werk'],
-        [route('site.store').'#vrae', 'Vrae'],
-        [route('site.contact'), 'Kontak'],
+        [route('site.store').'#devices', 'Devices'],
+        [route('site.store').'#software', 'Software'],
+        [route('site.suggest'), 'Made for you'],
+        [route('site.contact'), 'Contact'],
     ];
 @endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     @include('partials.head')
-    <title>@yield('title', 'Farmtech — Ken jou kudde')</title>
-    <meta name="description" content="@yield('description', 'Farmtech RFID Scanner V1 and Kuddebestuur herd software — scan in the kraal, see every kilo, every animal, every day.')">
+    <title>@yield('title', 'Farmtech — Know your herd')</title>
+    <meta name="description" content="@yield('description', 'Farmtech KraalTrac devices and Kuddebestuur herd software — scan in the kraal, see every kilo, every animal, every day. Built around your farm.')">
     @stack('head')
 </head>
 <body class="bg-sand text-char font-ui antialiased [font-feature-settings:'ss01']"
@@ -30,7 +29,7 @@
         :class="(scrolled || menu || {{ $overHero ? 'false' : 'true' }}) ? 'bg-sand/85 backdrop-blur-xl border-b border-hairline text-char' : 'bg-transparent border-b border-transparent {{ $overHero ? 'text-white' : 'text-char' }}'"
         style="padding-top: env(safe-area-inset-top, 0px)">
     <div class="wrap h-[76px] flex items-center gap-8">
-        <a href="{{ route('site.store') }}" class="shrink-0 flex items-baseline gap-1.5" aria-label="Farmtech winkel">
+        <a href="{{ route('site.store') }}" class="shrink-0 flex items-baseline gap-1.5" aria-label="Farmtech store">
             <span class="font-headline text-[30px] leading-none tracking-[-0.02em]">farmtech</span>
             <span class="w-1.5 h-1.5 rounded-full bg-ochre translate-y-[-2px]"></span>
         </a>
@@ -43,9 +42,9 @@
 
         <div class="hidden md:flex items-center gap-5 shrink-0">
             <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">Kuddebestuur →</a>
-            <a href="{{ route('site.store') }}#bestel"
+            <a href="{{ route('site.store') }}#order"
                class="btn btn-sm"
-               :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Bestel vroeg</a>
+               :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Get yours</a>
         </div>
 
         <button type="button" class="md:hidden ml-auto -mr-2 w-11 h-11 grid place-items-center" @click="menu = !menu" :aria-expanded="menu" aria-label="Menu">
@@ -61,12 +60,12 @@
          class="md:hidden fixed inset-x-0 bottom-0 top-[calc(76px+env(safe-area-inset-top,0px))] bg-sand text-char overflow-y-auto">
         <div class="wrap py-10 flex flex-col min-h-full" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px))">
             <nav class="flex flex-col">
-                @foreach ([[route('site.store'), 'Winkel'], ...$nav] as [$href, $label])
+                @foreach ([[route('site.store'), 'Store'], ...$nav] as [$href, $label])
                     <a href="{{ $href }}" @click="menu = false" class="font-headline text-5xl py-3 border-b border-hairline">{{ $label }}</a>
                 @endforeach
             </nav>
             <div class="mt-auto pt-10 grid gap-3">
-                <a href="{{ route('site.store') }}#bestel" @click="menu = false" class="btn-dark w-full">Bestel vroeg</a>
+                <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Get yours</a>
                 <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Kuddebestuur →</a>
             </div>
         </div>
@@ -81,38 +80,41 @@
     <div class="wrap pt-24 pb-10" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px))">
         <div class="grid lg:grid-cols-12 gap-12">
             <div class="lg:col-span-6">
-                <div class="font-headline text-sand text-[clamp(3.5rem,9vw,8rem)] leading-[0.85] tracking-[-0.03em]">Ken jou<br><em class="text-ochre-light">kudde.</em></div>
-                <p class="mt-6 max-w-sm">RFID Scanner V1 &amp; Kuddebestuur. Gebou vir die kraal, nie die kantoor nie.</p>
+                <div class="font-headline text-sand text-[clamp(3.5rem,9vw,8rem)] leading-[0.85] tracking-[-0.03em]">Know your<br><em class="text-ochre-light">herd.</em></div>
+                <p class="mt-6 max-w-sm">KraalTrac devices &amp; Kuddebestuur. Built for the kraal, not the office — and built around your farm.</p>
             </div>
             <div class="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-8 text-[15px]">
                 <div>
                     <div class="eyebrow text-sand/40 mb-4">Farmtech</div>
                     <ul class="space-y-2.5">
-                        <li><a class="hover:text-sand" href="{{ route('portal') }}">Voorblad</a></li>
-                        <li><a class="hover:text-sand" href="{{ route('site.store') }}">Winkel</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('portal') }}">Home</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.store') }}">Store</a></li>
                         <li><a class="hover:text-sand" href="{{ route('landing') }}">Kuddebestuur</a></li>
-                        <li><a class="hover:text-sand" href="{{ route('site.contact') }}">Kontak</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.suggest') }}">Suggest a device</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.contact') }}">Contact</a></li>
                     </ul>
                 </div>
                 <div>
-                    <div class="eyebrow text-sand/40 mb-4">Rekening</div>
+                    <div class="eyebrow text-sand/40 mb-4">Account</div>
                     <ul class="space-y-2.5">
-                        <li><a class="hover:text-sand" href="{{ route('login') }}">Teken in</a></li>
-                        <li><a class="hover:text-sand" href="{{ route('register') }}">Aktiveer jou leser</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('login') }}">Sign in</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('register') }}">Activate a device</a></li>
                     </ul>
                 </div>
                 <div>
-                    <div class="eyebrow text-sand/40 mb-4">Wetlik</div>
+                    <div class="eyebrow text-sand/40 mb-4">Legal</div>
                     <ul class="space-y-2.5">
-                        <li><a class="hover:text-sand" href="{{ route('policies.privacy') }}">Privacy (POPIA)</a></li>
-                        <li><a class="hover:text-sand" href="{{ route('policies.terms') }}">Terms</a></li>
-                        <li><a class="hover:text-sand" href="{{ route('policies.returns') }}">Returns</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('legal.show', 'privacy') }}">Privacy (POPIA)</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('legal.show', 'terms') }}">Terms of use</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('legal.show', 'sale') }}">Terms of sale</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('legal.show', 'returns') }}">Returns &amp; warranty</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('legal.index') }}">All legal</a></li>
                     </ul>
                 </div>
             </div>
         </div>
         <div class="mt-20 pt-6 border-t border-sand/10 flex flex-col md:flex-row md:items-center justify-between gap-4 text-[13px] text-sand/40">
-            <span>© {{ date('Y') }} Farmtech · Suid-Afrika · Lekker boer.</span>
+            <span>© {{ date('Y') }} {{ config('legal.legal_name') ?: 'Farmtech' }} · South Africa · Lekker boer.</span>
             @hasSection('credits')<div class="max-w-3xl md:text-right">@yield('credits')</div>@endif
         </div>
     </div>

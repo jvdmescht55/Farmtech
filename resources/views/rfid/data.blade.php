@@ -1,7 +1,7 @@
 @extends('layouts.rfid')
-@section('title', 'Data')
-@section('eyebrow')Invoer &amp; uitvoer — gooi enige CSV in, ons sorteer dit @endsection
-@section('actions')<a href="{{ route('rfid.data.backup') }}" class="btn-primary">Volledige rugsteun (.zip)</a>@endsection
+@section('title', 'Import & export')
+@section('eyebrow')Throw in any CSV — we sort out where it goes @endsection
+@section('actions')<a href="{{ route('rfid.data.backup') }}" class="btn-primary">Full backup (.zip)</a>@endsection
 
 @section('content')
 <div class="grid xl:grid-cols-5 gap-6">
@@ -12,15 +12,15 @@
             @endphp
             <div class="panel overflow-hidden">
                 <div class="px-6 sm:px-8 pt-7 pb-6 border-b border-hairline">
-                    <p class="eyebrow">Voorskou · {{ $preview['name'] }}</p>
-                    <h2 class="font-headline text-4xl mt-3">Dit lyk soos <em>{{ strtolower($kindLabel) }}</em>.</h2>
-                    <p class="text-stone mt-2">{{ number_format($preview['count']) }} rye. {{ $kindHelp }}</p>
+                    <p class="eyebrow">Preview · {{ $preview['name'] }}</p>
+                    <h2 class="font-headline text-4xl mt-3">Looks like <em>{{ strtolower($kindLabel) }}</em>.</h2>
+                    <p class="text-stone mt-2">{{ number_format($preview['count']) }} rows. {{ $kindHelp }}</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
                         @foreach ($preview['headers'] as $h)
-                            <span class="chip {{ in_array($h, $preview['recognised'], true) ? 'bg-char text-sand' : 'bg-sand-deep text-stone line-through' }}" title="{{ in_array($h, $preview['recognised'], true) ? 'Herken' : 'Word geïgnoreer' }}">{{ $h }}</span>
+                            <span class="chip {{ in_array($h, $preview['recognised'], true) ? 'bg-char text-sand' : 'bg-sand-deep text-stone line-through' }}" title="{{ in_array($h, $preview['recognised'], true) ? 'Recognised' : 'Ignored' }}">{{ $h }}</span>
                         @endforeach
                     </div>
-                    <p class="mt-2 text-xs text-stone">Donker = herken. Deurgetrek = word geïgnoreer.</p>
+                    <p class="mt-2 text-xs text-stone">Dark = we know this column. Crossed out = ignored.</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="tbl">
@@ -36,30 +36,30 @@
                     @csrf
                     <input type="hidden" name="token" value="{{ $preview['token'] }}">
                     <input type="hidden" name="name" value="{{ $preview['name'] }}">
-                    <div><label class="field-label">Voer in as</label>
+                    <div><label class="field-label">Bring it in as</label>
                         <select name="kind" class="field w-64">@foreach ($kinds as $k => [$l])<option value="{{ $k }}" @selected($preview['kind'] === $k)>{{ $l }}</option>@endforeach</select></div>
-                    <button class="btn-dark">Voer {{ number_format($preview['count']) }} rye in</button>
-                    <a href="{{ route('rfid.data') }}" class="btn-line">Kanselleer</a>
+                    <button class="btn-dark">Import {{ number_format($preview['count']) }} rows</button>
+                    <a href="{{ route('rfid.data') }}" class="btn-line">Cancel</a>
                 </form>
             </div>
         @endif
 
         <div class="panel p-6 sm:p-8">
-            <h2 class="font-headline text-3xl">Voer in</h2>
-            <p class="text-stone mt-2">Laai 'n CSV op — uit Logix, 'n spreadsheet, of jou skandeerder. Ons kyk na die kolomme en sê vir jou wat dit is voordat iets gestoor word.</p>
+            <h2 class="font-headline text-3xl">Bring data in</h2>
+            <p class="text-stone mt-2">Upload a CSV — from Logix, a spreadsheet or your KraalTrac. We look at the columns and show you what we found before anything is saved.</p>
             <form method="POST" action="{{ route('rfid.data.preview') }}" enctype="multipart/form-data" class="mt-6" x-data="{ name: '' }">
                 @csrf
                 <label class="block rounded-2xl border-2 border-dashed border-hairline hover:border-char transition p-10 text-center cursor-pointer">
                     <input type="file" name="file" accept=".csv,.txt,.tsv" required class="sr-only" @change="name = $event.target.files[0]?.name || ''; $nextTick(() => $el.closest('form').requestSubmit())">
-                    <div class="font-headline text-3xl" x-text="name || 'Kies of sleep \'n lêer'"></div>
-                    <div class="text-sm text-stone mt-2">.csv · .txt · .tsv — tot 20 MB. Excel? "Save as → CSV".</div>
+                    <div class="font-headline text-3xl" x-text="name || 'Choose or drop a file'"></div>
+                    <div class="text-sm text-stone mt-2">.csv · .txt · .tsv — up to 20 MB. Excel? "Save as → CSV".</div>
                 </label>
             </form>
             <div class="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
                 @foreach ($kinds as $k => [$l, $d])
                     <a href="{{ route('rfid.data.template', $k) }}" class="rounded-xl border border-hairline p-4 hover:border-char transition">
                         <div class="font-medium">{{ $l }}</div>
-                        <div class="text-xs text-stone mt-1">Laai sjabloon af ↓</div>
+                        <div class="text-xs text-stone mt-1">Download a template ↓</div>
                     </a>
                 @endforeach
             </div>
@@ -68,7 +68,7 @@
 
     <div class="xl:col-span-2 space-y-6">
         <div class="panel overflow-hidden">
-            <div class="panel-head"><div class="panel-title">Voer uit</div><span class="text-xs text-stone">CSV · oop in Excel</span></div>
+            <div class="panel-head"><div class="panel-title">Take data out</div><span class="text-xs text-stone">CSV · opens in Excel</span></div>
             <ul class="divide-y divide-hairline">
                 @foreach ($exports as $k => [$l, $d])
                     <li><a href="{{ route('rfid.data', ['export' => $k]) }}" class="flex items-center gap-4 px-6 py-4 hover:bg-sand-light group">
@@ -77,15 +77,15 @@
                     </a></li>
                 @endforeach
                 <li><a href="{{ route('rfid.catalogues.index') }}" class="flex items-center gap-4 px-6 py-4 hover:bg-sand-light group">
-                    <div class="flex-1"><div class="font-medium">Veilingkatalogusse</div><div class="text-sm text-stone">Elke katalogus het sy eie CSV en drukweergawe.</div></div>
+                    <div class="flex-1"><div class="font-medium">Sale catalogues</div><div class="text-sm text-stone">Each catalogue has its own CSV and print view.</div></div>
                     <span class="text-stone-light group-hover:text-char">→</span>
                 </a></li>
             </ul>
         </div>
         <div class="panel p-6 text-sm text-stone leading-relaxed">
-            <div class="panel-title text-char mb-2">Hoe ons sorteer</div>
-            <p>Kolomme soos <span class="font-num text-char">sire, dam, birth_date</span> → kuddeboek. <span class="font-num text-char">weight/kg</span> saam met 'n oormerk of ID → wegings. <span class="font-num text-char">type + date</span> → logboek. Jy kan altyd self kies voordat dit ingevoer word.</p>
-            <p class="mt-3">Die kuddeboek-uitvoer gebruik presies dieselfde kolomme as die invoer — maak dit oop in Excel, wysig, en voer weer in.</p>
+            <div class="panel-title text-char mb-2">How we sort it</div>
+            <p>Columns like <span class="font-num text-char">sire, dam, birth_date</span> → herd book. <span class="font-num text-char">weight/kg</span> with a tag or ID → weighings. <span class="font-num text-char">type + date</span> → records. You can always change it before importing.</p>
+            <p class="mt-3">The herd book export uses exactly the import columns — open it in Excel, edit, and bring it back in.</p><p class="mt-3">Your data is yours: export it any time. <a href="{{ route('legal.show', 'data') }}" class="link-u text-char">How we handle it</a>.</p>
         </div>
     </div>
 </div>

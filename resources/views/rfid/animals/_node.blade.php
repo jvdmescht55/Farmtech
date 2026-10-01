@@ -8,6 +8,6 @@
             <x-tier :tier="$a->tierResult()->tier" class="ml-auto" />
         </div>
     @else
-        <div class="text-sm text-stone-light mt-0.5">Nie aangeteken nie</div>
+        <div class="text-sm text-stone-light mt-0.5">Not recorded</div>
     @endif
 </div>

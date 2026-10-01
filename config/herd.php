@@ -5,19 +5,39 @@ return [
      * Herd Management software modules. Each is unlocked by a licence code
      * shipped with its device (licenses.module = key). Add future devices here.
      */
-    // Placeholder slots shown as "coming soon" on the Herd Management hub.
-    'upcoming' => [
-        ['name' => 'Toestel 02', 'tagline' => 'Die volgende Farmtech-toestel. Dieselfde kuddeboek, nuwe data.', 'image' => 'koppie-dawn'],
-        ['name' => 'Toestel 03', 'tagline' => 'Nog een op die tekenbord. Registreer belangstelling in die winkel.', 'image' => 'karoo-mist'],
-    ],
-
+    /*
+     * Herd Management sections — one per device family. A licence code that
+     * ships with the device unlocks its section (licenses.module = key).
+     * 'open' => true means any signed-in farmer can use it (custom devices).
+     */
     'modules' => [
         'rfid' => [
-            'name' => 'RFID Scanner V1',
-            'tagline' => 'Alles wat jou leser en skaal jou kan vertel — kuddeboek, gewigte, groei, vergelykings, sortering en katalogusse.',
+            'name' => 'KraalTrac Pro',
+            'kind' => 'Handheld EID reader & weigh logger',
+            'tagline' => 'Scan the tag, punch in the weight — your herd book, growth figures and sale catalogues build themselves.',
             'route' => 'rfid.dashboard',
             'image' => 'merino-rams',
-            'features' => ['Weegsessies & groei (g/dag)', 'Vergelyk groepe & sessies', 'Sorteer op gewig', 'SP / C / B stamboom', 'Veilingkatalogusse', 'Leser-sinch'],
+            'device_kind' => 'handheld',
+            'features' => ['Weigh sessions & daily gain', 'Compare rams, groups, seasons', 'Sort by weight', 'SP / C / B pedigree tiers', 'Sale catalogues', 'Health & breeding records'],
+        ],
+        'watch' => [
+            'name' => 'KraalTrac Watch',
+            'kind' => 'Gate & water-point counter',
+            'tagline' => 'Mount it at the trough or the gate. It counts who came through and shouts when an animal hasn\'t been to drink.',
+            'route' => 'watch.dashboard',
+            'image' => 'windpomp-storm',
+            'device_kind' => 'watch',
+            'features' => ['Head count per day', 'Missed-drink alerts', 'Visits per hour', 'Every water point & gate', 'Links to the herd book'],
+        ],
+        'custom' => [
+            'name' => 'Custom devices',
+            'kind' => 'Your own sensors & gadgets',
+            'tagline' => 'Built your own tank gauge, rain meter or cold-room sensor? Plug it in here — you choose what it measures and when to get worried.',
+            'route' => 'custom.index',
+            'image' => 'karoo-mist',
+            'device_kind' => 'custom',
+            'open' => true,
+            'features' => ['Any reading you like', 'Your own limits & alerts', 'Charts per device', 'Same simple device API'],
         ],
     ],
 
@@ -28,24 +48,24 @@ return [
      * litter mortality ~10% single / 15% twin / 33% triplet. Adjust freely.
      */
     'species' => [
-        'sheep' => ['label' => 'Skaap', 'plural' => 'Skape', 'young' => 'lam', 'female' => 'Ooi', 'male' => 'Ram', 'gestation' => 147, 'low_birth_kg' => 3.0, 'wean_age' => 120, 'old_age_years' => 7, 'max_jump_pct' => 25],
-        'goat' => ['label' => 'Bok', 'plural' => 'Bokke', 'young' => 'lammetjie', 'female' => 'Ooi', 'male' => 'Ram', 'gestation' => 150, 'low_birth_kg' => 2.5, 'wean_age' => 120, 'old_age_years' => 7, 'max_jump_pct' => 25],
-        'cattle' => ['label' => 'Bees', 'plural' => 'Beeste', 'young' => 'kalf', 'female' => 'Koei', 'male' => 'Bul', 'gestation' => 283, 'low_birth_kg' => 25.0, 'wean_age' => 240, 'old_age_years' => 12, 'max_jump_pct' => 15],
+        'sheep' => ['label' => 'Sheep', 'plural' => 'Sheep', 'young' => 'lamb', 'female' => 'Ewe', 'male' => 'Ram', 'gestation' => 147, 'low_birth_kg' => 3.0, 'wean_age' => 120, 'old_age_years' => 7, 'max_jump_pct' => 25],
+        'goat' => ['label' => 'Goat', 'plural' => 'Goats', 'young' => 'kid', 'female' => 'Doe', 'male' => 'Buck', 'gestation' => 150, 'low_birth_kg' => 2.5, 'wean_age' => 120, 'old_age_years' => 7, 'max_jump_pct' => 25],
+        'cattle' => ['label' => 'Cattle', 'plural' => 'Cattle', 'young' => 'calf', 'female' => 'Cow', 'male' => 'Bull', 'gestation' => 283, 'low_birth_kg' => 25.0, 'wean_age' => 240, 'old_age_years' => 12, 'max_jump_pct' => 15],
     ],
 
     // Logbook event types. 'status' => the animal status this event sets.
     'event_types' => [
-        'treatment' => ['label' => 'Behandeling', 'withdrawal' => true],
-        'vaccination' => ['label' => 'Inenting', 'withdrawal' => true],
-        'dosing' => ['label' => 'Doseer', 'withdrawal' => true],
-        'mating' => ['label' => 'Paring / dekking', 'mate' => true],
-        'pregnancy_scan' => ['label' => 'Dragtigheidskandering', 'result' => ['pregnant' => 'Dragtig', 'empty' => 'Leeg', 'twins' => 'Tweeling', 'triplets' => 'Drieling']],
-        'birth' => ['label' => 'Geboorte (lam/kalf)', 'count' => true],
-        'weaning' => ['label' => 'Speen'],
-        'observation' => ['label' => 'Waarneming'],
-        'sale' => ['label' => 'Verkoop', 'status' => 'sold'],
-        'death' => ['label' => 'Vrek / dood', 'status' => 'dead'],
-        'cull' => ['label' => 'Uitskot', 'status' => 'culled'],
+        'treatment' => ['label' => 'Treatment', 'withdrawal' => true],
+        'vaccination' => ['label' => 'Vaccination', 'withdrawal' => true],
+        'dosing' => ['label' => 'Dosing', 'withdrawal' => true],
+        'mating' => ['label' => 'Mating', 'mate' => true],
+        'pregnancy_scan' => ['label' => 'Pregnancy scan', 'result' => ['pregnant' => 'Pregnant', 'empty' => 'Empty', 'twins' => 'Twins', 'triplets' => 'Triplets']],
+        'birth' => ['label' => 'Birth', 'count' => true],
+        'weaning' => ['label' => 'Weaning'],
+        'observation' => ['label' => 'Note'],
+        'sale' => ['label' => 'Sold', 'status' => 'sold'],
+        'death' => ['label' => 'Died', 'status' => 'dead'],
+        'cull' => ['label' => 'Culled', 'status' => 'culled'],
     ],
 
     /*

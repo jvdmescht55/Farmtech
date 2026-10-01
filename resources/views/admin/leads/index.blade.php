@@ -14,7 +14,7 @@
 </div>
 <div class="bg-white border rounded-xl overflow-hidden">
     <div class="px-4 py-3 border-b flex flex-wrap items-center gap-2 text-sm">
-        @foreach (['' => 'All', 'interest' => 'Interest', 'contact' => 'Contact'] as $k => $l)
+        @foreach (['' => 'All', 'order' => 'Order requests', 'interest' => 'Interest', 'contact' => 'Contact'] as $k => $l)
             <a href="{{ route('admin.leads.index', array_filter(['type' => $k, 'status' => request('status')])) }}" class="px-2.5 py-1 rounded {{ request('type', '') === $k ? 'bg-farmtech-green text-white' : 'text-gray-600 hover:bg-gray-100' }}">{{ $l }}</a>
         @endforeach
         <a href="{{ route('admin.leads.index', array_filter(['type' => request('type'), 'status' => request('status') === 'open' ? null : 'open'])) }}" class="px-2.5 py-1 rounded {{ request('status') === 'open' ? 'bg-farmtech-gold text-white' : 'text-gray-600 hover:bg-gray-100' }}">Open only</a>
@@ -27,7 +27,7 @@
             @forelse ($leads as $l)
                 <tr class="{{ $l->handled_at ? 'opacity-50' : '' }}">
                     <td class="px-4 py-3 whitespace-nowrap text-gray-500">{{ $l->created_at->format('d M H:i') }}</td>
-                    <td class="px-4 py-3"><x-badge :color="$l->type === 'interest' ? 'green' : 'gray'">{{ $l->type }}</x-badge></td>
+                    <td class="px-4 py-3"><x-badge :color="$l->type === 'order' ? 'yellow' : ($l->type === 'interest' ? 'green' : 'gray')">{{ $l->type }}</x-badge>@if ($l->interest)<div class="text-xs text-gray-500 mt-1">{{ $l->interest }}</div>@endif</td>
                     <td class="px-4 py-3 font-medium">{{ $l->name }}</td>
                     <td class="px-4 py-3"><a href="mailto:{{ $l->email }}" class="text-farmtech-green">{{ $l->email }}</a><div class="text-xs text-gray-500">{{ $l->phone }}</div></td>
                     <td class="px-4 py-3 text-gray-600">{{ $l->farm_name ?? '—' }}<div class="text-xs text-gray-400">{{ collect([$l->herd_size, $l->province])->filter()->implode(' · ') }}</div></td>
@@ -35,7 +35,7 @@
                     <td class="px-4 py-3 text-right"><form method="POST" action="{{ route('admin.leads.toggle', $l) }}">@csrf<button class="text-sm font-medium {{ $l->handled_at ? 'text-gray-500' : 'text-farmtech-green' }}">{{ $l->handled_at ? 'Reopen' : 'Mark handled' }}</button></form></td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="px-4 py-10 text-center text-gray-500">No leads yet. They arrive from the store's "Bestel vroeg" form and the contact page.</td></tr>
+                <tr><td colspan="7" class="px-4 py-10 text-center text-gray-500">No leads yet. They arrive from the order / interest forms on the store and product pages, and the contact page.</td></tr>
             @endforelse
             </tbody>
         </table>

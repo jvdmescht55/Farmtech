@@ -137,7 +137,7 @@ class DeviceController extends Controller
         }
 
         $data = $request->json()->all() ?: $request->all();
-        unset($data['token'], $data['compact'], $data['weigh_type']);
+        unset($data['token'], $data['key'], $data['compact'], $data['weigh_type']);
 
         if (isset($data['device']) && is_array($data['device'])) {
             unset($data['device']);
@@ -154,7 +154,7 @@ class DeviceController extends Controller
 
     private function reader(Request $request): ?Reader
     {
-        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->query('token'));
+        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->query('token') ?: $request->query('key'));
 
         return $reader && $reader->user->hasModule('rfid') ? $reader : null;
     }

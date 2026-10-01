@@ -18,7 +18,7 @@ class EnsureModuleAccess
         }
 
         if (! $user->hasModule($module)) {
-            return redirect()->route('account.activate')->with('status', 'Enter the activation code that came with your device to unlock this software.');
+            return redirect()->route('account.activate')->with('status', 'Type in the activation code from your device\'s box to unlock this section.');
         }
 
         return $next($request);

@@ -8,18 +8,24 @@
     $u = auth()->user();
     $openLeads = \App\Models\Lead::whereNull('handled_at')->count();
     $item = fn ($route, $label, $pattern = null, $can = null, $badge = null) => ['route' => $route, 'label' => $label, 'pattern' => $pattern ?? $route, 'can' => $can, 'badge' => $badge];
+    $newSuggestions = \App\Models\Suggestion::where('status', 'new')->count();
     $groups = [
-        'Oorsig' => [$item('admin.insights', 'Insights', null, 'view-financials'), $item('admin.dashboard', 'Finansies', null, 'view-financials')],
-        'Kliënte' => [$item('admin.licenses.index', 'Lisensies & kliënte', 'admin.licenses.*', 'manage-users'), $item('admin.leads.index', 'Leads', 'admin.leads.*', null, $openLeads ?: null)],
-        'Winkel' => [
-            $item('admin.orders.index', 'Bestellings', 'admin.orders.*'),
-            $item('admin.products.index', 'Staging', 'admin.products.index|admin.products.show', 'manage-catalog'),
-            $item('admin.products.live', 'Lewendige produkte', null, 'manage-catalog'),
-            $item('admin.source.create', 'Bron nuwe produk', 'admin.source.*', 'manage-catalog'),
-            $item('admin.suppliers.outreach', 'Verskaffers', null, 'manage-catalog'),
-            $item('admin.outreach.index', 'Video-uitreik', 'admin.outreach.*', 'manage-catalog'),
+        'Overview' => [$item('admin.insights', 'Insights', null, 'view-financials'), $item('admin.dashboard', 'Finances', null, 'view-financials')],
+        'Customers' => [
+            $item('admin.leads.index', 'Leads & orders', 'admin.leads.*', null, $openLeads ?: null),
+            $item('admin.licenses.index', 'Activation codes & customers', 'admin.licenses.*', 'manage-users'),
+            $item('admin.suggestions.index', 'Suggestions', 'admin.suggestions.*', null, $newSuggestions ?: null),
         ],
-        'Stelsel' => [$item('admin.users.index', 'Gebruikers', 'admin.users.*', 'manage-users'), $item('admin.settings.edit', 'Instellings', 'admin.settings.*', 'manage-settings'), $item('admin.profile.edit', 'My profiel', 'admin.profile.*')],
+        'Store' => [
+            $item('admin.listings.index', 'Store listings', 'admin.listings.*', 'manage-catalog'),
+            $item('admin.orders.index', 'Orders', 'admin.orders.*'),
+            $item('admin.products.index', 'Product staging', 'admin.products.index|admin.products.show', 'manage-catalog'),
+            $item('admin.products.live', 'Imported products', null, 'manage-catalog'),
+            $item('admin.source.create', 'Source a product', 'admin.source.*', 'manage-catalog'),
+            $item('admin.suppliers.outreach', 'Suppliers', null, 'manage-catalog'),
+            $item('admin.outreach.index', 'Video outreach', 'admin.outreach.*', 'manage-catalog'),
+        ],
+        'System' => [$item('admin.users.index', 'Staff', 'admin.users.*', 'manage-users'), $item('admin.settings.edit', 'Settings', 'admin.settings.*', 'manage-settings'), $item('admin.profile.edit', 'My profile', 'admin.profile.*')],
     ];
     $isOn = fn ($i) => collect(explode('|', $i['pattern']))->contains(fn ($p) => request()->routeIs($p));
     $groups = collect($groups)->map(fn ($items) => collect($items)->filter(fn ($i) => ! $i['can'] || $u->can($i['can']))->values())->filter->isNotEmpty();
@@ -33,19 +39,19 @@
             <span class="ml-2 text-[11px] uppercase tracking-[0.2em] text-sand/50">Admin</span>
         </a>
         <div class="ml-auto flex items-center gap-1 sm:gap-3 text-sm">
-            <a href="{{ route('portal') }}" target="_blank" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Webwerf ↗</a>
+            <a href="{{ route('portal') }}" target="_blank" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Website ↗</a>
             <a href="{{ route('herd.hub') }}" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Kuddebestuur ↗</a>
-            <a href="{{ route('home') }}" target="_blank" class="hidden lg:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Produkwinkel ↗</a>
+            <a href="{{ route('home') }}" target="_blank" class="hidden lg:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Old product store ↗</a>
             <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
                 <button type="button" @click="open = !open" class="flex items-center gap-2 rounded-full pl-1 pr-3 h-10 hover:bg-white/5">
                     <span class="w-8 h-8 rounded-full bg-ochre text-char grid place-items-center text-sm font-semibold">{{ mb_strtoupper(mb_substr($u->name, 0, 1)) }}</span>
                     <span class="hidden sm:block max-w-[10rem] truncate">{{ $u->name }}</span>
                 </button>
                 <div x-show="open" x-cloak x-transition.origin.top.right class="absolute right-0 mt-2 w-56 rounded-2xl bg-white text-char border border-hairline shadow-[0_24px_60px_-20px_rgba(0,0,0,.35)] p-2">
-                    <a href="{{ route('admin.profile.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">My profiel</a>
-                    <a href="{{ route('portal') }}" target="_blank" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Webwerf ↗</a>
+                    <a href="{{ route('admin.profile.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">My profile</a>
+                    <a href="{{ route('portal') }}" target="_blank" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Website ↗</a>
                     <a href="{{ route('herd.hub') }}" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Kuddebestuur ↗</a>
-                    <form action="{{ route('admin.logout') }}" method="POST" class="border-t border-hairline mt-1 pt-1">@csrf<button class="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Teken uit</button></form>
+                    <form action="{{ route('admin.logout') }}" method="POST" class="border-t border-hairline mt-1 pt-1">@csrf<button class="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Sign out</button></form>
                 </div>
             </div>
         </div>
@@ -55,7 +61,7 @@
             @foreach ($groups as $name => $items)
                 <a href="{{ route($items->first()['route']) }}" class="relative shrink-0 py-3.5 text-[14px] flex items-center gap-1.5 {{ $activeGroup === $name ? 'text-sand' : 'text-sand/55 hover:text-sand' }}">
                     {{ $name }}
-                    @if ($name === 'Kliënte' && $openLeads)<span class="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-ochre text-char text-[11px] font-semibold grid place-items-center">{{ $openLeads }}</span>@endif
+                    @if ($name === 'Customers' && ($openLeads + $newSuggestions))<span class="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-ochre text-char text-[11px] font-semibold grid place-items-center">{{ $openLeads + $newSuggestions }}</span>@endif
                     @if ($activeGroup === $name)<span class="absolute inset-x-0 -bottom-px h-[2px] bg-ochre rounded-full"></span>@endif
                 </a>
             @endforeach
@@ -81,7 +87,7 @@
     @endif
     @if (session('resetLink'))
         <div class="mb-6 rounded-xl border border-ochre/30 bg-ochre/5 px-4 py-3 text-sm">
-            <div class="text-stone">Stuur hierdie skakel vir die kliënt (WhatsApp/SMS):</div>
+            <div class="text-stone">Send this link to the customer (WhatsApp / SMS):</div>
             <code class="mt-1 block break-all font-num select-all">{{ session('resetLink') }}</code>
         </div>
     @endif

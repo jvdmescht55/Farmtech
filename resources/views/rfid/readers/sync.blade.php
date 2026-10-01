@@ -1,17 +1,17 @@
 @extends('layouts.rfid')
-@section('title', 'Sinch #'.$sync->id)
-@section('actions')<a href="{{ route('rfid.readers.index') }}" class="btn-secondary">← Toestelle</a>@endsection
+@section('title', 'Sync #'.$sync->id)
+@section('actions')<a href="{{ route('rfid.readers.index') }}" class="btn-secondary">← Devices</a>@endsection
 @section('content')
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="app-card p-5"><div class="app-label">Wanneer</div><div class="font-medium">{{ $sync->created_at->format('d/m/Y H:i') }}</div><div class="text-xs text-stone-light">{{ strtoupper($sync->source) }} · {{ $sync->reader?->name ?? 'geen toestel' }}</div></div>
-    <div class="app-card p-5"><div class="app-label">Lesings</div><div class="stat-num">{{ $sync->scan_count }}</div></div>
-    <div class="app-card p-5"><div class="app-label">Bekend</div><div class="stat-num">{{ $sync->matched_count }}</div></div>
-    <div class="app-card p-5"><div class="app-label">Nuwe diere</div><div class="stat-num {{ $sync->new_count ? 'text-ochre-dark' : '' }}">{{ $sync->new_count }}</div><div class="text-xs text-stone-light">voltooi hul rekords</div></div>
+    <div class="app-card p-5"><div class="app-label">When</div><div class="font-medium">{{ $sync->created_at->format('d/m/Y H:i') }}</div><div class="text-xs text-stone-light">{{ strtoupper($sync->source) }} · {{ $sync->reader?->name ?? 'no device' }}</div></div>
+    <div class="app-card p-5"><div class="app-label">Reads</div><div class="stat-num">{{ $sync->scan_count }}</div></div>
+    <div class="app-card p-5"><div class="app-label">Known animals</div><div class="stat-num">{{ $sync->matched_count }}</div></div>
+    <div class="app-card p-5"><div class="app-label">New animals</div><div class="stat-num {{ $sync->new_count ? 'text-ochre-dark' : '' }}">{{ $sync->new_count }}</div><div class="text-xs text-stone-light">fill in their details</div></div>
 </div>
 <div class="app-card overflow-hidden">
     <div class="overflow-x-auto">
         <table class="app-table">
-            <thead><tr><th>Tyd</th><th>EID</th><th>Dier</th><th class="text-right">Gewig</th><th>Tipe</th></tr></thead>
+            <thead><tr><th>Time</th><th>Tag</th><th>Animal</th><th class="text-right">Weight</th><th>Type</th></tr></thead>
             <tbody>
             @foreach ($scans as $s)
                 <tr>

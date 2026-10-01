@@ -56,7 +56,7 @@ class EventController extends Controller
             ]);
         }
 
-        return back()->with('status', count($data['animal_ids']).' '.(count($data['animal_ids']) === 1 ? 'inskrywing' : 'inskrywings').' aangeteken: '.config("herd.event_types.{$data['type']}.label").'.');
+        return back()->with('status', config("herd.event_types.{$data['type']}.label").' recorded for '.count($data['animal_ids']).' '.(count($data['animal_ids']) === 1 ? 'animal' : 'animals').'.');
     }
 
     public function destroy(AnimalEvent $event)
@@ -64,6 +64,6 @@ class EventController extends Controller
         $this->own($event);
         $event->delete();
 
-        return back()->with('status', 'Inskrywing verwyder.');
+        return back()->with('status', 'Entry removed.');
     }
 }

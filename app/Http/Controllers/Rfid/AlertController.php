@@ -32,7 +32,7 @@ class AlertController extends Controller
             ['until' => isset($data['days']) ? now()->addDays((int) $data['days']) : null],
         );
 
-        return back()->with('status', 'Waarskuwing weggesteek.');
+        return back()->with('status', 'Alert hidden.');
     }
 
     public function restore(Request $request)

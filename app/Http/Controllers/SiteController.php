@@ -18,7 +18,19 @@ class SiteController extends Controller
 
     public function store()
     {
-        return view('site.store', ['provinces' => self::PROVINCES]);
+        return view('site.store', ['provinces' => self::PROVINCES, 'listings' => \App\Models\StoreListing::published()->get()]);
+    }
+
+    public function product(\App\Models\StoreListing $listing)
+    {
+        abort_unless($listing->is_published || auth()->user()?->canAccessAdminPanel(), 404);
+
+        return view('site.product', ['listing' => $listing, 'provinces' => self::PROVINCES]);
+    }
+
+    public function suggest()
+    {
+        return view('site.suggest');
     }
 
     public function contact()
@@ -35,12 +47,17 @@ class SiteController extends Controller
             'farm_name' => ['nullable', 'string', 'max:160'],
             'herd_size' => ['nullable', 'string', 'max:40'],
             'province' => ['nullable', 'string', 'max:60'],
+            'message' => ['nullable', 'string', 'max:3000'],
+            'listing' => ['nullable', 'integer', 'exists:store_listings,id'],
+            'consent' => ['accepted'],
             'website' => ['prohibited'], // honeypot
         ]);
 
-        Lead::create($data + ['type' => 'interest', 'interest' => 'RFID Scanner V1']);
+        $listing = isset($data['listing']) ? \App\Models\StoreListing::find($data['listing']) : null;
+        unset($data['listing'], $data['consent']);
+        Lead::create($data + ['type' => $listing && $listing->price_cents ? 'order' : 'interest', 'interest' => $listing?->name ?? 'KraalTrac', 'store_listing_id' => $listing?->id]);
 
-        return redirect()->to(route('site.store').'#bestel')->with('lead_ok', true);
+        return redirect()->to(url()->previous().'#order')->with('lead_ok', true);
     }
 
     public function sendContact(Request $request)
@@ -50,9 +67,11 @@ class SiteController extends Controller
             'email' => ['required', 'email', 'max:190'],
             'phone' => ['nullable', 'string', 'max:40'],
             'message' => ['required', 'string', 'max:3000'],
+            'consent' => ['accepted'],
             'website' => ['prohibited'],
         ]);
 
+        unset($data['consent']);
         Lead::create($data + ['type' => 'contact']);
 
         return back()->with('lead_ok', true);

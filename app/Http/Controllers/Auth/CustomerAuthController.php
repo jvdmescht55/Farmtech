@@ -31,13 +31,13 @@ class CustomerAuthController extends Controller
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'Those credentials do not match our records.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'That email and password don\'t match. Try again, or reset your password.'])->onlyInput('email');
         }
 
         if (! Auth::user()->is_active) {
             Auth::logout();
 
-            return back()->withErrors(['email' => 'This account has been deactivated. Contact Farmtech support.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'This account is switched off. Give us a shout on the contact page.'])->onlyInput('email');
         }
 
         $request->session()->regenerate();
@@ -58,7 +58,8 @@ class CustomerAuthController extends Controller
             'farm_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
-        ]);
+            'terms' => ['accepted'],
+        ], ['terms.accepted' => 'Please accept the terms of use and privacy policy to continue.']);
 
         $license = $this->availableLicense($data['code']);
 
@@ -70,6 +71,7 @@ class CustomerAuthController extends Controller
                 'password' => $data['password'],
                 'role' => 'customer',
                 'is_active' => true,
+                'terms_accepted_at' => now(),
             ]);
             $this->redeem($license, $user);
 
@@ -79,7 +81,7 @@ class CustomerAuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('rfid.dashboard')->with('status', 'Welcome! Your '.$license->moduleLabel().' is unlocked.');
+        return redirect()->route('herd.hub')->with('status', 'Welcome aboard! '.$license->moduleLabel().' is unlocked — let\'s get your herd in.');
     }
 
     public function showActivate()
@@ -93,7 +95,7 @@ class CustomerAuthController extends Controller
         $license = $this->availableLicense($data['code']);
         DB::transaction(fn () => $this->redeem($license, $request->user()));
 
-        return redirect()->route('herd.hub')->with('status', $license->moduleLabel().' unlocked.');
+        return redirect()->route('herd.hub')->with('status', $license->moduleLabel().' is unlocked. Lekker!');
     }
 
     public function logout(Request $request)
@@ -110,7 +112,7 @@ class CustomerAuthController extends Controller
         $license = License::where('code', License::normalizeCode($code))->lockForUpdate()->first();
 
         if (! $license || ! $license->isAvailable()) {
-            throw ValidationException::withMessages(['code' => 'That activation code is invalid or has already been used.']);
+            throw ValidationException::withMessages(['code' => 'That code isn\'t valid or has already been used. Check the card in the box, or ask us.']);
         }
 
         return $license;
@@ -121,11 +123,12 @@ class CustomerAuthController extends Controller
     {
         $license->update(['user_id' => $user->id, 'activated_at' => now()]);
 
-        if ($license->module === 'rfid') {
+        if (in_array($license->module, ['rfid', 'watch'], true)) {
             Reader::create([
                 'user_id' => $user->id,
                 'license_id' => $license->id,
-                'name' => $license->device_model ?: 'RFID reader',
+                'kind' => $license->module === 'watch' ? 'watch' : 'handheld',
+                'name' => $license->device_model ?: config("herd.modules.{$license->module}.name"),
                 'serial' => $license->device_serial,
                 'model' => $license->device_model,
             ]);
