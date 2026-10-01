@@ -71,7 +71,11 @@ class AnimalController extends Controller
 
     public function create(Request $request)
     {
-        return view('rfid.animals.form', ['animal' => new Animal(['status' => 'active', 'breed' => $request->user()->breed, 'species' => $request->user()->species ?: 'sheep']), 'parents' => $this->parentOptions($request)]);
+        return view('rfid.animals.form', [
+            'animal' => new Animal(['status' => 'active', 'breed' => $request->user()->breed, 'species' => $request->user()->species ?: 'sheep']),
+            'parents' => $this->parentOptions($request),
+            'suggestedId' => \App\Support\BirthdayId::next($request->user()->id),
+        ]);
     }
 
     public function store(Request $request)
@@ -198,7 +202,7 @@ class AnimalController extends Controller
             'sex' => $data['sex'] ?? null,
             'species' => $data['species'],
             'breed' => $data['breed'] ?? null,
-            'birth_date' => $data['birth_date'] ?? null,
+            'birth_date' => $data['birth_date'] ?? \App\Support\BirthdayId::birthDate($data['visual_id']),
             'birth_type' => $data['birth_type'] ?? null,
             'registered' => $request->boolean('registered'),
             'is_commercial' => $request->boolean('is_commercial'),

@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\HerdHubController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\Watch\WatchController;
 use App\Http\Controllers\Custom\CustomDeviceController;
 use App\Http\Controllers\SiteController;
@@ -103,6 +104,9 @@ Route::middleware('auth')->group(function () {
 Route::get('/app', [HerdHubController::class, 'index'])->middleware('auth')->name('herd.hub');
 Route::middleware('auth')->group(function () {
     Route::get('/app/suggest', [SuggestionController::class, 'index'])->name('herd.suggest');
+    Route::get('/app/help', [HelpController::class, 'index'])->name('help.index');
+    Route::get('/app/help/{guide}', [HelpController::class, 'show'])->name('help.show');
+    Route::post('/app/tour/{key}', [HelpController::class, 'tourDone'])->name('tour.done')->where('key', '[a-z0-9-]+');
     Route::post('/app/suggest', [SuggestionController::class, 'store'])->name('herd.suggest.store')->middleware('throttle:10,1');
 });
 
@@ -147,6 +151,7 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
     Route::get('/data', [RfidDataController::class, 'index'])->name('data');
     Route::post('/data/preview', [RfidDataController::class, 'preview'])->name('data.preview');
     Route::post('/data/import', [RfidDataController::class, 'import'])->name('data.import');
+    Route::post('/data/paste', [RfidDataController::class, 'paste'])->name('data.paste');
     Route::get('/data/backup', [RfidDataController::class, 'backup'])->name('data.backup');
     Route::get('/data/template/{kind}', [RfidDataController::class, 'template'])->name('data.template');
 

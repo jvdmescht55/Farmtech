@@ -1,25 +1,25 @@
 @extends('legal._layout')
 @section('legal')
-<p>These terms apply when you use farmtech.site, including <strong>Kuddebestuur</strong> (our herd management software) and any device connected to it. By creating an account or using the site you agree to them. If you buy a device, our <a href="{{ route('legal.show', 'sale') }}">terms of sale</a> apply to that purchase too.</p>
+<p>These terms apply when you use farmtech.site, including <strong>Herd Manager</strong> (our herd management software) and any device connected to it. By creating an account or using the site you agree to them. If you buy a device, our <a href="{{ route('legal.show', 'sale') }}">terms of sale</a> apply to that purchase too.</p>
 @include('legal._who')
 
 <h2>Your account</h2>
 <ul>
-    <li>Kuddebestuur accounts are opened with the activation code that comes with a Farmtech device. Custom devices can be used with any account.</li>
+    <li>Herd Manager accounts are opened with the activation code that comes with a Farmtech device. Custom devices can be used with any account.</li>
     <li>Keep your password and device keys private. You're responsible for what happens under your account; tell us straight away if you think someone else has access.</li>
     <li>You must be 18 or older, or have a parent or guardian agree on your behalf.</li>
 </ul>
 
 <h2>The software</h2>
 <ul>
-    <li>We give you a non-exclusive, non-transferable right to use Kuddebestuur for your own farming operation for as long as your account is active.</li>
+    <li>We give you a non-exclusive, non-transferable right to use Herd Manager for your own farming operation for as long as your account is active.</li>
     <li>The software that comes with a Farmtech device has no monthly fee. If we ever introduce paid extras, we'll tell you first and you won't lose what you already have.</li>
     <li>We keep improving things and may change features. We'll try hard not to take away something you rely on, and will give notice before any major change.</li>
     <li>We aim for the site to be available all the time, but we don't promise it will never be down — maintenance, internet outages and things outside our control happen. Devices store reads and sync later, so a short outage shouldn't lose data.</li>
 </ul>
 
 <h2>Alerts and figures are a help, not a vet</h2>
-<p>Kuddebestuur highlights things like weight loss, missed drinks, low birth weights and due dates from the data you and your devices give it. These are <strong>aids to your own judgement</strong>, not veterinary, breeding or financial advice. Always check the animal, and call your vet when something looks wrong. Pedigree tiers and breeding values are calculated from what's recorded and don't replace your breed society's official records.</p>
+<p>Herd Manager highlights things like weight loss, missed drinks, low birth weights and due dates from the data you and your devices give it. These are <strong>aids to your own judgement</strong>, not veterinary, breeding or financial advice. Always check the animal, and call your vet when something looks wrong. Pedigree tiers and breeding values are calculated from what's recorded and don't replace your breed society's official records.</p>
 
 <h2>Fair use</h2>
 <ul>

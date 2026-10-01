@@ -14,6 +14,8 @@ Route::post('/reader/sync', [\App\Http\Controllers\Api\ReaderSyncController::cla
 
 // Device API v1 — see App\Http\Controllers\Api\DeviceController for formats.
 Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
+    Route::get('/flock', [\App\Http\Controllers\Api\DeviceController::class, 'flock'])->name('api.v1.flock');
+    Route::get('/next-id', [\App\Http\Controllers\Api\DeviceController::class, 'nextId'])->name('api.v1.next-id');
     Route::get('/ping', [\App\Http\Controllers\Api\DeviceController::class, 'ping'])->name('api.v1.ping');
     // GET is accepted too, so firmware that used to call a local XAMPP script with ?tag=…&weight=… only needs a new URL.
     Route::match(['get', 'post'], '/scans', [\App\Http\Controllers\Api\DeviceController::class, 'scans'])->name('api.v1.scans');

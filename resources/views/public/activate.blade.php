@@ -1,4 +1,4 @@
-<x-public-shell title="Activate a device — Kuddebestuur" image="tafelberg" headline="Another device?<br><em class='text-ochre-light'>Lekker.</em>">
+<x-public-shell title="Activate a device — Herd Manager" image="tafelberg" headline="Another device?<br><em class='text-ochre-light'>Lekker.</em>">
     <h1 class="h-display text-6xl">Activate a device</h1>
     <p class="text-stone mt-3">Signed in as {{ auth()->user()->email }}. Type the code from the card in your device's box.</p>
 

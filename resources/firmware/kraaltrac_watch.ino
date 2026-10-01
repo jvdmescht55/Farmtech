@@ -1,11 +1,11 @@
 /*
- * KraalTrac Watch — gate & water-point counter for Kuddebestuur
+ * KraalTrac Watch — gate & water-point counter for Herd Manager
  * ==============================================================
  * Fixed 134.2 kHz FDX-B reader at a trough or gate. Every tag read is
  * saved to flash and sent to https://farmtech.site in small batches.
  * Repeated reads of the same animal within ~30 min count as one visit on
  * the server, so just send everything. Pair once with the 6-digit code
- * (Kuddebestuur → KraalTrac Watch → Water points & gates).
+ * (Herd Manager → KraalTrac Watch → Water points & gates).
  *
  * Hardware: ESP32 · FDX-B reader on UART2 · optional status LED on pin 2.
  * Libraries: ArduinoJson 7.
@@ -92,7 +92,7 @@ void send() {
     String l = f.readStringUntil('\n'); l.trim(); if (!l.length()) continue;
     int c1 = l.indexOf(','), c2 = l.indexOf(',', c1 + 1);
     JsonObject s = a.add<JsonObject>();
-    s["id"] = l.substring(0, c1); s["eid"] = l.substring(c1 + 1, c2);
+    s["ref"] = l.substring(0, c1); s["eid"] = l.substring(c1 + 1, c2);
     uint32_t ts = l.substring(c2 + 1).toInt(); if (ts > 1600000000UL) s["ts"] = ts;
     n++;
   }

@@ -59,7 +59,7 @@ class CatalogueController extends Controller
         $this->own($catalogue);
         $catalogue->update($this->validated($request));
 
-        return back()->with('status', 'Catalogue details saved.');
+        return back()->with('status', 'Book details saved.');
     }
 
     public function destroy(SaleCatalogue $catalogue)

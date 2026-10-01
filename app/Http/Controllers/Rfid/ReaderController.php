@@ -97,7 +97,7 @@ class ReaderController extends Controller
     public function upload(Request $request, ScanImporter $importer)
     {
         $data = $request->validate([
-            'file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,tsv'],
+            'file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,tsv,xlsx'],
             'reader_id' => ['nullable', 'integer'],
             'weigh_type' => ['nullable', 'in:birth,wean,post_wean,routine'],
         ]);
@@ -136,7 +136,11 @@ class ReaderController extends Controller
     /** Reference ESP32 firmware, ready to adapt. */
     public function firmware(Request $request)
     {
-        $file = $request->query('device') === 'watch' ? 'kraaltrac_watch.ino' : 'kraaltrac_pro.ino';
+        $file = match ($request->query('device')) {
+            'watch' => 'kraaltrac_watch.ino',
+            'usb' => 'sync_from_scale.ps1',
+            default => 'kraaltrac_pro.ino',
+        };
 
         return response()->download(resource_path('firmware/'.$file), $file, ['Content-Type' => 'text/plain']);
     }

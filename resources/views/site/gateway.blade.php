@@ -3,8 +3,8 @@
 <html lang="en">
 <head>
     @include('partials.head')
-    <title>Farmtech — Store or Kuddebestuur?</title>
-    <meta name="description" content="Farmtech: KraalTrac devices and Kuddebestuur herd software for sheep, goats and cattle — built around your farm.">
+    <title>Farmtech — Store or Herd Manager?</title>
+    <meta name="description" content="Farmtech: KraalTrac devices and Herd Manager herd software for sheep, goats and cattle — built around your farm.">
     <link rel="preload" as="image" href="{{ Img::url('windpomp-pink', true) }}">
     <link rel="preload" as="image" href="{{ Img::url('windpomp-storm', true) }}">
 </head>
@@ -20,7 +20,7 @@
     <main class="flex-1 flex flex-col lg:flex-row">
         @foreach ([
             [route('site.store'), 'windpomp-pink', '01', 'Store', 'KraalTrac devices — and everything they can do for your herd.', 'Go to the store'],
-            [auth()->check() ? route('herd.hub') : route('landing'), 'windpomp-storm', '02', 'Kuddebestuur', 'Your herd online — weights, growth, water, alerts and catalogues. Shaped around your farm.', auth()->check() ? 'Open my herd' : 'Sign in'],
+            [auth()->check() ? route('herd.hub') : route('landing'), 'windpomp-storm', '02', 'Herd Manager', 'Your herd online — weights, growth, water, alerts and catalogues. Shaped around your farm.', auth()->check() ? 'Open my herd' : 'Sign in'],
         ] as $i => [$href, $img, $n, $title, $body, $cta])
             <a href="{{ $href }}" class="group relative flex-1 min-h-[50svh] lg:min-h-[100svh] overflow-hidden lg:transition-[flex-grow] lg:duration-700 lg:ease-[cubic-bezier(.2,.7,.2,1)] lg:hover:grow-[1.35] {{ $i ? 'lg:border-l border-white/10' : '' }}">
                 <img src="{{ Img::url($img, true) }}" srcset="{{ Img::srcset($img) }}" sizes="(min-width: 1024px) 60vw, 100vw" alt="{{ Img::alt($img) }}"

@@ -4,7 +4,7 @@
 @include('legal._who')
 <h2>How to ask</h2>
 <ul>
-    <li>For your own personal information or farm records, just email us — or download your farm records yourself under Kuddebestuur → Data. There's no fee for this.</li>
+    <li>For your own personal information or farm records, just email us — or download your farm records yourself under Herd Manager → Data. There's no fee for this.</li>
     <li>For other records, send a written request (the prescribed PAIA form is available from the Information Regulator, inforegulator.org.za) to our Information Officer at {{ config('legal.email') }}.</li>
     <li>We'll respond within 30 days, as the Act requires.</li>
 </ul>

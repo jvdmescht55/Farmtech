@@ -50,6 +50,45 @@ class DeviceController extends Controller
         ]);
     }
 
+    /**
+     * GET /api/v1/flock — what the scale needs to work offline.
+     *   ?format=ids  (default) "250901,250902,2415,"  — active animal numbers, comma-separated
+     *   ?format=tags "982000123456789=250901\n…"     — tag → animal number, to rebuild the tag map
+     *   ?format=json both, plus the next free birthday number for this month
+     */
+    public function flock(Request $request)
+    {
+        $reader = $this->reader($request);
+        if (! $reader) {
+            return response('ERROR: unknown device key', 401)->header('Content-Type', 'text/plain');
+        }
+        $this->touch($request, $reader);
+
+        $animals = \App\Models\Animal::where('user_id', $reader->user_id)->where('in_herd', true)->where('status', 'active')
+            ->orderBy('visual_id')->get(['visual_id', 'eid']);
+
+        return match ($request->query('format', 'ids')) {
+            'tags' => response($animals->whereNotNull('eid')->map(fn ($a) => $a->eid.'='.$a->visual_id)->implode("\n")."\n")->header('Content-Type', 'text/plain'),
+            'json' => response()->json([
+                'ids' => $animals->pluck('visual_id'),
+                'tags' => $animals->whereNotNull('eid')->pluck('visual_id', 'eid'),
+                'next_id' => \App\Support\BirthdayId::next($reader->user_id, $request->query('ym')),
+            ]),
+            default => response($animals->pluck('visual_id')->implode(',').',')->header('Content-Type', 'text/plain'),
+        };
+    }
+
+    /** GET /api/v1/next-id?ym=2510 → "251004" — the next free birthday number for that month (default: this month). */
+    public function nextId(Request $request)
+    {
+        $reader = $this->reader($request);
+        if (! $reader) {
+            return response('ERROR: unknown device key', 401)->header('Content-Type', 'text/plain');
+        }
+
+        return response(\App\Support\BirthdayId::next($reader->user_id, $request->query('ym')))->header('Content-Type', 'text/plain');
+    }
+
     public function scans(Request $request, ScanImporter $importer, HerdAlerts $alerts): JsonResponse
     {
         $reader = $this->reader($request);
@@ -100,6 +139,7 @@ class DeviceController extends Controller
         if ($request->boolean('compact') || $request->json('compact')) {
             return response()->json([
                 'ok' => 1,
+                'status' => 'SUCCESS',
                 'n' => $results->where('status', 'ok')->count(),
                 'r' => $results->map(fn ($r) => array_filter([
                     's' => ['ok' => 1, 'duplicate' => 2, 'skipped' => 0][$r['status']] ?? 0,
@@ -115,6 +155,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'ok' => true,
+            'status' => 'SUCCESS',
             'session' => $sync->id,
             'stored' => $results->where('status', 'ok')->count(),
             'duplicates' => $results->where('status', 'duplicate')->count(),
@@ -154,7 +195,7 @@ class DeviceController extends Controller
 
     private function reader(Request $request): ?Reader
     {
-        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->query('token') ?: $request->query('key'));
+        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->header('X-Api-Key') ?: $request->query('token') ?: $request->query('key'));
 
         return $reader && $reader->user->hasModule('rfid') ? $reader : null;
     }

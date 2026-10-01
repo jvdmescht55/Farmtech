@@ -5,7 +5,7 @@
     @csrf @method('PUT')
     <div class="app-card p-6">
         <h2 class="font-headline text-3xl">Your farm</h2>
-        <p class="text-sm text-stone mt-1 mb-5">Printed on your sale catalogues, and used to set things up the way you farm.</p>
+        <p class="text-sm text-stone mt-1 mb-5">Printed on your auction books, and used to set things up the way you farm.</p>
         <div class="grid sm:grid-cols-2 gap-4">
             <div><label class="app-label">Farm / stud name</label><input name="farm_name" value="{{ old('farm_name', $user->farm_name) }}" placeholder="Die Bult Meatmaster Stoet" class="app-input"></div>
             <div><label class="app-label">Breeder number</label><input name="breeder_number" value="{{ old('breeder_number', $user->breeder_number) }}" placeholder="0696358" class="app-input font-mono"></div>

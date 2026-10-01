@@ -1,4 +1,4 @@
-<x-public-shell title="Sign in — Kuddebestuur">
+<x-public-shell title="Sign in — Herd Manager">
     <h1 class="h-display text-6xl">Sign in</h1>
     <p class="text-stone mt-3">Your herd's waiting. Let's see how they're doing.</p>
 

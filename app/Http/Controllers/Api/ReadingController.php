@@ -21,7 +21,7 @@ class ReadingController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->query('token') ?: $request->query('key'));
+        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->header('X-Api-Key') ?: $request->query('token') ?: $request->query('key'));
         if (! $reader) {
             return response()->json(['ok' => false, 'error' => 'Unknown device key.'], 401);
         }

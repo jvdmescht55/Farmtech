@@ -59,6 +59,9 @@ class DashboardController extends Controller
             'scans30' => Scan::where('user_id', $user->id)->where('scanned_at', '>=', now()->subDays(30))->count(),
             'syncs' => ReaderSync::with('reader')->where('user_id', $user->id)->latest()->limit(5)->get(),
             'sessionCount' => $sessions->count(),
+            'tourSeen' => $user->hasSeenTour('rfid'),
+            'deviceCount' => $user->readers()->where('kind', 'handheld')->count(),
+            'bookCount' => $user->catalogues()->count(),
         ]);
     }
 }

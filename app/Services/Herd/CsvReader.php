@@ -10,6 +10,15 @@ class CsvReader
     /** @return array{headers: string[], rows: array<int, array<string, string>>} */
     public static function read(string $path): array
     {
+        // Excel workbook (zip) — read it directly.
+        $head = (string) @file_get_contents($path, false, null, 0, 4);
+        if (str_starts_with($head, "PK\x03\x04")) {
+            $rows = XlsxReader::rows($path);
+            $rows = array_values(array_filter($rows, fn ($r) => implode('', $r) !== ''));
+
+            return self::fromRows($rows);
+        }
+
         $contents = file_get_contents($path);
         $contents = preg_replace('/^\xEF\xBB\xBF/', '', (string) $contents);
         $lines = preg_split('/\r\n|\r|\n/', trim($contents));
@@ -21,7 +30,16 @@ class CsvReader
         $delimiter = collect([',', ';', "\t"])->sortByDesc(fn ($d) => substr_count($first, $d))->first();
 
         $rows = array_map(fn ($l) => array_map('trim', str_getcsv($l, $delimiter)), array_filter($lines, fn ($l) => trim($l) !== ''));
-        $rows = array_values($rows);
+
+        return self::fromRows(array_values($rows));
+    }
+
+    /** Shared by CSV and Excel: header detection and keyed rows. */
+    private static function fromRows(array $rows): array
+    {
+        if (! $rows) {
+            return ['headers' => [], 'rows' => []];
+        }
 
         // Headerless reader dumps: first cell is a 15-digit ISO 11784 tag.
         if (preg_match('/^\d{15}$/', str_replace([' ', '.'], '', $rows[0][0] ?? ''))) {

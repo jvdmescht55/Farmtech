@@ -1,11 +1,24 @@
 @extends('layouts.rfid')
 @section('title', $catalogue->title)
-@section('eyebrow')Sale catalogue @endsection
+@section('eyebrow')Auction book @endsection
 @section('actions')
     <a href="{{ route('rfid.catalogues.export', $catalogue) }}" class="btn-secondary hidden sm:inline-flex">CSV</a>
     <a href="{{ route('rfid.catalogues.print', $catalogue) }}" target="_blank" class="btn-primary">Print</a>
 @endsection
 @section('content')
+@php
+    $numbered = $lots->isNotEmpty() && $lots->every(fn ($l) => filled($l->lot_number));
+    $step = $lots->isEmpty() ? 1 : ($numbered ? 3 : 2);
+@endphp
+<ol class="grid sm:grid-cols-3 gap-3 mb-8">
+    @foreach ([1 => ['Pick the animals', 'Tick them on the right'], 2 => ['Number the lots', '66A, 66B… in one click'], 3 => ['Print it', 'Logix layout, ready for the sale']] as $n => [$t, $d])
+        <li class="rounded-2xl border p-4 flex items-center gap-4 {{ $step === $n ? 'border-char bg-white' : ($step > $n ? 'border-hairline bg-white' : 'border-hairline') }}">
+            <span class="w-9 h-9 shrink-0 rounded-full grid place-items-center text-sm font-semibold {{ $step > $n ? 'bg-[#3F7A3A] text-white' : ($step === $n ? 'bg-char text-sand' : 'bg-sand-deep text-stone') }}">{{ $step > $n ? '✓' : $n }}</span>
+            <div><div class="font-medium">{{ $t }}</div><div class="text-xs text-stone">{{ $d }}</div></div>
+            @if ($n === 3 && $step === 3)<a href="{{ route('rfid.catalogues.print', $catalogue) }}" target="_blank" class="ml-auto btn-dark btn-sm">Print</a>@endif
+        </li>
+    @endforeach
+</ol>
 <div class="grid xl:grid-cols-3 gap-6">
     <div class="xl:col-span-2 space-y-6">
         <div class="app-card overflow-hidden">
@@ -40,7 +53,7 @@
                                     <td class="whitespace-nowrap text-xs">{{ $a->birth_date?->format('d/m/Y') ?? '—' }}</td>
                                     <td class="font-mono text-[11px] whitespace-nowrap">{{ $a->sire?->visual_id ?? '?' }}<br>{{ $a->dam?->visual_id ?? '?' }}</td>
                                     <td><input name="lots[{{ $lot->id }}][comment]" value="{{ $lot->comment }}" class="app-input !py-1 text-xs min-w-[14rem]"></td>
-                                    <td><button form="remove-{{ $lot->id }}" class="text-stone-light hover:text-[#B0452F] text-lg leading-none" title="Take out of catalogue">&times;</button></td>
+                                    <td><button form="remove-{{ $lot->id }}" class="text-stone-light hover:text-[#B0452F] text-lg leading-none" title="Take out of the book">&times;</button></td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -55,7 +68,7 @@
         </div>
 
         <details class="app-card p-6">
-            <summary class="cursor-pointer font-medium">Catalogue details</summary>
+            <summary class="cursor-pointer font-medium">Book details</summary>
             <form method="POST" action="{{ route('rfid.catalogues.update', $catalogue) }}" class="mt-5 space-y-4">
                 @csrf @method('PUT')
                 @include('rfid.catalogues._details', ['c' => $catalogue])
@@ -63,7 +76,7 @@
             </form>
             <form method="POST" action="{{ route('rfid.catalogues.destroy', $catalogue) }}" class="mt-6 pt-6 border-t border-hairline" x-data @submit="if (!$el.dataset.ok) { $event.preventDefault(); $el.dataset.ok = 1; $el.querySelector('button').textContent = 'Click again to delete it'; }">
                 @csrf @method('DELETE')
-                <button class="btn-danger">Delete catalogue</button>
+                <button class="btn-danger">Delete this book</button>
             </form>
         </details>
     </div>

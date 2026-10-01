@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     @include('partials.head')
-    <title>Kuddebestuur — Farmtech</title>
+    <title>Herd Manager — Farmtech</title>
 </head>
 <body class="bg-sand text-char font-ui antialiased min-h-screen">
 <section class="relative overflow-hidden bg-char text-sand">
@@ -14,13 +14,14 @@
             <a href="{{ route('portal') }}" class="flex items-baseline gap-1.5"><span class="font-headline text-[30px] leading-none">farmtech</span><span class="w-1.5 h-1.5 rounded-full bg-ochre"></span></a>
             <div class="flex items-center gap-5 text-sm">
                 <a href="{{ route('site.store') }}" class="hidden sm:inline text-sand/70 hover:text-sand">Store</a>
+                <a href="{{ route('help.index') }}" class="hidden sm:inline text-sand/70 hover:text-sand">Help &amp; guides</a>
                 <a href="{{ route('rfid.settings.edit') }}" class="hidden sm:inline text-sand/70 hover:text-sand">Settings</a>
                 @if ($user->canAccessAdminPanel())<a href="{{ url('/admin') }}" class="text-ochre-light hover:text-sand">Admin</a>@endif
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="btn-line-light btn-sm">Sign out</button></form>
             </div>
         </div>
         <div class="pt-16 pb-14 sm:pt-24 sm:pb-20">
-            <p class="eyebrow text-sand/60">Kuddebestuur · {{ $user->farm_name ?: 'your farm' }}</p>
+            <p class="eyebrow text-sand/60">Herd Manager · {{ $user->farm_name ?: 'your farm' }}</p>
             <h1 class="h-display mt-5 text-[clamp(3rem,8vw,7rem)]">Howzit, <em class="text-ochre-light">{{ \Illuminate\Support\Str::before($user->name, ' ') }}.</em></h1>
             <div class="mt-10 flex flex-wrap gap-x-14 gap-y-6">
                 <div><div class="font-headline text-5xl num">{{ number_format($stats['animals']) }}</div><div class="text-sm text-sand/60 mt-1">head in the herd book</div></div>
@@ -32,7 +33,7 @@
 </section>
 
 <main class="wrap py-14 sm:py-20" style="padding-bottom: max(5rem, env(safe-area-inset-bottom, 0px))">
-    @include('partials.flash')
+    @include('partials.toast')
     <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
         <div>
             <p class="eyebrow">Pick a device</p>
@@ -69,7 +70,7 @@
             <p class="eyebrow text-sand/50">Made for your farm</p>
             <div>
                 <div class="h-display text-4xl sm:text-5xl">Farm a bit differently? <em class="text-ochre-light">Tell us.</em></div>
-                <p class="mt-3 text-sand/70 max-w-lg">Suggest a device, a feature, or ask us to build something just for your setup. Kuddebestuur grows around the farmers using it.</p>
+                <p class="mt-3 text-sand/70 max-w-lg">Suggest a device, a feature, or ask us to build something just for your setup. Herd Manager grows around the farmers using it.</p>
             </div>
             <span class="mt-6 inline-flex items-center gap-3 font-medium">Make a suggestion <span class="transition-transform group-hover:translate-x-1">→</span></span>
         </a>

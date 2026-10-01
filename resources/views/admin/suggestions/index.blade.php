@@ -23,7 +23,7 @@
             </div>
         </form>
     @empty
-        <div class="panel p-12 text-center text-stone">No suggestions yet. They come from the website and from customers inside Kuddebestuur.</div>
+        <div class="panel p-12 text-center text-stone">No suggestions yet. They come from the website and from customers inside Herd Manager.</div>
     @endforelse
 </div>
 <div class="mt-6">{{ $suggestions->links() }}</div>

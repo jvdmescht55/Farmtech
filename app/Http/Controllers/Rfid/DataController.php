@@ -42,7 +42,7 @@ class DataController extends Controller
 
     public function preview(Request $request)
     {
-        $request->validate(['file' => ['required', 'file', 'max:20480', 'mimes:csv,txt,tsv']]);
+        $request->validate(['file' => ['required', 'file', 'max:20480', 'mimes:csv,txt,tsv,xlsx']]);
 
         $token = Str::random(32);
         $dir = dirname($this->path($token));
@@ -98,6 +98,33 @@ class DataController extends Controller
         @unlink($path);
 
         return redirect()->route('rfid.data')->with('status', $message);
+    }
+
+    /**
+     * "Paste from the scale": the lines a KraalTrac prints over USB when you
+     * press B (ref|id|tag|type|gender|sire|dam|weight|ts, or the older
+     * id|type|gender|sire|dam|weight). The BEGIN/END lines can be included.
+     */
+    public function paste(Request $request, ScanImporter $scans)
+    {
+        $text = (string) $request->validate(['lines' => ['required', 'string', 'max:500000']])['lines'];
+        $rows = [];
+        foreach (preg_split('/\R/', $text) as $line) {
+            $f = explode('|', trim($line));
+            if (count($f) === 9) {
+                $rows[] = array_combine(['ref', 'id', 'tag', 'type', 'gender', 'sire', 'dam', 'weight', 'ts'], $f);
+            } elseif (count($f) === 6) {
+                $rows[] = array_combine(['id', 'type', 'gender', 'sire', 'dam', 'weight'], $f) + ['ref' => 'paste-'.md5($line)];
+            }
+        }
+        if (! $rows) {
+            return back()->withErrors(['lines' => 'We couldn\'t find any scale records in that. Copy the lines between ----BEGIN QUEUE---- and ----END QUEUE----.'])->withInput();
+        }
+
+        $sync = $scans->import($request->user(), null, 'paste', $rows, 'Pasted from the scale');
+        $dupes = collect($scans->results)->where('status', 'duplicate')->count();
+
+        return redirect()->route('rfid.data')->with('status', "From the scale: {$sync->scan_count} saved".($dupes ? ", {$dupes} were already in (skipped)" : '').". It's now safe to clear the scale's queue (A + PIN).")->with('confetti', true);
     }
 
     public function backup(Request $request, DataExporter $exporter)

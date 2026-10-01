@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     @include('partials.head')
-    <title>{{ $title ?? 'Kuddebestuur — Farmtech' }}</title>
+    <title>{{ $title ?? 'Herd Manager — Farmtech' }}</title>
 </head>
 <body class="bg-sand text-char font-ui antialiased min-h-screen">
 <div class="min-h-screen grid lg:grid-cols-[1.15fr_1fr]">
@@ -14,7 +14,7 @@
         <div class="relative h-full flex flex-col justify-between p-12">
             <a href="{{ route('portal') }}" class="flex items-baseline gap-1.5"><span class="font-headline text-[30px] leading-none">farmtech</span><span class="w-1.5 h-1.5 rounded-full bg-ochre"></span></a>
             <div>
-                <p class="eyebrow text-white/60">Kuddebestuur · built around your farm</p>
+                <p class="eyebrow text-white/60">Herd Manager · built around your farm</p>
                 <h2 class="h-display mt-5 text-[clamp(3rem,5.5vw,5.5rem)]">{!! $headline ?? 'Welcome back<br><em class="text-ochre-light">to the kraal.</em>' !!}</h2>
                 <x-photo-credits :keys="[$image]" dark class="mt-10" />
             </div>

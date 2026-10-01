@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-/** Kuddebestuur home: pick a device section. Every section shares one herd book. */
+/** Herd Manager home: pick a device section. Every section shares one herd book. */
 class HerdHubController extends Controller
 {
     public function index(Request $request)

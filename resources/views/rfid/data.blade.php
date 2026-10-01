@@ -46,13 +46,13 @@
 
         <div class="panel p-6 sm:p-8">
             <h2 class="font-headline text-3xl">Bring data in</h2>
-            <p class="text-stone mt-2">Upload a CSV — from Logix, a spreadsheet or your KraalTrac. We look at the columns and show you what we found before anything is saved.</p>
+            <p class="text-stone mt-2">Drop in an Excel sheet or CSV — from Logix, your own spreadsheet or the scale. We look at the columns and show you what we found before anything is saved.</p>
             <form method="POST" action="{{ route('rfid.data.preview') }}" enctype="multipart/form-data" class="mt-6" x-data="{ name: '' }">
                 @csrf
                 <label class="block rounded-2xl border-2 border-dashed border-hairline hover:border-char transition p-10 text-center cursor-pointer">
-                    <input type="file" name="file" accept=".csv,.txt,.tsv" required class="sr-only" @change="name = $event.target.files[0]?.name || ''; $nextTick(() => $el.closest('form').requestSubmit())">
+                    <input type="file" name="file" accept=".xlsx,.csv,.txt,.tsv" required class="sr-only" @change="name = $event.target.files[0]?.name || ''; $nextTick(() => $el.closest('form').requestSubmit())">
                     <div class="font-headline text-3xl" x-text="name || 'Choose or drop a file'"></div>
-                    <div class="text-sm text-stone mt-2">.csv · .txt · .tsv — up to 20 MB. Excel? "Save as → CSV".</div>
+                    <div class="text-sm text-stone mt-2">Excel (.xlsx) or .csv — up to 20 MB. <a href="{{ route('help.show', 'excel') }}" class="underline">How?</a></div>
                 </label>
             </form>
             <div class="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
@@ -63,6 +63,22 @@
                     </a>
                 @endforeach
             </div>
+        </div>
+
+        <div class="panel p-6 sm:p-8" x-data="{ open: {{ $errors->has('lines') ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="w-full flex items-center gap-4 text-left">
+                <span class="w-11 h-11 shrink-0 rounded-2xl bg-ochre text-char grid place-items-center">@include('partials.icon', ['name' => 'chip', 'class' => 'w-5 h-5'])</span>
+                <span class="flex-1"><span class="block font-headline text-3xl">Paste from the scale</span><span class="block text-sm text-stone">No Wi-Fi at the kraal? Press B on the scale and paste what it prints.</span></span>
+                <span class="text-stone" x-text="open ? '−' : '+'"></span>
+            </button>
+            <form x-show="open" x-cloak method="POST" action="{{ route('rfid.data.paste') }}" class="mt-6 space-y-3">
+                @csrf
+                <textarea name="lines" rows="7" required placeholder="----BEGIN QUEUE----&#10;KT-3a9f-41|250912|982000123456789|birth|F|222435|220120|4.2|1790798104&#10;…&#10;----END QUEUE----" class="field font-num text-xs">{{ old('lines') }}</textarea>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button class="btn-dark">Save these records</button>
+                    <span class="text-xs text-stone">Pasting twice is safe — duplicates are skipped. <a href="{{ route('help.show', 'esp32') }}" class="underline">Step by step</a></span>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -77,7 +93,7 @@
                     </a></li>
                 @endforeach
                 <li><a href="{{ route('rfid.catalogues.index') }}" class="flex items-center gap-4 px-6 py-4 hover:bg-sand-light group">
-                    <div class="flex-1"><div class="font-medium">Sale catalogues</div><div class="text-sm text-stone">Each catalogue has its own CSV and print view.</div></div>
+                    <div class="flex-1"><div class="font-medium">Auction books</div><div class="text-sm text-stone">Each catalogue has its own CSV and print view.</div></div>
                     <span class="text-stone-light group-hover:text-char">→</span>
                 </a></li>
             </ul>

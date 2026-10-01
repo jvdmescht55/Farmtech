@@ -111,7 +111,7 @@ class DataExporter
             $zip->addFromString("{$type}.csv", stream_get_contents($fh));
             fclose($fh);
         }
-        $zip->addFromString('README.txt', "Farmtech Kuddebestuur backup — ".now()->toDateTimeString()."\n".($user->farm_name ?: $user->name)."\n\nherd.csv can be re-imported under Data. events.csv and weighings.csv too.\n");
+        $zip->addFromString('README.txt', "Farmtech Herd Manager backup — ".now()->toDateTimeString()."\n".($user->farm_name ?: $user->name)."\n\nherd.csv can be re-imported under Data. events.csv and weighings.csv too.\n");
         $zip->close();
 
         return $path;

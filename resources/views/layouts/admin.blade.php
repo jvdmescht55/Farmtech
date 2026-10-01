@@ -40,7 +40,7 @@
         </a>
         <div class="ml-auto flex items-center gap-1 sm:gap-3 text-sm">
             <a href="{{ route('portal') }}" target="_blank" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Website ↗</a>
-            <a href="{{ route('herd.hub') }}" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Kuddebestuur ↗</a>
+            <a href="{{ route('herd.hub') }}" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Herd Manager ↗</a>
             <a href="{{ route('home') }}" target="_blank" class="hidden lg:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Old product store ↗</a>
             <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
                 <button type="button" @click="open = !open" class="flex items-center gap-2 rounded-full pl-1 pr-3 h-10 hover:bg-white/5">
@@ -50,7 +50,7 @@
                 <div x-show="open" x-cloak x-transition.origin.top.right class="absolute right-0 mt-2 w-56 rounded-2xl bg-white text-char border border-hairline shadow-[0_24px_60px_-20px_rgba(0,0,0,.35)] p-2">
                     <a href="{{ route('admin.profile.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">My profile</a>
                     <a href="{{ route('portal') }}" target="_blank" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Website ↗</a>
-                    <a href="{{ route('herd.hub') }}" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Kuddebestuur ↗</a>
+                    <a href="{{ route('herd.hub') }}" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Herd Manager ↗</a>
                     <form action="{{ route('admin.logout') }}" method="POST" class="border-t border-hairline mt-1 pt-1">@csrf<button class="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Sign out</button></form>
                 </div>
             </div>

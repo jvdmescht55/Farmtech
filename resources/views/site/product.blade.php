@@ -42,7 +42,7 @@
                 <a href="{{ route('site.contact') }}" class="btn-line">Ask us something</a>
             </div>
             <ul class="mt-8 space-y-2 text-sm text-stone">
-                <li class="flex gap-2"><span class="text-ochre">—</span>Kuddebestuur included — no monthly subscription</li>
+                <li class="flex gap-2"><span class="text-ochre">—</span>Herd Manager included — no monthly subscription</li>
                 <li class="flex gap-2"><span class="text-ochre">—</span>7-day cooling-off · 6-month warranty</li>
                 <li class="flex gap-2"><span class="text-ochre">—</span>Shaped around your farm — tell us what you need</li>
             </ul>

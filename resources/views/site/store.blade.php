@@ -1,7 +1,7 @@
 @extends('layouts.site')
 @php use App\Support\SiteImages as Img; @endphp
-@section('title', 'Farmtech Store — KraalTrac devices & Kuddebestuur')
-@section('description', 'KraalTrac Pro handheld EID reader & weigh logger, KraalTrac Watch water-point counter, and Kuddebestuur herd software — built around South African farms.')
+@section('title', 'Farmtech Store — KraalTrac devices & Herd Manager')
+@section('description', 'KraalTrac Pro handheld EID reader & weigh logger, KraalTrac Watch water-point counter, and Herd Manager herd software — built around South African farms.')
 @section('hero_dark', '1')
 @push('head')<link rel="preload" as="image" href="{{ Img::url('windpomp-pink') }}" imagesrcset="{{ Img::srcset('windpomp-pink') }}" imagesizes="100vw">@endpush
 
@@ -14,7 +14,7 @@
         <p class="eyebrow text-white/70 reveal-up">The Farmtech store</p>
         <h1 class="h-display mt-6 text-[clamp(3.6rem,11vw,10rem)] reveal-up" style="animation-delay:.08s">Know every animal.<br><em class="text-ochre-light">Every kilo.</em></h1>
         <div class="mt-10 flex flex-col lg:flex-row lg:items-end justify-between gap-10 reveal-up" style="animation-delay:.18s">
-            <p class="max-w-md text-lg text-white/80 leading-relaxed">Scan in the kraal and your herd book updates itself — weights, growth, pedigree, water visits and sale catalogues. No notebook in the bakkie, no expensive imports.</p>
+            <p class="max-w-md text-lg text-white/80 leading-relaxed">Scan in the kraal and your herd book updates itself — weights, growth, pedigree, water visits and auction books. No notebook in the bakkie, no expensive imports.</p>
             <div class="flex flex-wrap gap-3">
                 <a href="#devices" class="btn-light">See the devices</a>
                 <a href="#order" class="btn-line-light">Get yours</a>
@@ -30,7 +30,7 @@
             <p class="eyebrow">Devices</p>
             <h2 class="h-display mt-5 text-[clamp(2.6rem,6vw,5rem)]">Built in SA, <em>for SA kraals.</em></h2>
         </div>
-        <p class="max-w-sm text-stone">Each device comes with its own section in Kuddebestuur. No monthly subscription to get going.</p>
+        <p class="max-w-sm text-stone">Each device comes with its own section in Herd Manager. No monthly subscription to get going.</p>
     </div>
 
     @php
@@ -70,11 +70,11 @@
 <section id="software" class="bg-bush text-sand overflow-hidden scroll-mt-20">
     <div class="wrap py-24 sm:py-32 grid lg:grid-cols-12 gap-14 items-center">
         <div class="lg:col-span-5">
-            <p class="eyebrow text-sand/50">Kuddebestuur — included</p>
+            <p class="eyebrow text-sand/50">Herd Manager — included</p>
             <h2 class="h-display mt-6 text-[clamp(2.6rem,5.5vw,4.8rem)]">Lekker data.<br><em class="text-ochre-light">Not just numbers.</em></h2>
             <p class="mt-8 text-sand/70 text-lg leading-relaxed max-w-md">See how the herd is growing, which ram's lambs do best, who's ready for the market and who skipped the water — on your phone, in the kraal.</p>
             <ul class="mt-8 space-y-3 text-sand/80">
-                @foreach (['Weigh days with daily gain per animal', 'Compare rams, groups and seasons', 'Sort the mob by weight in seconds', 'Alerts for weight loss, missed drinks, births and more', 'Sale catalogues with lot numbers, ready to print'] as $f)
+                @foreach (['Weigh days with daily gain per animal', 'Compare rams, groups and seasons', 'Sort the mob by weight in seconds', 'Alerts for weight loss, missed drinks, births and more', 'Auction books with lot numbers, ready to print'] as $f)
                     <li class="flex gap-3"><span class="text-ochre-light">—</span>{{ $f }}</li>
                 @endforeach
             </ul>
@@ -120,7 +120,7 @@
         <div class="max-w-xl">
             <p class="eyebrow text-white/60">Made for your farm</p>
             <h2 class="h-display mt-5 text-[clamp(3rem,7vw,6.5rem)]">Your farm isn't<br><em class="text-ochre-light">a template.</em></h2>
-            <p class="mt-6 text-lg text-white/75 max-w-md">Every farm runs differently. Tell us how you work and we'll shape Kuddebestuur around it — or build you a device that doesn't exist yet. Boer maak 'n plan; we help.</p>
+            <p class="mt-6 text-lg text-white/75 max-w-md">Every farm runs differently. Tell us how you work and we'll shape Herd Manager around it — or build you a device that doesn't exist yet. Boer maak 'n plan; we help.</p>
             <a href="{{ route('site.suggest') }}" class="btn-light mt-10">Tell us what you need</a>
         </div>
     </div>

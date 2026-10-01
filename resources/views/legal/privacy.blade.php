@@ -45,7 +45,7 @@
 <ul>
     <li>Ask what personal information we hold about you, and get a copy.</li>
     <li>Ask us to correct or delete it, or object to how we use it.</li>
-    <li>Export your farm records yourself at any time (Kuddebestuur → Data).</li>
+    <li>Export your farm records yourself at any time (Herd Manager → Data).</li>
     <li>Withdraw consent for marketing at any time.</li>
     <li>Complain to the <strong>Information Regulator</strong> (inforegulator.org.za · complaints.IR@inforegulator.org.za) if you're not happy with how we handled it.</li>
 </ul>

@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
  *  1. Device:  POST /api/v1/pair  {"serial":"FT1-000123","model":"RFID Scanner V1","firmware":"1.0.0"}
  *              ← {"code":"482913","secret":"…","expires_in":900,"poll_every":5}
  *              Device shows "482 913" on its screen.
- *  2. Farmer:  Kuddebestuur → Toestelle → "Koppel met kode" → types 482913.
+ *  2. Farmer:  Herd Manager → Toestelle → "Koppel met kode" → types 482913.
  *  3. Device:  POST /api/v1/pair/status {"secret":"…"} every few seconds
  *              ← {"status":"pending"} … then once: {"status":"paired","token":"…","device":"…","farm":"…"}
  *              Device stores the token in flash and uses it as its Bearer key from then on.

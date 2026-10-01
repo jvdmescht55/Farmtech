@@ -23,7 +23,7 @@
             <p class="text-sm text-stone mt-3">The KraalTrac keeps every read. Plug it in and upload the session file — any column order works.</p>
             <form method="POST" action="{{ route('rfid.sync.upload') }}" enctype="multipart/form-data" class="mt-4 space-y-3">
                 @csrf
-                <input type="file" name="file" accept=".csv,.txt,.tsv" required class="field !h-auto py-2.5 file:mr-3 file:rounded-full file:border-0 file:bg-char file:text-sand file:px-4 file:py-1.5 file:text-sm">
+                <input type="file" name="file" accept=".xlsx,.csv,.txt,.tsv" required class="field !h-auto py-2.5 file:mr-3 file:rounded-full file:border-0 file:bg-char file:text-sand file:px-4 file:py-1.5 file:text-sm">
                 <div class="grid grid-cols-2 gap-3">
                     <select name="reader_id" class="field"><option value="">Which device?</option>@foreach ($readers as $r)<option value="{{ $r->id }}">{{ $r->name }}</option>@endforeach</select>
                     <select name="weigh_type" class="field"><option value="">Weigh type (from file)</option>@foreach (\App\Models\Scan::WEIGH_TYPES as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select>
@@ -77,7 +77,7 @@
         @endforelse
 
         <details class="rounded-[24px] bg-char text-sand p-6 sm:p-7" x-data="{ tab: 'pair' }">
-            <summary class="cursor-pointer font-medium">For builders: how devices talk to Kuddebestuur</summary>
+            <summary class="cursor-pointer font-medium">For builders: how devices talk to Herd Manager</summary>
             <p class="text-sm text-sand/70 mt-4 leading-relaxed">Everything goes to <span class="font-num">farmtech.site</span> over HTTPS — no local server or XAMPP needed. Reads show up on the live view within seconds, and the reply tells the device who it read and any alerts.</p>
             <div class="mt-4 text-xs text-sand/60 font-num space-y-1">
                 <div>POST {{ url('/api/v1/scans') }}</div><div>GET&nbsp; {{ url('/api/v1/ping') }}</div><div>Authorization: Bearer &lt;device key&gt;</div>
@@ -96,14 +96,14 @@ POST /api/v1/pair/status  {"secret":"…"}   (every 5 s)
 → {"status":"paired","token":"…"}   once — save it in flash</code></pre>
 <pre x-show="tab === 'json'" x-cloak class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>{"compact": true,
  "device": {"battery": 87, "firmware": "1.0.3"},
- "scans": [{"id": "KT-000124", "eid": "982000123456789",
+ "scans": [{"ref": "KT-000124", "id": "250912", "eid": "982000123456789",
             "weight": 42.5, "weight_type": "wean",
             "sex": "F", "sire": "DVS 222435", "dam": "DVS 220120",
             "ts": 1790798104}]}
 
 // weight_type: birth | wean | post_wean | mature
 // sex, sire and dam only fill blanks — never overwrite the herd book
-// "id" makes retries safe; reads are saved on the device first</code></pre>
+// "id" = your farm number (e.g. 250912) · "ref" makes retries safe</code></pre>
 <pre x-show="tab === 'reply'" x-cloak class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>{"ok":1,"n":1,"r":[{"s":1,"a":"DVS 25 5010",
  "w":66.6,"c":-6.9,"g":-1725,"x":1,
  "t":"Sharp weight loss"}]}

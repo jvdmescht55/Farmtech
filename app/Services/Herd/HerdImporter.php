@@ -88,6 +88,9 @@ class HerdImporter
                     $attrs['notes'] = $v;
                 }
                 $attrs['breed'] = $animal->breed ?? $user->breed;
+                if (empty($attrs['birth_date']) && ! $animal->birth_date && ($bd = \App\Support\BirthdayId::birthDate($vid))) {
+                    $attrs['birth_date'] = $bd;
+                }
 
                 $ebvs = $animal->ebvs ?? [];
                 foreach (array_keys(config('herd.ebvs')) as $k) {

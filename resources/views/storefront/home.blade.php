@@ -20,7 +20,7 @@
                     Tag it. Scan it.<br><span class="italic font-medium text-brand-900">Know every animal in your herd.</span>
                 </h1>
                 <p :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:140ms" class="text-ink-secondary text-base sm:text-lg max-w-md mb-10 leading-relaxed">
-                    RFID stick readers and EID tags for sheep, goats and cattle — and every Farmtech reader includes Herd Management software, so scans become your herd register, weights and sale catalogues.
+                    RFID stick readers and EID tags for sheep, goats and cattle — and every Farmtech reader includes Herd Management software, so scans become your herd register, weights and auction books.
                 </p>
 
                 <div :class="$store.intro.alreadyPlayed ? '' : 'animate-reveal-up'" style="animation-delay:200ms" class="flex flex-wrap items-center gap-4">
@@ -94,7 +94,7 @@
             <div>
                 <p class="text-xs font-mono uppercase tracking-[0.25em] text-mint mb-4">Included with every reader</p>
                 <h2 class="font-display font-bold text-3xl sm:text-5xl leading-tight">Herd Management software — RFID Scanner V1</h2>
-                <p class="mt-6 text-white/75 text-lg leading-relaxed max-w-xl">Your reader ships with an activation code. Scans sync into a herd register with weights and daily gain, SP / C / B pedigree grading, and print-ready sale catalogues with lot numbers.</p>
+                <p class="mt-6 text-white/75 text-lg leading-relaxed max-w-xl">Your reader ships with an activation code. Scans sync into a herd register with weights and daily gain, SP / C / B pedigree grading, and print-ready auction books with lot numbers.</p>
                 <div class="mt-8 flex flex-wrap gap-4">
                     <a href="{{ route('category.show', 'rfid') }}" class="inline-flex items-center gap-2 bg-mint hover:bg-mint-dark text-white text-sm font-semibold px-7 py-3.5 rounded-full transition">Get a reader</a>
                     <a href="{{ route('login') }}" class="inline-flex items-center gap-2 border border-white/30 hover:border-white text-white text-sm font-semibold px-7 py-3.5 rounded-full transition">Already have one? Sign in</a>
@@ -105,7 +105,7 @@
                     ['Scan → record', 'Session files or direct sync. Unknown tags become new animals automatically.'],
                     ['Weights & ADG', 'Every weighing tracked with grams-per-day gain between sessions.'],
                     ['Pedigree tiers', 'SP, C and B worked out from three generations — with the reason shown.'],
-                    ['Sale catalogues', '66A, 66B… lot numbering and a veiling-ready printed layout.'],
+                    ['Auction books', '66A, 66B… lot numbering and a veiling-ready printed layout.'],
                 ] as [$t, $d])
                     <div class="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-5">
                         <dt class="font-semibold">{{ $t }}</dt>

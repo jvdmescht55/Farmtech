@@ -24,6 +24,7 @@ class User extends Authenticatable
         'species',
         'phone',
         'terms_accepted_at',
+        'tours_seen',
     ];
 
     protected $hidden = [
@@ -38,6 +39,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'terms_accepted_at' => 'datetime',
+            'tours_seen' => 'array',
         ];
     }
 
@@ -95,5 +97,10 @@ class User extends Authenticatable
     public function breederLine(): string
     {
         return trim(($this->breeder_number ? $this->breeder_number.'  ' : '').mb_strtoupper(collect([$this->farm_name, $this->farm_address])->filter()->implode(', ')));
+    }
+
+    public function hasSeenTour(string $key): bool
+    {
+        return in_array($key, $this->tours_seen ?? [], true);
     }
 }

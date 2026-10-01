@@ -1,6 +1,6 @@
 @extends('layouts.herd', ['module' => null])
 @section('title', 'Suggestions')
-@section('eyebrow')Kuddebestuur is built around the farmers using it @endsection
+@section('eyebrow')Herd Manager is built around the farmers using it @endsection
 
 @section('content')
 <div class="grid xl:grid-cols-5 gap-6">

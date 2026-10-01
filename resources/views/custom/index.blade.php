@@ -54,3 +54,10 @@
     </div>
 </div>
 @endsection
+
+@section('tour')
+    <x-tour key="custom" :auto="! auth()->user()->hasSeenTour('custom') || request()->boolean('tour')" :steps="[
+        ['target' => null, 'title' => 'Your own devices', 'body' => 'Tank gauges, rain meters, cold rooms — name it, say what it measures, set your limits. We chart it and shout when something\'s off.'],
+        ['target' => 'help', 'title' => 'Need the technical bit?', 'body' => 'The <strong>?</strong> button → guides has the two lines your device needs to send readings.', 'cta' => 'Lekker'],
+    ]" />
+@endsection

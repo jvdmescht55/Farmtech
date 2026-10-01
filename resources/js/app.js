@@ -225,3 +225,83 @@ document.addEventListener('alpine:init', () => {
 });
 
 Alpine.start();
+
+// ── Herd Manager polish ─────────────────────────────────────────────────
+document.addEventListener('alpine:init', () => {
+    // First-run tour: highlights one element at a time ([data-tour="…"]).
+    Alpine.data('tour', (steps, doneUrl, autoStart) => ({
+        steps, i: 0, open: false, rect: null,
+        init() {
+            if (autoStart) setTimeout(() => this.start(), 700);
+            window.addEventListener('start-tour', () => this.start());
+            window.addEventListener('resize', () => this.place());
+            window.addEventListener('scroll', () => this.place(), { passive: true });
+        },
+        get step() { return this.steps[this.i] || {}; },
+        start() { this.i = 0; this.open = true; this.$nextTick(() => this.go()); },
+        target() { return this.step.target ? document.querySelector(`[data-tour="${this.step.target}"]`) : null; },
+        go() {
+            const el = this.target();
+            if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => this.place(), 380); } else { this.rect = null; }
+        },
+        place() {
+            if (!this.open) return;
+            const el = this.target();
+            if (!el) { this.rect = null; return; }
+            const r = el.getBoundingClientRect();
+            this.rect = { top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 };
+        },
+        next() { if (this.i < this.steps.length - 1) { this.i++; this.go(); } else { this.finish(); } },
+        back() { if (this.i > 0) { this.i--; this.go(); } },
+        finish() {
+            this.open = false;
+            fetch(doneUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content, Accept: 'application/json' } });
+        },
+        get spot() { return this.rect ? `top:${this.rect.top}px;left:${this.rect.left}px;width:${this.rect.width}px;height:${this.rect.height}px` : ''; },
+        get card() {
+            if (!this.rect || window.innerWidth < 640) return '';
+            const below = this.rect.top + this.rect.height + 14;
+            const top = below + 230 < window.innerHeight ? below : Math.max(16, this.rect.top - 244);
+            const left = Math.min(Math.max(16, this.rect.left), window.innerWidth - 396);
+            return `top:${top}px;left:${left}px`;
+        },
+    }));
+
+    // Numbers that count up when they appear: <span x-countup>1 234</span>
+    Alpine.directive('countup', (el) => {
+        const raw = el.textContent.trim();
+        const target = parseFloat(raw.replace(/[^\d.-]/g, ''));
+        if (isNaN(target) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const decimals = (raw.split('.')[1] || '').replace(/\D/g, '').length;
+        const prefix = raw.startsWith('+') ? '+' : '';
+        const t0 = performance.now(), dur = 900;
+        const tick = (now) => {
+            const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+            const v = (target * e).toFixed(decimals);
+            el.textContent = prefix + Number(v).toLocaleString('en-ZA', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).replace(/,/g, ' ');
+            if (p < 1) requestAnimationFrame(tick);
+        };
+        el.textContent = prefix + '0';
+        requestAnimationFrame(tick);
+    });
+});
+
+// A small, satisfying burst for big moments (imports done, first pairing…).
+window.farmtechConfetti = () => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const colours = ['#B8732E', '#E3B27A', '#15140F', '#3F7A3A', '#F4F1EA'];
+    for (let i = 0; i < 70; i++) {
+        const d = document.createElement('i');
+        const size = 6 + Math.random() * 6;
+        Object.assign(d.style, {
+            position: 'fixed', zIndex: 80, left: '50%', top: '38%', width: `${size}px`, height: `${size * 0.45}px`,
+            background: colours[i % colours.length], borderRadius: '2px', pointerEvents: 'none',
+        });
+        document.body.appendChild(d);
+        const a = Math.random() * Math.PI * 2, v = 180 + Math.random() * 260;
+        d.animate([
+            { transform: 'translate(-50%,-50%) rotate(0)', opacity: 1 },
+            { transform: `translate(${Math.cos(a) * v}px, ${Math.sin(a) * v + 260}px) rotate(${Math.random() * 720}deg)`, opacity: 0 },
+        ], { duration: 1300 + Math.random() * 700, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => d.remove();
+    }
+};

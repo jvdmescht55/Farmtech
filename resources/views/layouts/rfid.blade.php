@@ -5,7 +5,8 @@
     $is = fn (...$p) => request()->routeIs(...$p);
     $more = [
         [route('rfid.live'), 'Live view', $is('rfid.live')],
-        [route('rfid.catalogues.index'), 'Sale catalogues', $is('rfid.catalogues.*')],
+        [route('rfid.catalogues.index'), 'Auction books', $is('rfid.catalogues.*')],
+        [route('help.index'), 'Help & guides', false],
         [route('rfid.readers.index'), 'Devices', $is('rfid.readers.*', 'rfid.sync.*')],
         [route('rfid.data'), 'Import & export', $is('rfid.data*', 'rfid.import.*')],
         [route('rfid.settings.edit'), 'Farm settings', $is('rfid.settings.*')],
@@ -14,12 +15,12 @@
 @endphp
 
 @section('tabs')
-    @include('partials.tab', ['href' => route('rfid.dashboard'), 'label' => 'Overview', 'on' => $is('rfid.dashboard')])
-    @include('partials.tab', ['href' => route('rfid.animals.index'), 'label' => 'Herd', 'on' => $is('rfid.animals.*')])
-    @include('partials.tab', ['href' => route('rfid.weighings.index'), 'label' => 'Weighing', 'on' => $is('rfid.weighings.*', 'rfid.compare', 'rfid.draft*')])
-    @include('partials.tab', ['href' => route('rfid.alerts'), 'label' => 'Alerts', 'on' => $is('rfid.alerts*'), 'badge' => $alertCount ?: null])
-    @include('partials.tab', ['href' => route('rfid.events.index'), 'label' => 'Records', 'on' => $is('rfid.events.*')])
-    @include('partials.tab', ['href' => $moreOn ? route('rfid.dashboard', ['more' => 1]) : request()->fullUrlWithQuery(['more' => request()->boolean('more') ? null : 1]), 'label' => $moreOn ? collect($more)->first(fn ($m) => $m[2])[1].' ▾' : 'More ▾', 'on' => $moreOn || request()->boolean('more')])
+    @include('partials.tab', ['href' => route('rfid.dashboard'), 'label' => 'Overview', 'icon' => 'home', 'on' => $is('rfid.dashboard')])
+    @include('partials.tab', ['href' => route('rfid.animals.index'), 'label' => 'Herd', 'icon' => 'herd', 'on' => $is('rfid.animals.*')])
+    @include('partials.tab', ['href' => route('rfid.weighings.index'), 'label' => 'Weighing', 'icon' => 'scale', 'on' => $is('rfid.weighings.*', 'rfid.compare', 'rfid.draft*')])
+    @include('partials.tab', ['href' => route('rfid.alerts'), 'label' => 'Alerts', 'icon' => 'bell', 'on' => $is('rfid.alerts*'), 'badge' => $alertCount ?: null])
+    @include('partials.tab', ['href' => route('rfid.events.index'), 'label' => 'Records', 'icon' => 'note', 'on' => $is('rfid.events.*')])
+    @include('partials.tab', ['href' => $moreOn ? route('rfid.dashboard', ['more' => 1]) : request()->fullUrlWithQuery(['more' => request()->boolean('more') ? null : 1]), 'label' => $moreOn ? collect($more)->first(fn ($m) => $m[2])[1] : 'More', 'icon' => 'more', 'on' => $moreOn || request()->boolean('more')])
 @endsection
 
 @section('subnav')

@@ -18,7 +18,7 @@
 <p>See <a href="{{ route('legal.show', 'shipping') }}">Delivery</a> and <a href="{{ route('legal.show', 'returns') }}">Returns, cooling-off & warranty</a> — including your right to cancel within 7 days of receiving a device ordered online.</p>
 
 <h2>Software that comes with a device</h2>
-<p>Each device includes an activation code for the matching Kuddebestuur section, governed by our <a href="{{ route('legal.show', 'terms') }}">terms of use</a>.</p>
+<p>Each device includes an activation code for the matching Herd Manager section, governed by our <a href="{{ route('legal.show', 'terms') }}">terms of use</a>.</p>
 
 <h2>Complaints</h2>
 <p>Talk to us first — most things get sorted quickly. If we can't resolve it, you can contact the <strong>Consumer Goods and Services Ombud</strong> (cgso.org.za) or the <strong>National Consumer Commission</strong> (thencc.org.za).</p>

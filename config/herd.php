@@ -14,11 +14,11 @@ return [
         'rfid' => [
             'name' => 'KraalTrac Pro',
             'kind' => 'Handheld EID reader & weigh logger',
-            'tagline' => 'Scan the tag, punch in the weight — your herd book, growth figures and sale catalogues build themselves.',
+            'tagline' => 'Scan the tag, punch in the weight — your herd book, growth figures and auction books build themselves.',
             'route' => 'rfid.dashboard',
             'image' => 'merino-rams',
             'device_kind' => 'handheld',
-            'features' => ['Weigh sessions & daily gain', 'Compare rams, groups, seasons', 'Sort by weight', 'SP / C / B pedigree tiers', 'Sale catalogues', 'Health & breeding records'],
+            'features' => ['Weigh sessions & daily gain', 'Compare rams, groups, seasons', 'Sort by weight', 'SP / C / B pedigree tiers', 'Auction books', 'Health & breeding records'],
         ],
         'watch' => [
             'name' => 'KraalTrac Watch',
@@ -88,7 +88,7 @@ return [
     'commercial_prefixes' => ['CC'],
 
     /*
-     * EBV columns printed on the sale catalogue (value + accuracy %).
+     * EBV columns printed on the auction book (value + accuracy %).
      * Keys are what CSV imports and the animal form use.
      */
     'ebvs' => [

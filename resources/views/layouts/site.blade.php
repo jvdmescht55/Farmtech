@@ -16,7 +16,7 @@
 <head>
     @include('partials.head')
     <title>@yield('title', 'Farmtech — Know your herd')</title>
-    <meta name="description" content="@yield('description', 'Farmtech KraalTrac devices and Kuddebestuur herd software — scan in the kraal, see every kilo, every animal, every day. Built around your farm.')">
+    <meta name="description" content="@yield('description', 'Farmtech KraalTrac devices and Herd Manager herd software — scan in the kraal, see every kilo, every animal, every day. Built around your farm.')">
     @stack('head')
 </head>
 <body class="bg-sand text-char font-ui antialiased [font-feature-settings:'ss01']"
@@ -41,7 +41,7 @@
         </nav>
 
         <div class="hidden md:flex items-center gap-5 shrink-0">
-            <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">Kuddebestuur →</a>
+            <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">Herd Manager →</a>
             <a href="{{ route('site.store') }}#order"
                class="btn btn-sm"
                :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Get yours</a>
@@ -66,7 +66,7 @@
             </nav>
             <div class="mt-auto pt-10 grid gap-3">
                 <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Get yours</a>
-                <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Kuddebestuur →</a>
+                <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Herd Manager →</a>
             </div>
         </div>
     </div>
@@ -81,7 +81,7 @@
         <div class="grid lg:grid-cols-12 gap-12">
             <div class="lg:col-span-6">
                 <div class="font-headline text-sand text-[clamp(3.5rem,9vw,8rem)] leading-[0.85] tracking-[-0.03em]">Know your<br><em class="text-ochre-light">herd.</em></div>
-                <p class="mt-6 max-w-sm">KraalTrac devices &amp; Kuddebestuur. Built for the kraal, not the office — and built around your farm.</p>
+                <p class="mt-6 max-w-sm">KraalTrac devices &amp; Herd Manager. Built for the kraal, not the office — and built around your farm.</p>
             </div>
             <div class="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-8 text-[15px]">
                 <div>
@@ -89,7 +89,7 @@
                     <ul class="space-y-2.5">
                         <li><a class="hover:text-sand" href="{{ route('portal') }}">Home</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.store') }}">Store</a></li>
-                        <li><a class="hover:text-sand" href="{{ route('landing') }}">Kuddebestuur</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('landing') }}">Herd Manager</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.suggest') }}">Suggest a device</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.contact') }}">Contact</a></li>
                     </ul>

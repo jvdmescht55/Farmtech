@@ -14,7 +14,7 @@
     <div class="px-5 sm:px-12 lg:px-20 pt-32 pb-24 flex flex-col justify-center" x-data="{ kind: '{{ old('kind', request('kind', 'device')) }}' }">
         <p class="eyebrow">Made for your farm</p>
         <h1 class="h-display mt-5 text-[clamp(3rem,6vw,5rem)]">What should we build <em>for you?</em></h1>
-        <p class="mt-5 text-lg text-stone max-w-md">Every device and every feature in Kuddebestuur started with a farmer saying "I wish…". Tell us yours.</p>
+        <p class="mt-5 text-lg text-stone max-w-md">Every device and every feature in Herd Manager started with a farmer saying "I wish…". Tell us yours.</p>
         @if (session('suggest_ok'))
             <div class="mt-10 rounded-[24px] bg-white border border-hairline p-10"><div class="font-headline text-4xl">Lekker, thanks!</div><p class="mt-3 text-stone">We read every one and we'll get back to you.</p></div>
         @else

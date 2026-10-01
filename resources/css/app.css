@@ -204,3 +204,8 @@
 }
 .admin-v2 input:focus, .admin-v2 select:focus, .admin-v2 textarea:focus { border-color: #15140F; outline: none; box-shadow: 0 0 0 4px rgba(21,20,15,.05); }
 .admin-v2 h2.font-semibold, .admin-v2 h2.text-lg { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 1.6rem; letter-spacing: -.01em; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes v2-pop { 0% { transform: scale(.96); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.pop-in { animation: v2-pop .45s cubic-bezier(.2,.7,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .pop-in { animation: none; } }

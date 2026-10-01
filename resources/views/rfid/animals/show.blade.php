@@ -146,7 +146,7 @@
             </ul>
         </div>
         @if ($lots->isNotEmpty())
-            <div class="panel p-6 text-sm"><div class="kpi-label mb-2">In sale catalogues</div>@foreach ($lots as $l)<a href="{{ route('rfid.catalogues.show', $l->catalogue) }}" class="block link-u">{{ $l->catalogue->title }} · lot {{ $l->lot_number ?: '—' }}</a>@endforeach</div>
+            <div class="panel p-6 text-sm"><div class="kpi-label mb-2">In auction books</div>@foreach ($lots as $l)<a href="{{ route('rfid.catalogues.show', $l->catalogue) }}" class="block link-u">{{ $l->catalogue->title }} · lot {{ $l->lot_number ?: '—' }}</a>@endforeach</div>
         @endif
     </div>
 </div>

@@ -25,7 +25,8 @@ class ScanImporter
 
     public const DATE = ['scanned_at', 'date', 'datetime', 'date_time', 'time', 'datum', 'ts', 'timestamp'];
 
-    public const REF = ['id', 'ref', 'client_ref', 'scan_id', 'uuid', 'seq'];
+    // NOT 'id' — scale firmware sends the sheep number as "id" (see VID).
+    public const REF = ['ref', 'client_ref', 'scan_id', 'uuid', 'seq'];
 
     /** @var array<int, array> per-scan outcome of the last import() call (API replies use this). */
     public array $results = [];
@@ -62,7 +63,7 @@ class ScanImporter
                     continue;
                 }
                 // Devices retry when the network drops — the same ref is only stored once.
-                $ref = $source === 'api' ? CsvReader::pick($row, self::REF) : null;
+                $ref = in_array($source, ['api', 'paste'], true) ? CsvReader::pick($row, self::REF) : null;
                 if ($ref && Scan::where('user_id', $user->id)->where('client_ref', $ref)->exists()) {
                     $this->results[] = ['status' => 'duplicate', 'ref' => $ref, 'eid' => $eid];
 
@@ -95,6 +96,7 @@ class ScanImporter
                     $new++;
                     $animal = Animal::create([
                         'user_id' => $user->id,
+                        'birth_date' => \App\Support\BirthdayId::birthDate($vid),
                         'eid' => $eid,
                         'visual_id' => $vid ?? $eid,
                         'breed' => $user->breed,
@@ -166,12 +168,13 @@ class ScanImporter
     {
         $t = strtolower(trim((string) $raw));
 
+        // Accepts short codes and the long labels scale firmware uses ("Birth Weight", "Post Wean Wt").
         return match (true) {
             $t === '' => null,
-            in_array($t, ['birth', 'geboorte', 'b', '1'], true) => 'birth',
-            in_array($t, ['wean', 'weaning', 'speen', 'w', '2'], true) => 'wean',
-            in_array($t, ['post_wean', 'post-wean', 'postwean', 'naspeen', 'p', '3'], true) => 'post_wean',
-            in_array($t, ['mature', 'adult', 'volwasse', 'm', '4'], true) => 'mature',
+            in_array($t, ['b', '1'], true) || str_contains($t, 'birth') || str_contains($t, 'geboorte') => 'birth',
+            in_array($t, ['p', '3'], true) || str_contains($t, 'post') || str_contains($t, 'naspeen') => 'post_wean',
+            in_array($t, ['w', '2'], true) || str_contains($t, 'wean') || str_contains($t, 'speen') => 'wean',
+            in_array($t, ['m', '4'], true) || str_contains($t, 'mature') || str_contains($t, 'adult') || str_contains($t, 'volwasse') => 'mature',
             default => 'routine',
         };
     }

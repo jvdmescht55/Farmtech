@@ -14,7 +14,14 @@
     <div class="app-card p-6">
         <h2 class="font-headline text-3xl mb-5">The basics</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div><label class="app-label">Animal ID (management tag) *</label><input name="visual_id" value="{{ $v('visual_id', $animal->visual_id) }}" required placeholder="DVS 25 5082" class="app-input font-mono"></div>
+            <div x-data="{ id: @js($v('visual_id', $animal->visual_id)) }">
+                <label class="app-label">Animal number *</label>
+                <input name="visual_id" x-model="id" required placeholder="{{ $suggestedId ?? 'e.g. 250912' }}" class="app-input font-mono">
+                @if (! $animal->exists && isset($suggestedId))
+                    <button type="button" x-show="!id" @click="id = '{{ $suggestedId }}'" class="mt-1.5 text-xs link-u text-char">Use next birthday number {{ $suggestedId }}</button>
+                    <p x-show="id && /^\d{2}(0[1-9]|1[0-2])\d{2}$/.test(id)" class="mt-1.5 text-xs text-stone">Birthday number — birth month filled in for you.</p>
+                @endif
+            </div>
             <div><label class="app-label">Tag number (EID, 15 digits)</label><input name="eid" value="{{ $v('eid', $animal->eid) }}" inputmode="numeric" placeholder="982000123456789" class="app-input font-mono"></div>
             <div><label class="app-label">Name</label><input name="name" value="{{ $v('name', $animal->name) }}" class="app-input"></div>
             <div><label class="app-label">Breed</label><input name="breed" value="{{ $v('breed', $animal->breed) }}" class="app-input"></div>
@@ -30,8 +37,8 @@
         </div>
     </div>
 
-    <div class="app-card p-6">
-        <h2 class="font-headline text-3xl">Registration &amp; pedigree <span class="text-stone text-xl">— optional</span></h2>
+    <details class="app-card p-6" {{ $animal->exists && ($animal->sire_id || $animal->dam_id || $animal->registered) ? 'open' : '' }}>
+        <summary class="cursor-pointer font-headline text-3xl">Registration &amp; pedigree <span class="text-stone text-xl">— optional</span></summary>
         <p class="text-sm text-stone mt-1 mb-5">Type IDs exactly as on the stud certificate. Ancestors that aren't in your herd are kept as pedigree references. IDs starting with <span class="font-num">CC</span> count as commercial stock.</p>
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <label class="flex items-center gap-2 text-sm pt-6"><input type="hidden" name="registered" value="0"><input type="checkbox" name="registered" value="1" @checked($v('registered', $animal->registered)) class="rounded border-hairline text-char"> Registered (REG)</label>
@@ -51,10 +58,10 @@
                 </div>
             @endforeach
         </div>
-    </div>
+    </details>
 
-    <div class="app-card p-6">
-        <h2 class="font-headline text-3xl mb-5">Breeding values (EBV) <span class="text-stone text-xl">— optional</span></h2>
+    <details class="app-card p-6" {{ $animal->ebvs ? 'open' : '' }}>
+        <summary class="cursor-pointer font-headline text-3xl mb-5">Breeding values (EBV) <span class="text-stone text-xl">— optional</span></summary>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach (config('herd.ebvs') as $k => $e)
                 <div class="flex gap-2">
@@ -63,22 +70,22 @@
                 </div>
             @endforeach
         </div>
-    </div>
+    </details>
 
-    <div class="app-card p-6">
-        <h2 class="font-headline text-3xl mb-1">Lambing record <span class="text-stone text-xl">— optional</span></h2>
-        <p class="text-sm text-stone mb-5">For ewes: the lambing record printed on sale catalogues.</p>
+    <details class="app-card p-6" {{ $animal->dam_record ? 'open' : '' }}>
+        <summary class="cursor-pointer font-headline text-3xl mb-1">Lambing record <span class="text-stone text-xl">— optional</span></summary>
+        <p class="text-sm text-stone mb-5">For ewes: the lambing record printed on auction books.</p>
         <div class="grid grid-cols-3 sm:grid-cols-7 gap-3">
             @foreach (config('herd.dam_record') as $k => $label)
                 <div><label class="app-label">{{ $label }}</label><input name="dam_record[{{ $k }}]" value="{{ old("dam_record.$k", $animal->dam_record[$k] ?? '') }}" class="app-input font-mono"></div>
             @endforeach
         </div>
-    </div>
+    </details>
 
     <div class="app-card p-6">
         <label class="app-label">Note</label>
         <textarea name="notes" rows="2" placeholder="e.g. Moontlik dragtig van DVS 23 3369" class="app-input">{{ $v('notes', $animal->notes) }}</textarea>
-        <p class="text-xs text-stone-light mt-1">Copied onto the lot when the animal goes into a sale catalogue.</p>
+        <p class="text-xs text-stone-light mt-1">Copied onto the lot when the animal goes into a auction book.</p>
     </div>
 
     <div class="flex gap-3">

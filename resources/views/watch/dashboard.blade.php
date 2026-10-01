@@ -71,3 +71,11 @@
     </div>
 @endif
 @endsection
+
+@section('tour')
+    <x-tour key="watch" :auto="! auth()->user()->hasSeenTour('watch') || request()->boolean('tour')" :steps="[
+        ['target' => null, 'title' => 'KraalTrac Watch', 'body' => 'It counts every tagged animal that comes to the water — and tells you when one hasn\'t.'],
+        ['target' => 'tabs', 'title' => 'Three tabs, that\'s it', 'body' => '<strong>Today</strong> is who came to drink. <strong>Animals</strong> lists every regular. <strong>Water points</strong> is where you pair and name each Watch.'],
+        ['target' => 'switcher', 'title' => 'Same herd book', 'body' => 'Jump back to KraalTrac Pro here — water visits show on each animal\'s page too.', 'cta' => 'Lekker'],
+    ]" />
+@endsection
