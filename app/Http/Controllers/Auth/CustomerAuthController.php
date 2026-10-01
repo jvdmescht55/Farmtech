@@ -134,6 +134,6 @@ class CustomerAuthController extends Controller
 
     private function home(User $user): string
     {
-        return $user->canAccessAdminPanel() ? route('admin.orders.index') : route('herd.hub');
+        return $user->canAccessAdminPanel() ? url('/admin') : route('herd.hub');
     }
 }

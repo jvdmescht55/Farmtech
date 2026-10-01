@@ -8,7 +8,10 @@
         @csrf
         <div><label class="field-label" for="email">E-pos</label><input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" class="field"></div>
         <div><label class="field-label" for="password">Wagwoord</label><input id="password" type="password" name="password" required autocomplete="current-password" class="field"></div>
-        <label class="flex items-center gap-2.5 text-sm text-stone"><input type="checkbox" name="remember" class="rounded border-hairline text-char focus:ring-char/10"> Hou my ingeteken</label>
+        <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2.5 text-sm text-stone"><input type="checkbox" name="remember" class="rounded border-hairline text-char focus:ring-char/10"> Hou my ingeteken</label>
+            <a href="{{ route('password.request') }}" class="text-sm text-stone hover:text-char">Wagwoord vergeet?</a>
+        </div>
         <button class="btn-dark w-full">Teken in</button>
     </form>
 

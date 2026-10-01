@@ -16,4 +16,6 @@ Route::post('/reader/sync', [\App\Http\Controllers\Api\ReaderSyncController::cla
 Route::prefix('v1')->middleware('throttle:120,1')->group(function () {
     Route::get('/ping', [\App\Http\Controllers\Api\DeviceController::class, 'ping'])->name('api.v1.ping');
     Route::post('/scans', [\App\Http\Controllers\Api\DeviceController::class, 'scans'])->name('api.v1.scans');
+    Route::post('/pair', [\App\Http\Controllers\Api\PairingController::class, 'start'])->middleware('throttle:10,1')->name('api.v1.pair');
+    Route::post('/pair/status', [\App\Http\Controllers\Api\PairingController::class, 'status'])->name('api.v1.pair.status');
 });

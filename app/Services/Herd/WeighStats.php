@@ -55,31 +55,40 @@ class WeighStats
             ->when($this->species, fn ($q) => $q->where('species', $this->species))
             ->pluck('id')->flip();
 
-        $scans = Scan::where('user_id', $userId)
+        // Plain query + string dates: this runs on almost every page, so no
+        // per-row model hydration or Carbon objects.
+        $scans = \Illuminate\Support\Facades\DB::table('scans')
+            ->where('user_id', $userId)
             ->whereNotNull('weight_kg')->whereNotNull('animal_id')
             ->orderBy('scanned_at')
-            ->get(['animal_id', 'weight_kg', 'weigh_type', 'scanned_at'])
-            ->filter(fn ($s) => $herdIds->has($s->animal_id));
+            ->get(['animal_id', 'weight_kg', 'weigh_type', 'scanned_at']);
 
         $rows = collect();
-        foreach ($scans->groupBy('animal_id') as $animalId => $series) {
-            $byDay = $series->groupBy(fn ($s) => $s->scanned_at->toDateString())->map->last()->values();
+        $byAnimal = [];
+        foreach ($scans as $s) {
+            if ($herdIds->has($s->animal_id)) {
+                // last weight per animal per calendar day wins
+                $byAnimal[$s->animal_id][substr($s->scanned_at, 0, 10)] = $s;
+            }
+        }
+        foreach ($byAnimal as $animalId => $days) {
             $prev = null;
-            foreach ($byDay as $s) {
-                $date = $s->scanned_at->toDateString();
+            foreach ($days as $date => $s) {
+                $day = intdiv(strtotime($date.' 12:00:00'), 86400);
                 $kg = (float) $s->weight_kg;
-                $days = $prev ? max(1, (int) Carbon::parse($prev->date)->diffInDays($date)) : null;
+                $gap = $prev ? max(1, $day - $prev->day) : null;
                 $row = (object) [
                     'animal_id' => (int) $animalId,
                     'date' => $date,
+                    'day' => $day,
                     'at' => $s->scanned_at,
                     'kg' => $kg,
                     'type' => $s->weigh_type,
                     'prev_kg' => $prev?->kg,
                     'prev_date' => $prev?->date,
-                    'days' => $days,
+                    'days' => $gap,
                     'change' => $prev ? round($kg - $prev->kg, 1) : null,
-                    'adg' => $prev ? (int) round(($kg - $prev->kg) * 1000 / $days) : null,
+                    'adg' => $prev ? (int) round(($kg - $prev->kg) * 1000 / $gap) : null,
                 ];
                 $rows->push($row);
                 $prev = $row;
@@ -128,7 +137,7 @@ class WeighStats
         return $this->rows($userId)->groupBy('animal_id')->map(function (Collection $series) {
             $first = $series->first();
             $last = $series->last();
-            $lifeDays = max(1, (int) Carbon::parse($first->date)->diffInDays($last->date));
+            $lifeDays = max(1, $last->day - $first->day);
 
             return (object) [
                 'animal_id' => $last->animal_id,

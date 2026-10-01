@@ -175,3 +175,25 @@
     @media (prefers-reduced-motion: reduce) { .reveal-up { animation: none; } }
     .scrollbar-none { scrollbar-width: none; } .scrollbar-none::-webkit-scrollbar { display: none; }
 }
+
+/* Admin views were written with plain gray utilities — map them onto the v2
+   palette so every admin page matches without rewriting each one. */
+.admin-v2 .bg-gray-50, .admin-v2 .bg-gray-100 { background-color: #FAF8F3; }
+.admin-v2 .text-gray-400 { color: #918C80; }
+.admin-v2 .text-gray-500, .admin-v2 .text-gray-600, .admin-v2 .text-gray-700 { color: #5E5A50; }
+.admin-v2 .text-gray-900 { color: #15140F; }
+.admin-v2 .border, .admin-v2 .border-b, .admin-v2 .border-t, .admin-v2 .divide-y > * + *, .admin-v2 .border-gray-200, .admin-v2 .border-gray-300 { border-color: #E2DCCE; }
+.admin-v2 .rounded-xl { border-radius: 1rem; }
+.admin-v2 .rounded-md { border-radius: .75rem; }
+.admin-v2 .bg-farmtech-green { background-color: #15140F; }
+.admin-v2 .hover\:bg-farmtech-green-dark:hover { background-color: #2A2822; }
+.admin-v2 .bg-farmtech-gold { background-color: #B8732E; }
+.admin-v2 .text-farmtech-green { color: #15140F; }
+.admin-v2 .text-farmtech-gold { color: #94591F; }
+.admin-v2 .hover\:text-farmtech-green:hover { color: #B8732E; }
+.admin-v2 table thead { font-size: 11px; letter-spacing: .12em; }
+.admin-v2 input[type=text], .admin-v2 input[type=email], .admin-v2 input[type=number], .admin-v2 input[type=password], .admin-v2 input[type=search], .admin-v2 input[type=url], .admin-v2 input:not([type]), .admin-v2 select, .admin-v2 textarea {
+    border-color: #E2DCCE; border-radius: .75rem; background: #fff;
+}
+.admin-v2 input:focus, .admin-v2 select:focus, .admin-v2 textarea:focus { border-color: #15140F; outline: none; box-shadow: 0 0 0 4px rgba(21,20,15,.05); }
+.admin-v2 h2.font-semibold, .admin-v2 h2.text-lg { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 1.6rem; letter-spacing: -.01em; }

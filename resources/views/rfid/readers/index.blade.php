@@ -81,8 +81,19 @@
     </div>
 
     <div class="xl:col-span-2 space-y-6">
+        <div class="panel p-6 sm:p-7 border-char">
+            <p class="eyebrow">Maklikste manier</p>
+            <div class="font-headline text-3xl mt-2">Koppel met kode</div>
+            <p class="text-sm text-stone mt-2">Skakel die skandeerder aan. Dit wys 'n 6-syfer kode — tik dit hier in. Die toestel haal self sy sleutel.</p>
+            <form method="POST" action="{{ route('rfid.readers.pair') }}" class="mt-5 flex gap-2">
+                @csrf
+                <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required placeholder="482 913" class="field font-num text-xl tracking-[0.3em] text-center">
+                <button class="btn-dark shrink-0">Koppel</button>
+            </form>
+        </div>
+
         <div class="panel p-6">
-            <div class="panel-title">Voeg 'n toestel by</div>
+            <div class="panel-title">Of: voeg met die hand by</div>
             <form method="POST" action="{{ route('rfid.readers.store') }}" class="mt-4 space-y-3">
                 @csrf
                 <div><label class="field-label">Naam</label><input name="name" required placeholder="Kraal-skandeerder" class="field"></div>
@@ -94,7 +105,7 @@
             </form>
         </div>
 
-        <div class="rounded-2xl bg-char text-sand p-6 sm:p-7" x-data="{ tab: 'json' }">
+        <div class="rounded-2xl bg-char text-sand p-6 sm:p-7" x-data="{ tab: 'pair' }">
             <p class="eyebrow text-sand/50">Vir jou eie skandeerder</p>
             <div class="font-headline text-3xl mt-2">Stuur direk na Kuddebestuur</div>
             <p class="text-sm text-sand/70 mt-3 leading-relaxed">Elke lesing wat die toestel stuur, verskyn binne sekondes op die <a href="{{ route('rfid.live') }}" class="underline">lewendige skerm</a>. Die antwoord sê vir die toestel wie dit was, die vorige gewig, groei en waarskuwings — wys dit op jou skerm.</p>
@@ -103,12 +114,24 @@
                 <div>GET&nbsp; {{ url('/api/v1/ping') }}</div>
                 <div>Authorization: Bearer &lt;sinch-sleutel&gt;</div>
             </div>
-            <div class="mt-5 flex gap-1 text-xs">
-                @foreach (['json' => 'JSON', 'csv' => 'CSV-reël', 'esp32' => 'ESP32', 'reply' => 'Antwoord'] as $k => $l)
+            <a href="{{ route('rfid.readers.firmware') }}" class="mt-5 inline-flex items-center gap-2 rounded-full bg-sand text-char px-4 h-9 text-sm font-medium hover:bg-white">↓ Volledige ESP32-firmware (.ino)</a>
+            <div class="mt-5 flex flex-wrap gap-1 text-xs">
+                @foreach (['pair' => 'Koppel', 'json' => 'JSON', 'csv' => 'CSV-reël', 'esp32' => 'ESP32', 'reply' => 'Antwoord'] as $k => $l)
                     <button type="button" @click="tab = '{{ $k }}'" class="rounded-full px-3 h-7" :class="tab === '{{ $k }}' ? 'bg-sand text-char' : 'text-sand/60 hover:text-sand'">{{ $l }}</button>
                 @endforeach
             </div>
-<pre x-show="tab === 'json'" class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>{"device": {"battery": 87, "firmware": "1.0.3"},
+<pre x-show="tab === 'pair'" class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>// 1. toestel vra 'n kode
+POST /api/v1/pair
+{"serial":"FT1-000123","model":"RFID Scanner V1"}
+→ {"code":"482913","secret":"…","poll_every":5}
+
+// 2. boer tik 482 913 hier in
+
+// 3. toestel vra elke 5 sek.
+POST /api/v1/pair/status  {"secret":"…"}
+→ {"status":"paired","token":"…"}   // net een keer
+// stoor die token in flash (Preferences)</code></pre>
+<pre x-show="tab === 'json'" x-cloak class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>{"device": {"battery": 87, "firmware": "1.0.3"},
  "scans": [
   {"id": "s-000124", "eid": "982000123456789",
    "weight": 42.5, "ts": 1790798104}
@@ -138,7 +161,15 @@ void sendScan(String eid, float kg) {
   String reply = http.getString();
   http.end();
 }</code></pre>
-<pre x-show="tab === 'reply'" x-cloak class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>{"ok": true, "stored": 1, "duplicates": 0,
+<pre x-show="tab === 'reply'" x-cloak class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>// met "compact": true — klein genoeg vir 'n ESP32
+{"ok":1,"n":1,"r":[{"s":1,"a":"DVS 25 5010",
+ "w":66.6,"c":-6.9,"g":-1725,"x":1,
+ "t":"Skerp gewigsverlies"}]}
+// s 1=gestoor 2=dubbel · a dier · w kg · c verandering
+// g g/dag · x waarskuwings · t eerste waarskuwing
+
+// volle antwoord:
+{"ok": true, "stored": 1, "duplicates": 0,
  "results": [{
    "status": "ok",
    "animal": "DVS 25 5003",
@@ -152,6 +183,8 @@ void sendScan(String eid, float kg) {
                 <li>· Tyd as ISO-datum of Unix-sekondes/-millisekondes; sonder tyd gebruik ons nou.</li>
                 <li>· Dieselfde dier + gewig binne 20 sek. = dubbel-lesing, word geïgnoreer.</li>
                 <li>· Lesings binne 3 uur van mekaar vorm een sessie.</li>
+                <li>· <span class="font-num">"weigh_type":"wean"</span> bo-aan 'n bondel geld vir elke lesing daarin.</li>
+                <li>· Stoor elke lesing eers in flash; stuur dan. So gaan niks verlore sonder sein nie.</li>
             </ul>
         </div>
     </div>

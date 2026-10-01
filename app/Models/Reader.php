@@ -18,11 +18,36 @@ class Reader extends Model
         return ['last_synced_at' => 'datetime'];
     }
 
+    /** The plain key, only available right after it was issued (shown to the farmer once). */
+    public ?string $plainToken = null;
+
     protected static function booted(): void
     {
         static::creating(function (Reader $reader) {
-            $reader->api_token ??= Str::random(48);
+            if (! $reader->api_token) {
+                $reader->plainToken = Str::random(48);
+                $reader->api_token = self::hashToken($reader->plainToken);
+            }
         });
+    }
+
+    public static function hashToken(string $plain): string
+    {
+        return hash('sha256', $plain);
+    }
+
+    public static function findByToken(?string $plain): ?self
+    {
+        return $plain && strlen($plain) >= 20 ? static::with('user')->where('api_token', self::hashToken($plain))->first() : null;
+    }
+
+    /** Issue a new key; returns the plain value (store nowhere but on the device). */
+    public function rotateToken(): string
+    {
+        $this->plainToken = Str::random(48);
+        $this->update(['api_token' => self::hashToken($this->plainToken)]);
+
+        return $this->plainToken;
     }
 
     public function user(): BelongsTo

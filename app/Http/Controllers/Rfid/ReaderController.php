@@ -35,16 +35,47 @@ class ReaderController extends Controller
         ]);
         $reader = $request->user()->readers()->create($data);
 
-        return back()->with('status', "Reader \"{$reader->name}\" added.")->with('shownToken', [$reader->id => $reader->api_token]);
+        return back()->with('status', "Toestel \"{$reader->name}\" bygevoeg.")->with('shownToken', [$reader->id => $reader->plainToken]);
+    }
+
+    /** Farmer types the 6-digit code the device is showing. */
+    public function pair(Request $request)
+    {
+        $data = $request->validate(['code' => ['required', 'string'], 'name' => ['nullable', 'string', 'max:255']]);
+        $code = preg_replace('/\D/', '', $data['code']);
+        $pairing = \App\Models\DevicePairing::open()->where('code', $code)->first();
+
+        if (! $pairing) {
+            return back()->withErrors(['code' => 'Daai kode is ongeldig of het verval. Begin weer koppel op die toestel.']);
+        }
+
+        $user = $request->user();
+        $reader = $pairing->serial ? $user->readers()->where('serial', $pairing->serial)->first() : null;
+        if ($reader) {
+            $plain = $reader->rotateToken();
+            $reader->update(array_filter(['model' => $pairing->model, 'firmware' => $pairing->firmware]));
+        } else {
+            $reader = $user->readers()->create([
+                'name' => ($data['name'] ?? null) ?: ($pairing->model ?: 'Farmtech-skandeerder').($pairing->serial ? ' · '.$pairing->serial : ''),
+                'serial' => $pairing->serial,
+                'model' => $pairing->model,
+                'firmware' => $pairing->firmware,
+            ]);
+            $plain = $reader->plainToken;
+        }
+
+        $pairing->update(['reader_id' => $reader->id, 'token_encrypted' => $plain, 'claimed_at' => now()]);
+
+        return back()->with('status', "Gekoppel! \"{$reader->name}\" haal nou sy sleutel — dit neem 'n paar sekondes.");
     }
 
     public function regenerateToken(Reader $reader)
     {
         $this->own($reader);
-        $reader->update(['api_token' => Str::random(48)]);
+        $plain = $reader->rotateToken();
 
-        return back()->with('status', 'New sync token issued — update it on the reader/app. The old one no longer works.')
-            ->with('shownToken', [$reader->id => $reader->api_token]);
+        return back()->with('status', 'Nuwe sinch-sleutel uitgereik — sit dit op die toestel. Die ou sleutel werk nie meer nie.')
+            ->with('shownToken', [$reader->id => $plain]);
     }
 
     public function destroy(Reader $reader)
@@ -52,7 +83,7 @@ class ReaderController extends Controller
         $this->own($reader);
         $reader->delete();
 
-        return back()->with('status', 'Reader removed. Its past scans are kept.');
+        return back()->with('status', 'Toestel verwyder. Sy skanderings bly gestoor.');
     }
 
     public function upload(Request $request, ScanImporter $importer)
@@ -92,5 +123,11 @@ class ReaderController extends Controller
             'sync' => $sync->load('reader'),
             'scans' => $sync->scans()->with('animal')->orderBy('scanned_at')->paginate(100),
         ]);
+    }
+
+    /** Reference ESP32 firmware, ready to adapt. */
+    public function firmware()
+    {
+        return response()->download(resource_path('firmware/farmtech_scanner.ino'), 'farmtech_scanner.ino', ['Content-Type' => 'text/plain']);
     }
 }

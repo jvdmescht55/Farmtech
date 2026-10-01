@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\InsightsController as AdminInsightsController;
 use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Auth\CustomerAuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\HerdHubController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Rfid\AnimalController as RfidAnimalController;
@@ -69,6 +70,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('/register', [CustomerAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [CustomerAuthController::class, 'register'])->middleware('throttle:10,1');
+    Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'email'])->name('password.email')->middleware('throttle:5,1');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])->name('password.update')->middleware('throttle:10,1');
 });
 Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
 
@@ -123,6 +128,8 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
 
     Route::get('/readers', [RfidReaderController::class, 'index'])->name('readers.index');
     Route::post('/readers', [RfidReaderController::class, 'store'])->name('readers.store');
+    Route::get('/readers/firmware', [RfidReaderController::class, 'firmware'])->name('readers.firmware');
+    Route::post('/readers/pair', [RfidReaderController::class, 'pair'])->name('readers.pair')->middleware('throttle:10,1');
     Route::post('/readers/{reader}/token', [RfidReaderController::class, 'regenerateToken'])->name('readers.token');
     Route::delete('/readers/{reader}', [RfidReaderController::class, 'destroy'])->name('readers.destroy');
     Route::post('/sync/upload', [RfidReaderController::class, 'upload'])->name('sync.upload');
@@ -220,7 +227,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         // Orders + own Profile: both Admin and Staff — the only two
         // sections Staff has, per the EnsureUserIsAdmin panel gate.
-        Route::redirect('/', '/admin/orders');
+        Route::get('/', fn () => redirect()->route(auth()->user()->can('view-financials') ? 'admin.insights' : 'admin.orders.index'));
 
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
@@ -260,6 +267,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/licenses', [AdminLicenseController::class, 'index'])->name('licenses.index');
             Route::post('/licenses', [AdminLicenseController::class, 'store'])->name('licenses.store');
             Route::post('/licenses/{license}/revoke', [AdminLicenseController::class, 'revoke'])->name('licenses.revoke');
+            Route::post('/customers/{user}/reset-link', [AdminLicenseController::class, 'resetLink'])->name('customers.reset-link');
             Route::post('/licenses/{license}/restore', [AdminLicenseController::class, 'restore'])->name('licenses.restore');
 
             Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');

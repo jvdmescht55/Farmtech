@@ -69,7 +69,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 text-left text-gray-500 uppercase text-xs">
-                            <tr><th class="px-4 py-3">Customer</th><th class="px-4 py-3">Farm</th><th class="px-4 py-3 text-right">Licences</th><th class="px-4 py-3 text-right">Readers</th><th class="px-4 py-3 text-right">Animals</th><th class="px-4 py-3">Joined</th></tr>
+                            <tr><th class="px-4 py-3">Customer</th><th class="px-4 py-3">Farm</th><th class="px-4 py-3 text-right">Licences</th><th class="px-4 py-3 text-right">Readers</th><th class="px-4 py-3 text-right">Animals</th><th class="px-4 py-3">Joined</th><th class="px-4 py-3"></th></tr>
                         </thead>
                         <tbody class="divide-y">
                             @forelse ($customers as $c)
@@ -80,9 +80,10 @@
                                     <td class="px-4 py-3 text-right">{{ $c->readers_count }}</td>
                                     <td class="px-4 py-3 text-right">{{ $c->animals_count }}</td>
                                     <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ $c->created_at->format('d/m/Y') }}</td>
+                                    <td class="px-4 py-3 text-right"><form method="POST" action="{{ route('admin.customers.reset-link', $c) }}">@csrf<button class="text-sm font-medium text-farmtech-green whitespace-nowrap" title="Create a password-reset link to send the customer">Reset link</button></form></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">No customers have activated a reader yet.</td></tr>
+                                <tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">No customers have activated a reader yet.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

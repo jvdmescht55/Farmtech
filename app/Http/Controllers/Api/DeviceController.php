@@ -58,6 +58,11 @@ class DeviceController extends Controller
         }
 
         $rows = $this->rows($request);
+        // Batch-level defaults, e.g. {"weigh_type":"wean","scans":[…]} — applied where a scan doesn't say otherwise.
+        $defaults = array_filter(['weigh_type' => $request->json('weigh_type') ?? $request->input('weigh_type')]);
+        if ($defaults) {
+            $rows = array_map(fn ($r) => $r + $defaults, $rows);
+        }
         if (! $rows) {
             return response()->json(['ok' => false, 'error' => 'No scans found in the request. Send JSON {"eid":…,"weight":…}, a JSON array, CSV lines, or form fields.'], 422);
         }
@@ -91,6 +96,23 @@ class DeviceController extends Controller
             return $r;
         });
 
+        // Small devices: {"compact":true} or ?compact=1 → minimal keys, no padding.
+        if ($request->boolean('compact') || $request->json('compact')) {
+            return response()->json([
+                'ok' => 1,
+                'n' => $results->where('status', 'ok')->count(),
+                'r' => $results->map(fn ($r) => array_filter([
+                    's' => ['ok' => 1, 'duplicate' => 2, 'skipped' => 0][$r['status']] ?? 0,
+                    'a' => $r['animal'] ?? null,
+                    'w' => $r['weight'] ?? null,
+                    'c' => $r['change'] ?? null,
+                    'g' => $r['adg'] ?? null,
+                    'x' => isset($r['alerts']) ? $r['alerts']->count() : null,
+                    't' => isset($r['alerts']) && $r['alerts']->isNotEmpty() ? mb_substr($r['alerts']->first()['title'], 0, 24) : null,
+                ], fn ($v) => $v !== null))->values(),
+            ], 201);
+        }
+
         return response()->json([
             'ok' => true,
             'session' => $sync->id,
@@ -115,7 +137,7 @@ class DeviceController extends Controller
         }
 
         $data = $request->json()->all() ?: $request->all();
-        unset($data['token']);
+        unset($data['token'], $data['compact'], $data['weigh_type']);
 
         if (isset($data['device']) && is_array($data['device'])) {
             unset($data['device']);
@@ -132,11 +154,7 @@ class DeviceController extends Controller
 
     private function reader(Request $request): ?Reader
     {
-        $token = $request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->query('token');
-        if (! $token || strlen($token) < 20) {
-            return null;
-        }
-        $reader = Reader::with('user')->where('api_token', $token)->first();
+        $reader = Reader::findByToken($request->bearerToken() ?: $request->header('X-Device-Token') ?: $request->query('token'));
 
         return $reader && $reader->user->hasModule('rfid') ? $reader : null;
     }

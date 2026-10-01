@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Animal extends Model
 {
-    public const STATUSES = ['active' => 'Active', 'sold' => 'Sold', 'dead' => 'Dead', 'culled' => 'Culled'];
+    public const STATUSES = ['active' => 'Aktief', 'sold' => 'Verkoop', 'dead' => 'Dood', 'culled' => 'Uitskot'];
 
     protected $fillable = [
         'user_id', 'in_herd', 'species', 'eid', 'visual_id', 'name', 'sex', 'breed', 'birth_date', 'birth_type',

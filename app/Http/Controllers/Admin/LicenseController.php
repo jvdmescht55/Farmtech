@@ -73,4 +73,13 @@ class LicenseController extends Controller
 
         return back()->with('status', "Code {$license->code} restored.");
     }
+
+    /** Email isn't always set up — give the admin a link to send the customer (e.g. on WhatsApp). */
+    public function resetLink(User $user)
+    {
+        abort_unless($user->isCustomer(), 404);
+        $url = route('password.reset', ['token' => \Illuminate\Support\Facades\Password::createToken($user), 'email' => $user->email]);
+
+        return back()->with('status', "Herstel-skakel vir {$user->email} (geldig 60 min.):")->with('resetLink', $url);
+    }
 }

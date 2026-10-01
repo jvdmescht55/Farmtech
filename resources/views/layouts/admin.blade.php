@@ -1,87 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Admin — Farmtech')</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.head')
+    <title>@yield('title', trim($__env->yieldContent('heading', 'Admin'))) — Farmtech Admin</title>
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
-    <div class="flex min-h-screen">
-        <aside class="w-56 bg-farmtech-green-dark text-white flex-shrink-0">
-            <div class="px-4 py-4 text-lg font-bold border-b border-white/10">
-                Farm<span class="text-farmtech-gold">tech</span> Admin
-            </div>
-            @can('manage-catalog')
-                <div class="px-3 pt-4">
-                    <a href="{{ route('admin.source.create') }}" class="flex items-center justify-center gap-2 w-full bg-farmtech-gold hover:brightness-110 text-white text-sm font-semibold px-3 py-2.5 rounded-md transition">
-                        + Source New Listing
-                    </a>
+@php
+    $u = auth()->user();
+    $openLeads = \App\Models\Lead::whereNull('handled_at')->count();
+    $item = fn ($route, $label, $pattern = null, $can = null, $badge = null) => ['route' => $route, 'label' => $label, 'pattern' => $pattern ?? $route, 'can' => $can, 'badge' => $badge];
+    $groups = [
+        'Oorsig' => [$item('admin.insights', 'Insights', null, 'view-financials'), $item('admin.dashboard', 'Finansies', null, 'view-financials')],
+        'Kliënte' => [$item('admin.licenses.index', 'Lisensies & kliënte', 'admin.licenses.*', 'manage-users'), $item('admin.leads.index', 'Leads', 'admin.leads.*', null, $openLeads ?: null)],
+        'Winkel' => [
+            $item('admin.orders.index', 'Bestellings', 'admin.orders.*'),
+            $item('admin.products.index', 'Staging', 'admin.products.index|admin.products.show', 'manage-catalog'),
+            $item('admin.products.live', 'Lewendige produkte', null, 'manage-catalog'),
+            $item('admin.source.create', 'Bron nuwe produk', 'admin.source.*', 'manage-catalog'),
+            $item('admin.suppliers.outreach', 'Verskaffers', null, 'manage-catalog'),
+            $item('admin.outreach.index', 'Video-uitreik', 'admin.outreach.*', 'manage-catalog'),
+        ],
+        'Stelsel' => [$item('admin.users.index', 'Gebruikers', 'admin.users.*', 'manage-users'), $item('admin.settings.edit', 'Instellings', 'admin.settings.*', 'manage-settings'), $item('admin.profile.edit', 'My profiel', 'admin.profile.*')],
+    ];
+    $isOn = fn ($i) => collect(explode('|', $i['pattern']))->contains(fn ($p) => request()->routeIs($p));
+    $groups = collect($groups)->map(fn ($items) => collect($items)->filter(fn ($i) => ! $i['can'] || $u->can($i['can']))->values())->filter->isNotEmpty();
+    $activeGroup = $groups->search(fn ($items) => $items->contains($isOn)) ?: $groups->keys()->first();
+@endphp
+<body class="admin-v2 bg-sand text-char font-ui antialiased min-h-screen">
+<header class="sticky top-0 z-40 bg-char text-sand" style="padding-top: env(safe-area-inset-top, 0px)">
+    <div class="wrap h-16 flex items-center gap-4">
+        <a href="{{ route('admin.insights') }}" class="flex items-baseline gap-1.5 shrink-0">
+            <span class="font-headline text-[26px] leading-none">farmtech</span><span class="w-1.5 h-1.5 rounded-full bg-ochre"></span>
+            <span class="ml-2 text-[11px] uppercase tracking-[0.2em] text-sand/50">Admin</span>
+        </a>
+        <div class="ml-auto flex items-center gap-1 sm:gap-3 text-sm">
+            <a href="{{ route('portal') }}" target="_blank" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Webwerf ↗</a>
+            <a href="{{ route('herd.hub') }}" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Kuddebestuur ↗</a>
+            <a href="{{ route('home') }}" target="_blank" class="hidden lg:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Produkwinkel ↗</a>
+            <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                <button type="button" @click="open = !open" class="flex items-center gap-2 rounded-full pl-1 pr-3 h-10 hover:bg-white/5">
+                    <span class="w-8 h-8 rounded-full bg-ochre text-char grid place-items-center text-sm font-semibold">{{ mb_strtoupper(mb_substr($u->name, 0, 1)) }}</span>
+                    <span class="hidden sm:block max-w-[10rem] truncate">{{ $u->name }}</span>
+                </button>
+                <div x-show="open" x-cloak x-transition.origin.top.right class="absolute right-0 mt-2 w-56 rounded-2xl bg-white text-char border border-hairline shadow-[0_24px_60px_-20px_rgba(0,0,0,.35)] p-2">
+                    <a href="{{ route('admin.profile.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">My profiel</a>
+                    <a href="{{ route('portal') }}" target="_blank" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Webwerf ↗</a>
+                    <a href="{{ route('herd.hub') }}" class="block md:hidden rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Kuddebestuur ↗</a>
+                    <form action="{{ route('admin.logout') }}" method="POST" class="border-t border-hairline mt-1 pt-1">@csrf<button class="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Teken uit</button></form>
                 </div>
-            @endcan
-            <nav class="px-2 py-4 text-sm space-y-1">
-                <div class="px-3 pt-1 pb-1 text-[10px] uppercase tracking-widest text-white/40">RFID platform</div>
-                @can('manage-users')
-                    <a href="{{ route('admin.licenses.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.licenses.*') ? 'bg-white/10 font-semibold' : '' }}">Licences &amp; Customers</a>
-                @endcan
-                <a href="{{ route('admin.leads.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.leads.*') ? 'bg-white/10 font-semibold' : '' }}">Leads @php($openLeads = \App\Models\Lead::whereNull('handled_at')->count())@if($openLeads)<span class="ml-1 rounded-full bg-farmtech-gold px-1.5 text-[10px]">{{ $openLeads }}</span>@endif</a>
-                <a href="{{ route('rfid.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10">Open Kuddebestuur ↗</a>
-                <a href="{{ route('portal') }}" target="_blank" class="block px-3 py-2 rounded hover:bg-white/10">View public site ↗</a>
-                <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-white/40">Store</div>
-                <a href="{{ route('home') }}" target="_blank" class="block px-3 py-2 rounded hover:bg-white/10">Product store (preview) ↗</a>
-                @can('view-financials')
-                    <a href="{{ route('admin.insights') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.insights') ? 'bg-white/10 font-semibold' : '' }}">★ Insights</a>
-                    <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.dashboard') ? 'bg-white/10 font-semibold' : '' }}">Dashboard</a>
-                @endcan
-                @can('manage-catalog')
-                    <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.index') || request()->routeIs('admin.products.show') ? 'bg-white/10 font-semibold' : '' }}">Staging Queue</a>
-                    <a href="{{ route('admin.products.live') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.products.live') ? 'bg-white/10 font-semibold' : '' }}">Live Products</a>
-                    <a href="{{ route('admin.suppliers.outreach') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.suppliers.outreach') ? 'bg-white/10 font-semibold' : '' }}">Supplier Outreach</a>
-                    <a href="{{ route('admin.outreach.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.outreach.*') ? 'bg-white/10 font-semibold' : '' }}">Video Outreach</a>
-                @endcan
-                <a href="{{ route('admin.orders.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.orders.*') ? 'bg-white/10 font-semibold' : '' }}">Orders</a>
-                @can('manage-users')
-                    <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.users.*') ? 'bg-white/10 font-semibold' : '' }}">Users</a>
-                @endcan
-                @can('manage-settings')
-                    <a href="{{ route('admin.settings.edit') }}" class="block px-3 py-2 rounded hover:bg-white/10 {{ request()->routeIs('admin.settings.*') ? 'bg-white/10 font-semibold' : '' }}">Settings</a>
-                @endcan
-            </nav>
-            <form action="{{ route('admin.logout') }}" method="POST" class="px-4 py-4 border-t border-white/10 mt-auto">
-                @csrf
-                <button type="submit" class="text-sm text-white/70 hover:text-white">Log out</button>
-            </form>
-        </aside>
-
-        <div class="flex-1 flex flex-col">
-            <header class="bg-white border-b px-6 py-4 flex items-center justify-between">
-                <h1 class="text-lg font-semibold">@yield('heading', 'Dashboard')</h1>
-                @auth
-                    <a href="{{ route('admin.profile.edit') }}" class="text-sm text-gray-500 hover:text-farmtech-green transition">{{ auth()->user()->name }}</a>
-                @endauth
-            </header>
-
-            <main class="flex-1 p-6">
-                @if (session('status'))
-                    <div class="mb-4 bg-green-100 border border-green-300 text-green-800 rounded-md px-4 py-3 text-sm">
-                        {{ session('status') }}
-                    </div>
-                @endif
-
-                @if (isset($errors) && $errors->any())
-                    <div class="mb-4 bg-red-100 border border-red-300 text-red-800 rounded-md px-4 py-3 text-sm">
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                @yield('content')
-            </main>
+            </div>
         </div>
     </div>
+    <nav class="border-t border-white/10">
+        <div class="wrap flex gap-7 overflow-x-auto scrollbar-none">
+            @foreach ($groups as $name => $items)
+                <a href="{{ route($items->first()['route']) }}" class="relative shrink-0 py-3.5 text-[14px] flex items-center gap-1.5 {{ $activeGroup === $name ? 'text-sand' : 'text-sand/55 hover:text-sand' }}">
+                    {{ $name }}
+                    @if ($name === 'Kliënte' && $openLeads)<span class="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-ochre text-char text-[11px] font-semibold grid place-items-center">{{ $openLeads }}</span>@endif
+                    @if ($activeGroup === $name)<span class="absolute inset-x-0 -bottom-px h-[2px] bg-ochre rounded-full"></span>@endif
+                </a>
+            @endforeach
+        </div>
+    </nav>
+</header>
+
+<main class="wrap py-10" style="padding-bottom: max(3.5rem, env(safe-area-inset-bottom, 0px))">
+    @if ($groups->get($activeGroup)?->count() > 1)
+        <div class="flex flex-wrap gap-1 mb-8">
+            @foreach ($groups[$activeGroup] as $i)
+                <a href="{{ route($i['route']) }}" class="rounded-full px-4 h-9 inline-flex items-center gap-1.5 text-sm border {{ $isOn($i) ? 'bg-char text-sand border-char' : 'bg-white border-hairline text-stone hover:text-char hover:border-char' }}">
+                    {{ $i['label'] }}@if ($i['badge'])<span class="rounded-full bg-ochre text-char px-1.5 text-[10px] font-semibold">{{ $i['badge'] }}</span>@endif
+                </a>
+            @endforeach
+        </div>
+    @endif
+
+    <h1 class="h-display text-[clamp(2.4rem,4.5vw,3.6rem)] mb-8">@yield('heading', 'Admin')</h1>
+
+    @if (session('status'))
+        <div class="mb-6 rounded-xl border border-hairline bg-white px-4 py-3 text-sm flex gap-3"><span class="text-ochre">●</span>{{ session('status') }}</div>
+    @endif
+    @if (session('resetLink'))
+        <div class="mb-6 rounded-xl border border-ochre/30 bg-ochre/5 px-4 py-3 text-sm">
+            <div class="text-stone">Stuur hierdie skakel vir die kliënt (WhatsApp/SMS):</div>
+            <code class="mt-1 block break-all font-num select-all">{{ session('resetLink') }}</code>
+        </div>
+    @endif
+    @if (isset($errors) && $errors->any())
+        <div class="mb-6 rounded-xl border border-[#B0452F]/25 bg-[#B0452F]/5 px-4 py-3 text-sm text-[#B0452F]">
+            @foreach ($errors->all() as $error)<div>{{ $error }}</div>@endforeach
+        </div>
+    @endif
+
+    @yield('content')
+</main>
 </body>
 </html>

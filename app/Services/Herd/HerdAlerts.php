@@ -26,10 +26,18 @@ class HerdAlerts
         'data' => 'Rekords',
     ];
 
+    /** @var array<string, Collection> per-request memo (layout badge + page share one run) */
+    private static array $memo = [];
+
     public function __construct(private readonly WeighStats $stats) {}
 
     /** @return Collection<int, array> */
     public function forUser(int $userId, bool $includeDismissed = false): Collection
+    {
+        return self::$memo[$userId.'|'.(int) $includeDismissed] ??= $this->compute($userId, $includeDismissed);
+    }
+
+    private function compute(int $userId, bool $includeDismissed): Collection
     {
         $graph = PedigreeTier::graph($userId);
         $herd = $graph->where('in_herd', true);
@@ -37,7 +45,11 @@ class HerdAlerts
         $latest = $this->stats->latest($userId);
         $rows = $this->stats->rows($userId);
         $events = AnimalEvent::where('user_id', $userId)->get();
+        $eventsByAnimal = $events->groupBy('animal_id');
+        $rowsByAnimal = $rows->groupBy('animal_id');
         $today = now()->startOfDay();
+        $todayDay = intdiv(strtotime($today->toDateString().' 12:00:00'), 86400);
+        $dayOf = fn (string $date) => intdiv(strtotime($date.' 12:00:00'), 86400);
 
         $alerts = collect();
         $add = function (string $code, string $severity, string $category, ?Animal $a, string $title, string $detail, string $action = '') use ($alerts) {
@@ -62,13 +74,13 @@ class HerdAlerts
             if (! $a) {
                 continue;
             }
-            $recent = Carbon::parse($l->date)->gte($today->copy()->subDays(45));
+            $recent = $dayOf($l->date) >= $todayDay - 45;
 
             if ($recent && $l->change !== null && $l->change < 0) {
                 $prev = $l->kg - $l->change;
                 $pct = $prev > 0 ? abs($l->change) / $prev * 100 : 0;
                 if ($pct >= 5) {
-                    $add('weight_drop', 'critical', 'health', $a, 'Skerp gewigsverlies', sprintf('%s kg verloor (%.1f%%) sedert %s. Gewigsverlies is die vroegste teken van siekte.', abs($l->change), $pct, Carbon::parse($l->series->slice(-2, 1)->first()->date ?? $l->date)->format('j M')), 'Ondersoek vandag — kyk vir interne parasiete (FAMACHA), kreupelheid of siekte.');
+                    $add('weight_drop', 'critical', 'health', $a, 'Skerp gewigsverlies', sprintf('%s kg verloor (%.1f%%) sedert %s. Gewigsverlies is die vroegste teken van siekte.', abs($l->change), $pct, date('j M', strtotime($l->series->slice(-2, 1)->first()->date ?? $l->date))), 'Ondersoek vandag — kyk vir interne parasiete (FAMACHA), kreupelheid of siekte.');
                 } else {
                     $add('weight_loss', 'warning', 'health', $a, 'Verloor gewig', abs($l->change).' kg minder as by die vorige weging ('.$l->adg.' g/dag).', 'Hou dop by die volgende weging; kontroleer weiding en parasiete.');
                 }
@@ -86,7 +98,7 @@ class HerdAlerts
             // Implausible jump: probably a misread or wrong animal on the scale.
             if ($l->change !== null && $l->series->count() >= 2) {
                 $prevRow = $l->series->slice(-2, 1)->first();
-                $days = max(1, Carbon::parse($prevRow->date)->diffInDays($l->date));
+                $days = max(1, $dayOf($l->date) - $prevRow->day);
                 $pct = $prevRow->kg > 0 ? abs($l->change) / $prevRow->kg * 100 : 0;
                 if ($days <= 21 && $pct > $a->bio('max_jump_pct')) {
                     $add('weight_jump', 'info', 'data', $a, 'Ongewone gewigsprong', round($pct).'% verandering in '.$days.' dae — moontlik \'n foutiewe lesing of verkeerde dier op die skaal.', 'Herweeg om te bevestig.');
@@ -108,15 +120,17 @@ class HerdAlerts
             if (! $since) {
                 continue;
             }
-            $after = $rows->where('animal_id', $a->id)->filter(fn ($r) => Carbon::parse($r->date)->gt($since));
+            $sinceDay = $dayOf($since->toDateString());
+            $after = $rowsByAnimal->get($a->id, collect())->filter(fn ($r) => $r->day > $sinceDay);
             if ($after->isNotEmpty()) {
-                $add('ghost_scan', 'warning', 'movement', $a, 'Geskandeer ná '.($a->status === 'dead' ? 'dood' : 'verkoop'), 'Gemerk as '.$a->status.' op '.$since->format('j M').', maar weer gelees op '.Carbon::parse($after->last()->date)->format('j M').'.', 'Kontroleer die oormerk — dalk op die verkeerde dier of hergebruik.');
+                $add('ghost_scan', 'warning', 'movement', $a, 'Geskandeer ná '.($a->status === 'dead' ? 'dood' : 'verkoop'), 'Gemerk as '.$a->status.' op '.$since->format('j M').', maar weer gelees op '.date('j M', strtotime($after->last()->date)).'.', 'Kontroleer die oormerk — dalk op die verkeerde dier of hergebruik.');
             }
         }
 
         // ── Births & young stock ────────────────────────────────────────
         foreach ($active->filter(fn ($a) => $a->birth_date && $a->birth_date->gte($today->copy()->subDays(45))) as $a) {
-            $birthRow = $rows->where('animal_id', $a->id)->first(fn ($r) => Carbon::parse($r->date)->lte($a->birth_date->copy()->addDays(3)));
+            $birthLimit = $dayOf($a->birth_date->toDateString()) + 3;
+            $birthRow = $rowsByAnimal->get($a->id, collect())->first(fn ($r) => $r->day <= $birthLimit);
             if ($birthRow && $birthRow->kg < $a->bio('low_birth_kg')) {
                 $add('low_birth_weight', 'critical', 'birth', $a, 'Lae geboortegewig', "{$birthRow->kg} kg by geboorte — onder {$a->bio('low_birth_kg')} kg is oorlewing baie laer.", 'Sorg vir biesmelk (colostrum) binne 6 uur, warmte en skuiling; oorweeg bottel.');
             }
@@ -128,8 +142,8 @@ class HerdAlerts
         }
         foreach ($active->filter(fn ($a) => $a->birth_date) as $a) {
             $age = $a->birth_date->diffInDays($today);
-            $weaned = $events->where('animal_id', $a->id)->where('type', 'weaning')->isNotEmpty()
-                || $rows->where('animal_id', $a->id)->where('type', 'wean')->isNotEmpty();
+            $weaned = $eventsByAnimal->get($a->id, collect())->where('type', 'weaning')->isNotEmpty()
+                || $rowsByAnimal->get($a->id, collect())->where('type', 'wean')->isNotEmpty();
             if (! $weaned && $age > $a->bio('wean_age') + 30 && $age < $a->bio('wean_age') + 200) {
                 $add('wean_overdue', 'info', 'birth', $a, 'Speen agterstallig', "{$age} dae oud en nog nie as gespeen aangeteken nie.", 'Speen of teken die speengewig aan.');
             }
@@ -146,14 +160,15 @@ class HerdAlerts
         }
 
         // ── Breeding ────────────────────────────────────────────────────
+        $youngByDam = $herd->filter(fn ($x) => $x->dam_id && $x->birth_date)->groupBy('dam_id');
         foreach ($events->where('type', 'mating') as $e) {
             $a = $active->get($e->animal_id);
             if (! $a || $a->sex !== 'F') {
                 continue;
             }
             $due = $e->date->copy()->addDays($a->bio('gestation'));
-            $bornSince = $herd->contains(fn ($x) => $x->dam_id === $a->id && $x->birth_date && $x->birth_date->gte($e->date->copy()->addDays(100)));
-            $birthLogged = $events->where('animal_id', $a->id)->where('type', 'birth')->contains(fn ($b) => $b->date->gte($e->date));
+            $bornSince = ($youngByDam[$a->id] ?? collect())->contains(fn ($x) => $x->birth_date->gte($e->date->copy()->addDays(100)));
+            $birthLogged = $eventsByAnimal->get($a->id, collect())->where('type', 'birth')->contains(fn ($b) => $b->date->gte($e->date));
             if ($bornSince || $birthLogged) {
                 continue;
             }

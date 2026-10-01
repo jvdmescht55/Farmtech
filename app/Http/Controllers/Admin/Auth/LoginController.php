@@ -56,7 +56,7 @@ class LoginController extends Controller
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.orders.index'));
+        return redirect()->intended(Auth::user()->isCustomer() ? route('herd.hub') : url('/admin'));
     }
 
     public function destroy(Request $request)

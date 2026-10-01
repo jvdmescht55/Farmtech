@@ -17,8 +17,7 @@ class ReaderSyncController extends Controller
 {
     public function store(Request $request, ScanImporter $importer): JsonResponse
     {
-        $token = $request->bearerToken();
-        $reader = $token ? Reader::with('user')->where('api_token', $token)->first() : null;
+        $reader = Reader::findByToken($request->bearerToken());
 
         if (! $reader || ! $reader->user->hasModule('rfid')) {
             return response()->json(['error' => 'Invalid or unlicensed reader token.'], 401);
