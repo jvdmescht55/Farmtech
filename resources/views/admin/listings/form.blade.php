@@ -13,6 +13,16 @@
             <div class="sm:col-span-2"><label class="field-label">Tagline</label><input name="tagline" value="{{ old('tagline', $listing->tagline) }}" class="field"></div>
             <div><label class="field-label">Price (R, incl. VAT)</label><input name="price" type="number" step="0.01" value="{{ old('price', $listing->price_cents !== null ? $listing->price_cents / 100 : '') }}" placeholder="leave empty = register interest" class="field font-num"></div>
             <div><label class="field-label">Availability</label><input name="availability" value="{{ old('availability', $listing->availability) }}" placeholder="e.g. Built to order" class="field"></div>
+            <div><label class="field-label">Sold per (optional)</label><input name="unit_label" value="{{ old('unit_label', $listing->unit_label) }}" placeholder="e.g. Pack of 50" class="field"></div>
+            <div><label class="field-label">Was-price (R, optional)</label><input name="compare_at" type="number" step="0.01" value="{{ old('compare_at', $listing->compare_at_cents !== null ? $listing->compare_at_cents / 100 : '') }}" class="field font-num"></div>
+            <div><label class="field-label">Stock</label>
+                <select name="stock_status" class="field">@foreach (\App\Models\StoreListing::STOCK as $k => $label)<option value="{{ $k }}" @selected(old('stock_status', $listing->stock_status ?? 'in_stock') === $k)>{{ $label }}</option>@endforeach</select></div>
+            <div><label class="field-label">Units on hand <span class="font-normal text-stone">(empty = built to order)</span></label><input name="stock_qty" type="number" min="0" value="{{ old('stock_qty', $listing->stock_qty) }}" class="field font-num"></div>
+            <div class="sm:col-span-2"><label class="field-label">Next batch note <span class="font-normal text-stone">(shown when sold out / coming soon)</span></label><input name="next_batch" value="{{ old('next_batch', $listing->next_batch) }}" placeholder="e.g. Next batch ships mid-November. Reserve yours, pay when it's ready." class="field"></div>
+            <div><label class="field-label">Badge (optional)</label><input name="badge" value="{{ old('badge', $listing->badge) }}" placeholder="e.g. New, Best value" class="field"></div>
+            <div><label class="field-label">Max per order</label><input name="max_per_order" type="number" min="1" value="{{ old('max_per_order', $listing->max_per_order) }}" placeholder="20" class="field font-num"></div>
+            <div class="sm:col-span-2"><label class="field-label">Picture until you upload photos</label>
+                <select name="photo_key" class="field"><option value="">None</option>@foreach (\App\Support\SiteImages::IMAGES as $k => $img)<option value="{{ $k }}" @selected(old('photo_key', $listing->photo_key) === $k)>{{ $img['alt'] }}</option>@endforeach</select></div>
             <div><label class="field-label">Category</label><input name="category" value="{{ old('category', $listing->category) }}" class="field"></div>
             <div><label class="field-label">Unlocks software</label><select name="module" class="field"><option value="">—</option>@foreach (config('herd.modules') as $k => $m)<option value="{{ $k }}" @selected(old('module', $listing->module) === $k)>{{ $m['name'] }}</option>@endforeach</select></div>
         </div>

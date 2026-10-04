@@ -11,16 +11,16 @@
     <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
         <div x-data="{ i: 0 }">
             @php($photos = $listing->images ?: [])
-            <div class="relative {{ $photos ? 'aspect-[4/3]' : 'aspect-[4/3] sm:aspect-[5/4]' }} rounded-[28px] overflow-hidden bg-char min-h-[420px]">
+            <div class="relative {{ $photos || $listing->module !== 'rfid' ? 'aspect-[4/3]' : 'h-[480px] sm:h-auto sm:aspect-[5/4]' }} rounded-[28px] overflow-hidden bg-char">
                 @forelse ($photos as $n => $p)
                     <img x-show="i === {{ $n }}" src="{{ asset('storage/'.$p) }}" alt="{{ $listing->name }}" class="absolute inset-0 h-full w-full object-cover" @if($n) x-cloak @endif>
                 @empty
                     @if ($listing->module === 'rfid')
                         <div class="absolute inset-0 bg-gradient-to-b from-sand-deep to-sand flex items-center justify-center p-6">@include('site._device')</div>
                     @else
-                        <img src="{{ Img::url('windpomp-storm', true) }}" alt="{{ Img::alt('windpomp-storm') }}" class="absolute inset-0 h-full w-full object-cover img-grade">
-                        <div class="absolute inset-0 bg-gradient-to-t from-char/70 to-transparent"></div>
-                        <span class="absolute bottom-5 left-5 chip bg-sand/90 text-char">Product photos coming soon</span>
+                        <img src="{{ $listing->photoUrl(false) ?? Img::url('windpomp-storm', true) }}" alt="{{ $listing->name }}" class="absolute inset-0 h-full w-full object-cover {{ $listing->photo_key === 'ear-tags' ? '' : 'img-grade' }}">
+                        @if ($listing->photo_key !== 'ear-tags')<div class="absolute inset-0 bg-gradient-to-t from-char/60 to-transparent"></div>
+                        <span class="absolute bottom-5 left-5 chip bg-sand/90 text-char">Product photos coming soon</span>@endif
                     @endif
                 @endforelse
             </div>
@@ -36,12 +36,25 @@
         <div class="lg:sticky lg:top-28">
             <h1 class="h-display text-[clamp(3rem,7vw,5.5rem)]">{{ $listing->name }}</h1>
             @if ($listing->tagline)<p class="mt-3 text-xl text-stone">{{ $listing->tagline }}</p>@endif
-            <div class="mt-8 flex flex-wrap items-baseline gap-4">
-                @if ($listing->priceLabel())<span class="font-headline text-5xl">{{ $listing->priceLabel() }}</span><span class="text-sm text-stone">incl. VAT where applicable · delivery confirmed with your order</span>@endif
+            <div class="mt-8 flex flex-wrap items-baseline gap-3">
+                @if ($listing->priceLabel())
+                    <span class="font-headline text-5xl">{{ $listing->priceLabel() }}</span>
+                    @if ($listing->compare_at_cents)<span class="text-stone line-through">{{ \App\Models\StoreListing::rand($listing->compare_at_cents) }}</span>@endif
+                    <span class="text-sm text-stone">{{ $listing->unit_label ? $listing->unit_label.' · ' : '' }}incl. VAT</span>
+                @else
+                    <span class="font-headline text-3xl">Price confirmed before it ships</span>
+                @endif
             </div>
-            @if ($listing->availability)<p class="mt-3 inline-flex items-center gap-2 text-sm"><span class="w-2 h-2 rounded-full bg-[#3F7A3A]"></span>{{ $listing->availability }}</p>@endif
-            <div class="mt-8 flex flex-wrap gap-3">
-                <a href="#order" class="btn-dark">{{ $listing->price_cents ? 'Order yours' : 'Register interest' }}</a>
+            <div class="mt-5 rounded-2xl border {{ $listing->buyable() ? 'border-[#3F7A3A]/30 bg-[#3F7A3A]/5' : 'border-ochre/40 bg-ochre/5' }} p-4 text-sm">
+                <div class="flex items-center gap-2 font-medium"><span class="w-2 h-2 rounded-full {{ $listing->buyable() ? 'bg-[#3F7A3A]' : 'bg-ochre' }}"></span>{{ $listing->stockLabel() }}</div>
+                @if ($listing->buyable())
+                    <p class="mt-1 text-stone">{{ $listing->availability ?: 'Ships within a few working days.' }}</p>
+                @else
+                    <p class="mt-1 text-stone">{{ $listing->next_batch ?: 'Reserve one now. You pay only when your unit is ready, and you can cancel before then.' }}</p>
+                @endif
+            </div>
+            <div class="mt-6 flex flex-wrap gap-3">
+                @include('shop._buy', ['l' => $listing, 'qty' => true, 'class' => 'px-8'])
                 <a href="{{ route('site.contact') }}" class="btn-line">Ask us something</a>
             </div>
             <ul class="mt-8 space-y-2 text-sm text-stone">
@@ -109,7 +122,22 @@
     </div>
 </section>
 
-@include('site._order', ['heading' => $listing->price_cents ? 'Order your '.$listing->name : 'Be first for the '.$listing->name, 'listing' => $listing])
+@php($others = \App\Models\StoreListing::published()->where('id', '!=', $listing->id)->get())
+@if ($others->isNotEmpty())
+<section class="wrap py-20 sm:py-28">
+    <h2 class="h-display text-[clamp(2.4rem,5vw,4rem)]">Goes well with</h2>
+    <div class="mt-10 grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+        @foreach ($others as $o)@include('shop._card', ['l' => $o])@endforeach
+    </div>
+</section>
+@endif
+
+{{-- Sticky buy bar on phones --}}
+<div class="lg:hidden fixed inset-x-0 bottom-0 z-30 bg-sand/95 backdrop-blur border-t border-hairline px-4 py-3 flex items-center gap-3" style="padding-bottom: max(.75rem, env(safe-area-inset-bottom))">
+    <div class="flex-1 min-w-0"><div class="text-sm truncate">{{ $listing->name }}</div><div class="font-headline text-xl">{{ $listing->priceLabel() ?? 'Price TBC' }}</div></div>
+    @include('shop._buy', ['l' => $listing])
+</div>
+<div class="lg:hidden h-20"></div>
 @endsection
 
-@section('credits')<x-photo-credits :keys="[$listing->module === 'watch' ? 'windpomp-storm' : 'merino-rams', 'dirt-road']" dark />@endsection
+@section('credits')<x-photo-credits :keys="array_filter([$listing->photo_key, 'karoo-mist'])" dark />@endsection

@@ -9,7 +9,13 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id', 'product_id', 'title_snapshot', 'unit_price_zar', 'quantity', 'line_total_zar',
         'product_variant_id', 'variant_option_name', 'variant_sku',
+        'store_listing_id', 'is_reservation',
     ];
+
+    public function listing()
+    {
+        return $this->belongsTo(StoreListing::class, 'store_listing_id');
+    }
 
     protected function casts(): array
     {

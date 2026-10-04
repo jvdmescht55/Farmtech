@@ -2,25 +2,26 @@
 @php
     use App\Support\SiteImages as Img;
     $pro = $pro ?? null;
+    $watch = $listings->firstWhere('slug', 'kraaltrac-watch');
     $price = $pro?->price_cents ? 'R'.number_format($pro->price_cents / 100, 0, '.', ' ') : 'R7 999';
 @endphp
 @section('title', 'KraalTrac Pro & Herd Manager — Farmtech')
 @section('description', 'KraalTrac Pro: a handheld EID reader and weigh logger built in South Africa, with Herd Manager included. Scan the tag, punch in the weight — your herd book, gains and auction book do the rest. '.$price.' once-off.')
 @section('hero_dark', '1')
-@push('head')<link rel="preload" as="image" href="{{ Img::url('flock-golden', true) }}" imagesrcset="{{ Img::srcset('flock-golden') }}" imagesizes="100vw">@endpush
+@push('head')<link rel="preload" as="image" href="{{ Img::url('windpomp-pink', true) }}" imagesrcset="{{ Img::srcset('windpomp-pink') }}" imagesizes="100vw">@endpush
 
 @section('content')
 {{-- Hero --}}
 <section class="relative h-[100svh] min-h-[640px] overflow-hidden bg-char text-white">
-    <img src="{{ Img::url('flock-golden') }}" srcset="{{ Img::srcset('flock-golden') }}" sizes="100vw" alt="{{ Img::alt('flock-golden') }}" class="absolute inset-0 h-full w-full object-cover object-[50%_60%] img-grade kenburns" fetchpriority="high">
+    <img src="{{ Img::url('windpomp-pink') }}" srcset="{{ Img::srcset('windpomp-pink') }}" sizes="100vw" alt="{{ Img::alt('windpomp-pink') }}" class="absolute inset-0 h-full w-full object-cover object-[50%_65%] img-grade kenburns" fetchpriority="high">
     <div class="absolute inset-0 bg-gradient-to-t from-char/90 via-char/25 to-char/45"></div>
     <div class="relative wrap h-full flex flex-col justify-end pb-14 sm:pb-20">
         <h1 class="h-display text-[clamp(4.2rem,15vw,13rem)] leading-[0.86] reveal-up">Ken jou<br>kudde.</h1>
         <div class="mt-10 grid lg:grid-cols-[1fr_auto] gap-8 items-end reveal-up" style="animation-delay:.15s">
             <p class="max-w-xl text-lg sm:text-xl text-white/85 leading-relaxed">Scan the ear tag, punch in the weight. Your herd book, daily gains and auction book sort themselves out on your phone, even when there's no signal in the kraal.</p>
             <div class="flex flex-wrap gap-3">
-                <a href="#pro" class="btn-light">See the KraalTrac Pro</a>
-                <a href="#order" class="btn-line-light">Reserve one · {{ $price }}</a>
+                <a href="#shop" class="btn-light">Shop now</a>
+                <a href="#pro" class="btn-line-light">See how it works</a>
             </div>
         </div>
         <ul class="mt-12 pt-6 border-t border-white/15 flex flex-wrap gap-x-8 gap-y-2 text-sm text-white/65">
@@ -29,6 +30,44 @@
             <li>Once-off price, Herd Manager included</li>
             <li>6-month warranty</li>
         </ul>
+    </div>
+</section>
+
+{{-- The shop --}}
+<section id="shop" class="wrap pt-24 sm:pt-32 pb-20 scroll-mt-20">
+    <div class="grid lg:grid-cols-12 gap-8 items-end">
+        <h2 class="lg:col-span-7 h-display text-[clamp(2.8rem,6vw,5rem)]">Tag it, weigh it, watch it.</h2>
+        <p class="lg:col-span-5 text-stone text-lg leading-relaxed">Everything here works with Herd Manager, included free. Sold out? Reserve from the next batch. You only pay when it's ready.</p>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+        @foreach ($listings as $l)
+            @include('shop._card', ['l' => $l])
+        @endforeach
+        <article class="group relative rounded-[28px] overflow-hidden bg-char text-sand min-h-[420px] flex">
+            <img src="{{ Img::url('karoo-mist', true) }}" alt="{{ Img::alt('karoo-mist') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-70 img-grade transition duration-[1.2s] group-hover:scale-[1.04]">
+            <div class="absolute inset-0 bg-gradient-to-t from-char via-char/40 to-transparent"></div>
+            <div class="relative self-end p-7">
+                <div class="text-sm text-sand/70">Custom builds</div>
+                <h3 class="mt-1 font-headline text-3xl">Something only your farm needs</h3>
+                <p class="mt-2 text-sand/70 text-[15px]">Trough levels, fence alarms, pump monitors. Quoted for you, built by us.</p>
+                <a href="{{ route('site.custom') }}" class="btn-light mt-5">See what we build</a>
+            </div>
+        </article>
+    </div>
+</section>
+
+{{-- Photo band --}}
+<section class="relative h-[78svh] min-h-[520px] overflow-hidden bg-char text-white">
+    <img src="{{ Img::url('merino-rams', true) }}" srcset="{{ Img::srcset('merino-rams') }}" sizes="100vw" alt="{{ Img::alt('merino-rams') }}" loading="lazy" class="absolute inset-0 h-full w-full object-cover img-grade">
+    <div class="absolute inset-0 bg-gradient-to-r from-char/85 via-char/35 to-transparent"></div>
+    <div class="relative wrap h-full flex items-center">
+        <div class="max-w-xl">
+            <h2 class="h-display text-[clamp(3rem,7vw,6.2rem)]">Built for the kraal, not the office.</h2>
+            <p class="mt-6 text-lg text-white/80 max-w-md">Dust, cold fingers, no signal and 300 lambs before lunch. That's what we designed for, not a desk.</p>
+            <div class="mt-8 flex flex-wrap gap-2 text-sm">
+                @foreach (['Works without signal', 'Reads in under a second', 'Designed in South Africa'] as $t)<span class="rounded-full border border-white/30 px-4 py-2">{{ $t }}</span>@endforeach
+            </div>
+        </div>
     </div>
 </section>
 
@@ -62,8 +101,9 @@
                 @endforeach
             </dl>
 
-            <div class="mt-8 flex flex-wrap gap-3">
-                <a href="#order" class="btn-dark">Reserve yours</a>
+            @if ($pro)<p class="mt-6 inline-flex items-center gap-2 text-sm"><span class="w-2 h-2 rounded-full {{ $pro->buyable() ? 'bg-[#3F7A3A]' : 'bg-ochre' }}"></span>{{ $pro->stockLabel() }}@if (! $pro->buyable() && $pro->next_batch). {{ $pro->next_batch }}@endif</p>@endif
+            <div class="mt-5 flex flex-wrap gap-3">
+                @if ($pro)@include('shop._buy', ['l' => $pro, 'qty' => true])@endif
                 <a href="#weighday" class="btn-line">How a weigh day goes</a>
             </div>
 
@@ -112,6 +152,45 @@
     </div>
 </section>
 
+{{-- KraalTrac Watch --}}
+<section id="watch" class="relative overflow-hidden bg-char text-sand scroll-mt-20">
+    <img src="{{ Img::url('windpomp-storm', true) }}" srcset="{{ Img::srcset('windpomp-storm') }}" sizes="100vw" alt="{{ Img::alt('windpomp-storm') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-55 img-grade">
+    <div class="absolute inset-0 bg-gradient-to-r from-char via-char/75 to-char/20"></div>
+    <div class="relative wrap py-24 sm:py-32 grid lg:grid-cols-2 gap-14 items-center">
+        <div>
+            <span class="chip bg-ochre text-char">{{ $watch?->stock_status === 'coming_soon' ? 'Coming soon · reserve now' : 'KraalTrac Watch' }}</span>
+            <h2 class="h-display mt-6 text-[clamp(3rem,6.5vw,5.6rem)]">Know who didn't come to drink.</h2>
+            <p class="mt-6 text-lg text-sand/80 max-w-lg leading-relaxed">The KraalTrac Watch hangs at the trough or the gate and reads every ear tag that walks past. If an animal hasn't been to water in a day, your phone tells you. Sick animals stop drinking first.</p>
+            <ul class="mt-8 space-y-3 text-sand/85">
+                @foreach (['Counts every animal at every water point, day and night', 'Alerts when one skips the water for 24 hours (or your own limit)', 'Visits show on each animal\'s page next to its weights', 'One per trough or gate, all in the same Herd Manager'] as $t)
+                    <li class="flex gap-3"><span class="mt-2.5 w-1.5 h-1.5 shrink-0 rounded-full bg-ochre-light"></span>{{ $t }}</li>
+                @endforeach
+            </ul>
+            <div class="mt-10 flex flex-wrap gap-3 items-center">
+                @if ($watch)
+                    @include('shop._buy', ['l' => $watch, 'class' => '!bg-sand !text-char !border-sand hover:!bg-white'])
+                    <a href="{{ route('site.product', $watch) }}" class="btn-line-light">Details</a>
+                @endif
+            </div>
+            @if ($watch?->next_batch)<p class="mt-4 text-sm text-sand/60 max-w-md">{{ $watch->next_batch }}</p>@endif
+        </div>
+        {{-- What the farmer sees --}}
+        <div class="rounded-[28px] bg-sand text-char p-6 sm:p-8 shadow-[0_40px_100px_-30px_rgba(0,0,0,.6)] max-w-md lg:ml-auto w-full">
+            <div class="flex items-center justify-between text-sm text-stone"><span>North trough · today</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#3F7A3A] animate-pulse"></span>Live</span></div>
+            <div class="mt-3 font-headline text-6xl">412<span class="text-2xl text-stone"> / 418</span></div>
+            <div class="text-sm text-stone">have been to drink in the last 24 hours</div>
+            <div class="mt-4 h-2 rounded-full bg-sand-deep overflow-hidden"><div class="h-full bg-[#3F7A3A]" style="width: 98.5%"></div></div>
+            <div class="mt-6 text-sm font-medium">Not seen at water</div>
+            <ul class="mt-2 divide-y divide-hairline text-sm">
+                @foreach ([['DVS 25 5010', '31 h', '#B0452F'], ['DVS 24 3107', '27 h', '#B0452F'], ['DVS 25 5058', '25 h', '#B8732E']] as [$id, $h, $c])
+                    <li class="py-2.5 flex justify-between"><span class="font-num">{{ $id }}</span><span style="color: {{ $c }}">last drink {{ $h }} ago</span></li>
+                @endforeach
+            </ul>
+            <p class="mt-4 text-[12px] text-stone">Example screen with sample animals.</p>
+        </div>
+    </div>
+</section>
+
 {{-- Software --}}
 <section id="software" class="overflow-hidden scroll-mt-20">
     <div class="wrap py-24 sm:py-32 grid lg:grid-cols-12 gap-14 items-center">
@@ -132,6 +211,34 @@
         <div class="lg:col-span-7 store-showcase">
 @include('site._showcase')
             <p class="mt-5 text-[13px] text-stone">Sample data from a demo flock.</p>
+        </div>
+    </div>
+</section>
+
+{{-- Custom builds --}}
+<section class="relative overflow-hidden bg-char text-sand">
+    <img src="{{ Img::url('golden-valley', true) }}" srcset="{{ Img::srcset('golden-valley') }}" sizes="100vw" alt="{{ Img::alt('golden-valley') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-55 img-grade">
+    <div class="absolute inset-0 bg-gradient-to-r from-char via-char/80 to-char/30"></div>
+    <div class="relative wrap py-24 sm:py-32">
+        <div class="max-w-2xl">
+            <h2 class="h-display text-[clamp(2.8rem,6vw,5rem)]">Need something that doesn't exist yet?</h2>
+            <p class="mt-6 text-lg text-sand/75 leading-relaxed">We also build gadgets for one farm at a time. A sensor on the trough, a counter at the gate, an alarm on the fence. It shows up in Herd Manager next to your animals, with its own graphs and alerts.</p>
+        </div>
+        <div class="mt-12 grid sm:grid-cols-3 gap-4 max-w-4xl">
+            @foreach ([
+                ['Trough runs dry', 'A level sensor texts you before the sheep notice.'],
+                ['Fence goes down', 'You get an alert the moment the voltage drops.'],
+                ['Borehole pump stops', 'Flow and battery every hour, alarm if it stops.'],
+            ] as [$t, $d])
+                <div class="rounded-2xl bg-white/10 border border-white/10 backdrop-blur p-5">
+                    <div class="font-medium">{{ $t }}</div>
+                    <p class="mt-1.5 text-sm text-sand/65">{{ $d }}</p>
+                </div>
+            @endforeach
+        </div>
+        <div class="mt-10 flex flex-wrap gap-3">
+            <a href="{{ route('site.custom') }}" class="btn-light">See custom builds</a>
+            <a href="{{ route('site.suggest', ['kind' => 'custom_build']) }}" class="btn-line-light">Tell us your problem</a>
         </div>
     </div>
 </section>
@@ -225,50 +332,7 @@
                 <div><div class="text-sand/60 text-sm">Paid back in about</div><div class="font-headline text-4xl mt-1" x-text="months ? months + (months === 1 ? ' month' : ' months') : '—'"></div><div class="text-sand/50 text-sm">on these numbers</div></div>
             </div>
             <p class="mt-8 text-sm text-sand/50 leading-relaxed">This is a rough sum with your numbers, not a promise. It leaves out the time you save on weigh days and auction books.</p>
-            <a href="#order" class="btn-light mt-8">Reserve yours</a>
-        </div>
-    </div>
-</section>
-
-{{-- Custom builds --}}
-<section class="relative overflow-hidden bg-char text-sand">
-    <img src="{{ Img::url('windpomp-storm', true) }}" srcset="{{ Img::srcset('windpomp-storm') }}" sizes="100vw" alt="{{ Img::alt('windpomp-storm') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-40 img-grade">
-    <div class="absolute inset-0 bg-gradient-to-r from-char via-char/80 to-char/30"></div>
-    <div class="relative wrap py-24 sm:py-32">
-        <div class="max-w-2xl">
-            <h2 class="h-display text-[clamp(2.8rem,6vw,5rem)]">Need something that doesn't exist yet?</h2>
-            <p class="mt-6 text-lg text-sand/75 leading-relaxed">We also build gadgets for one farm at a time. A sensor on the trough, a counter at the gate, an alarm on the fence. It shows up in Herd Manager next to your animals, with its own graphs and alerts.</p>
-        </div>
-        <div class="mt-12 grid sm:grid-cols-3 gap-4 max-w-4xl">
-            @foreach ([
-                ['Trough runs dry', 'A level sensor texts you before the sheep notice.'],
-                ['Fence goes down', 'You get an alert the moment the voltage drops.'],
-                ['Borehole pump stops', 'Flow and battery every hour, alarm if it stops.'],
-            ] as [$t, $d])
-                <div class="rounded-2xl bg-white/10 border border-white/10 backdrop-blur p-5">
-                    <div class="font-medium">{{ $t }}</div>
-                    <p class="mt-1.5 text-sm text-sand/65">{{ $d }}</p>
-                </div>
-            @endforeach
-        </div>
-        <div class="mt-10 flex flex-wrap gap-3">
-            <a href="{{ route('site.custom') }}" class="btn-light">See custom builds</a>
-            <a href="{{ route('site.suggest', ['kind' => 'custom_build']) }}" class="btn-line-light">Tell us your problem</a>
-        </div>
-    </div>
-</section>
-
-{{-- Coming next --}}
-<section class="wrap py-20 sm:py-24">
-    <div class="grid md:grid-cols-[1fr_1.2fr] gap-10 items-center rounded-[32px] border border-hairline overflow-hidden bg-white">
-        <div class="relative aspect-[4/3] md:aspect-auto md:h-full min-h-[260px]">
-            <img src="{{ Img::url('windmill-red', true) }}" alt="{{ Img::alt('windmill-red') }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover img-grade">
-        </div>
-        <div class="p-8 sm:p-12">
-            <span class="chip bg-sand-deep text-stone">Coming next</span>
-            <h2 class="mt-5 font-headline text-5xl">KraalTrac Watch</h2>
-            <p class="mt-4 text-stone text-lg leading-relaxed">Mount it at the trough or gate. It reads every tag that walks past and tells you which animal hasn't been to drink in the last day.</p>
-            <a href="#order" class="btn-line mt-8">Put me on the list</a>
+            <a href="#shop" class="btn-light mt-8">Reserve yours</a>
         </div>
     </div>
 </section>
@@ -289,7 +353,8 @@
                 ['Does it connect to my scale?', 'For now you type the weight from your scale\'s display. It takes about two seconds a lamb. A direct scale cable is on our list.'],
                 ['Is there a monthly fee?', 'No. Herd Manager comes with the device.'],
                 ['Can I bring my Logix or stud book records?', 'Yes. Upload the Excel or CSV export. We read the IDs, parents and EBVs and work out the SP, C and B tiers.'],
-                ['How does buying work?', 'Reserve one below. We phone or email to confirm delivery and how to pay. Nothing is charged before you say yes, and you have 7 days to change your mind after delivery.'],
+                ['How does buying work?', 'Add it to your cart and check out. Pay by EFT (or card, where offered) and we courier it to you or you collect. If something is sold out, reserve it: nothing is paid until your batch is ready, and you can cancel before then.'],
+                ['What does "reserve" mean?', 'When a batch sells out, you can hold a unit from the next one. We phone you when it\'s ready, confirm the price and delivery date, and then you pay.'],
                 ['Who owns my data?', 'You do. Export everything any time. We never sell it.'],
             ] as $i => [$q, $a])
                 <div>
@@ -321,7 +386,18 @@
     </div>
 </section>
 
-@include('site._order', ['heading' => 'Reserve yours', 'listing' => $pro])
+<section class="relative overflow-hidden bg-char text-sand">
+    <img src="{{ Img::url('dirt-road', true) }}" srcset="{{ Img::srcset('dirt-road') }}" sizes="100vw" alt="{{ Img::alt('dirt-road') }}" loading="lazy" class="absolute inset-0 h-full w-full object-cover opacity-60 img-grade">
+    <div class="absolute inset-0 bg-gradient-to-t from-char via-char/50 to-char/20"></div>
+    <div class="relative wrap py-28 sm:py-40 text-center">
+        <h2 class="h-display text-[clamp(3rem,8vw,7rem)]">Ken jou kudde.</h2>
+        <p class="mt-5 text-lg text-sand/75 max-w-xl mx-auto">Start with one KraalTrac and a pack of tags. Herd Manager comes with it.</p>
+        <div class="mt-10 flex flex-wrap justify-center gap-3">
+            <a href="#shop" class="btn-light">Shop now</a>
+            <a href="{{ route('site.contact') }}" class="btn-line-light">Talk to us first</a>
+        </div>
+    </div>
+</section>
 @endsection
 
-@section('credits')<x-photo-credits :keys="['flock-golden', 'flock-bakkie', 'tagged-ewe', 'dorper-ram', 'windpomp-storm', 'windmill-red', 'dirt-road']" dark />@endsection
+@section('credits')<x-photo-credits :keys="['windpomp-pink', 'karoo-mist', 'merino-rams', 'flock-bakkie', 'tagged-ewe', 'flock-golden', 'dorper-ram', 'windpomp-storm', 'golden-valley', 'dirt-road']" dark />@endsection

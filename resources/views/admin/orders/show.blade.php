@@ -21,7 +21,7 @@
                     <tbody class="divide-y">
                         @foreach ($order->items as $item)
                             <tr>
-                                <td class="px-4 py-3 font-medium">{{ $item->title_snapshot }}</td>
+                                <td class="px-4 py-3 font-medium">{{ $item->title_snapshot }}@if ($item->is_reservation)<span class="ml-2 text-xs rounded-full bg-blue-50 text-blue-700 px-2 py-0.5">reserved</span>@endif</td>
                                 <td class="px-4 py-3 font-mono text-gray-500">{{ $item->product?->sku ?? '—' }}</td>
                                 <td class="px-4 py-3 text-gray-500">
                                     @if ($item->product)
@@ -83,7 +83,11 @@
                         <div class="flex justify-between"><dt class="text-gray-500">Name</dt><dd>{{ $order->customer_name }}</dd></div>
                         <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ $order->email }}</dd></div>
                         <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $order->phone }}</dd></div>
-                        <div class="flex justify-between"><dt class="text-gray-500">Payment</dt><dd class="capitalize">{{ $order->payment_gateway ?? '—' }} ({{ $order->payment_status }})</dd></div>
+                        @if ($order->farm_name)<div class="flex justify-between"><dt class="text-gray-500">Farm</dt><dd>{{ $order->farm_name }}</dd></div>@endif
+                        <div class="flex justify-between"><dt class="text-gray-500">Type</dt><dd class="capitalize">{{ $order->kind === 'reservation' ? 'Reservation (next batch)' : ($order->kind === 'mixed' ? 'Order + reservation' : 'Order') }}</dd></div>
+                        <div class="flex justify-between"><dt class="text-gray-500">Payment</dt><dd class="capitalize">{{ $order->payment_method === 'eft' ? 'EFT' : ($order->payment_gateway ?? $order->payment_method ?? '—') }} ({{ $order->payment_status }})</dd></div>
+                        @if ($order->delivery_method)<div class="flex justify-between"><dt class="text-gray-500">Delivery</dt><dd>{{ $order->delivery_method === 'collect' ? 'Collects' : 'Courier' }}</dd></div>@endif
+                        @if ($order->customer_notes)<div class="pt-2 text-gray-600 italic">“{{ $order->customer_notes }}”</div>@endif
                     </dl>
                 </div>
                 <div class="bg-white border rounded-xl p-5">

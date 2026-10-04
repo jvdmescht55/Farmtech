@@ -70,6 +70,12 @@ Route::get('/sitemap.xml', function () {
 Route::get('/store', [SiteController::class, 'store'])->name('site.store');
 Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.interest')->middleware('throttle:6,1');
 Route::get('/custom', [SiteController::class, 'custom'])->name('site.custom');
+Route::get('/cart', [\App\Http\Controllers\ShopController::class, 'cart'])->name('shop.cart');
+Route::post('/cart/{listing}', [\App\Http\Controllers\ShopController::class, 'add'])->name('shop.add')->middleware('throttle:60,1');
+Route::patch('/cart/{listing}', [\App\Http\Controllers\ShopController::class, 'update'])->name('shop.update');
+Route::get('/checkout', [\App\Http\Controllers\ShopController::class, 'checkout'])->name('shop.checkout');
+Route::post('/checkout', [\App\Http\Controllers\ShopController::class, 'place'])->name('shop.place')->middleware('throttle:10,1');
+Route::get('/order/{number}', [\App\Http\Controllers\ShopController::class, 'thanks'])->name('shop.thanks');
 Route::get('/store/{listing}', [SiteController::class, 'product'])->name('site.product');
 Route::get('/suggest', [SiteController::class, 'suggest'])->name('site.suggest');
 Route::post('/suggest', [SuggestionController::class, 'store'])->name('site.suggest.store')->middleware('throttle:6,1');
@@ -318,6 +324,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/listings/{listing}/edit', [AdminListingController::class, 'edit'])->name('listings.edit');
             Route::put('/listings/{listing}', [AdminListingController::class, 'update'])->name('listings.update');
             Route::post('/listings/{listing}/toggle', [AdminListingController::class, 'toggle'])->name('listings.toggle');
+            Route::post('/listings/{listing}/stock', [AdminListingController::class, 'stock'])->name('listings.stock');
             Route::post('/listings/{listing}/images', [AdminListingController::class, 'uploadImage'])->name('listings.images.store');
             Route::delete('/listings/{listing}/images', [AdminListingController::class, 'removeImage'])->name('listings.images.destroy');
         });

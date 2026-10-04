@@ -3,9 +3,13 @@
     with light type over a full-bleed hero, and turns solid on scroll.
 --}}
 @php
+    $shopCart = app(\App\Services\Shop\ShopCart::class);
+    $cartCount = $shopCart->count();
     $overHero = trim($__env->yieldContent('hero_dark')) !== '';
     $nav = [
+        [route('site.store').'#shop', 'Shop'],
         [route('site.store').'#pro', 'KraalTrac Pro'],
+        [route('site.store').'#watch', 'KraalTrac Watch'],
         [route('site.store').'#software', 'Herd Manager'],
         [route('site.custom'), 'Custom builds'],
         [route('site.contact'), 'Contact'],
@@ -20,10 +24,10 @@
     @stack('head')
 </head>
 <body class="bg-sand text-char font-ui antialiased [font-feature-settings:'ss01']"
-      x-data="{ scrolled: false, menu: false }"
+      x-data="{ scrolled: false, menu: false, cart: {{ session('cart_added') ? 'true' : 'false' }} }"
       x-init="scrolled = window.scrollY > 24"
       @scroll.window.passive="scrolled = window.scrollY > 24"
-      :class="menu && 'overflow-hidden'">
+      :class="(menu || cart) && 'overflow-hidden'" @keydown.escape.window="cart = false">
 
 <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-full focus:bg-ochre focus:text-char focus:px-5 focus:py-3 focus:text-sm">Skip to content</a>
 <header class="fixed inset-x-0 top-0 z-50 transition-colors duration-500"
@@ -43,12 +47,20 @@
 
         <div class="hidden md:flex items-center gap-5 shrink-0">
             <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">{{ auth()->check() ? 'My herd' : 'Sign in' }}</a>
-            <a href="{{ route('site.store') }}#order"
+            <button type="button" @click="cart = true" class="relative w-10 h-10 grid place-items-center rounded-full hover:bg-black/5" aria-label="Cart ({{ $cartCount }})">
+                <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14l-1.2 11.1a2 2 0 01-2 1.9H8.2a2 2 0 01-2-1.9L5 7zM9 7V6a3 3 0 016 0v1"/></svg>
+                @if ($cartCount)<span class="absolute -top-0.5 -right-0.5 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-ochre text-char text-[11px] font-semibold grid place-items-center">{{ $cartCount }}</span>@endif
+            </button>
+            <a href="{{ route('site.store') }}#shop"
                class="btn btn-sm"
-               :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Reserve yours</a>
+               :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Shop now</a>
         </div>
 
-        <button type="button" class="md:hidden ml-auto -mr-2 w-11 h-11 grid place-items-center" @click="menu = !menu" :aria-expanded="menu" aria-label="Menu">
+        <div class="md:hidden ml-auto"><button type="button" @click="cart = true" class="relative w-11 h-10 grid place-items-center rounded-full hover:bg-black/5" aria-label="Cart ({{ $cartCount }})">
+                <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14l-1.2 11.1a2 2 0 01-2 1.9H8.2a2 2 0 01-2-1.9L5 7zM9 7V6a3 3 0 016 0v1"/></svg>
+                @if ($cartCount)<span class="absolute -top-0.5 -right-0.5 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-ochre text-char text-[11px] font-semibold grid place-items-center">{{ $cartCount }}</span>@endif
+            </button></div>
+        <button type="button" class="md:hidden -mr-2 w-11 h-11 grid place-items-center" @click="menu = !menu" :aria-expanded="menu" aria-label="Menu">
             <span class="relative block w-6 h-3">
                 <span class="absolute left-0 top-0 h-[1.5px] w-6 bg-current transition-transform duration-300" :class="menu && 'translate-y-[5px] rotate-45'"></span>
                 <span class="absolute left-0 bottom-0 h-[1.5px] w-6 bg-current transition-transform duration-300" :class="menu && '-translate-y-[5px] -rotate-45'"></span>
@@ -67,12 +79,46 @@
             @endforeach
         </nav>
         <div class="mt-auto pt-10 grid gap-3">
-            <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Reserve yours</a>
+            <a href="{{ route('site.store') }}#shop" @click="menu = false" class="btn-dark w-full">Shop now</a>
             <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Herd Manager →</a>
         </div>
     </div>
 </div>
 
+{{-- Cart drawer --}}
+<div x-show="cart" x-cloak class="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Your cart">
+    <div class="absolute inset-0 bg-char/50" x-show="cart" x-transition.opacity @click="cart = false"></div>
+    <aside class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-sand text-char flex flex-col shadow-2xl"
+           x-show="cart" x-transition:enter="transition duration-300 ease-out" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+           x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+           style="padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px)">
+        <div class="flex items-center justify-between px-6 h-[76px] border-b border-hairline">
+            <div class="font-headline text-3xl">Your cart</div>
+            <button type="button" @click="cart = false" class="w-10 h-10 rounded-full border border-hairline grid place-items-center text-xl" aria-label="Close">×</button>
+        </div>
+        @if (session('cart_added'))<div class="mx-6 mt-5 rounded-xl bg-[#3F7A3A]/10 text-[#2f5d2c] px-4 py-3 text-sm">✓ {{ session('cart_added') }}.</div>@endif
+        @php($cartLines = $shopCart->lines())
+        <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            @forelse ($cartLines as $line)
+                @include('shop._line', ['line' => $line, 'compact' => true])
+            @empty
+                <div class="py-16 text-center">
+                    <div class="font-headline text-3xl">Nothing in here yet.</div>
+                    <a href="{{ route('site.store') }}#shop" @click="cart = false" class="btn-line mt-6">Browse the shop</a>
+                </div>
+            @endforelse
+        </div>
+        @if ($cartLines->isNotEmpty())
+            <div class="border-t border-hairline px-6 py-5 space-y-3">
+                @php($dueNow = $shopCart->dueNow($cartLines))
+                @if ($dueNow)<div class="flex justify-between"><span>To pay now</span><span class="font-headline text-2xl">{{ \App\Models\StoreListing::rand($dueNow) }}</span></div>@endif
+                @if ($cartLines->where('reserve', true)->isNotEmpty())<p class="text-sm text-stone">Reserved items are paid only when your batch is ready. You can cancel any time before.</p>@endif
+                <a href="{{ route('shop.checkout') }}" class="btn-dark w-full">{{ $dueNow ? 'Checkout' : 'Confirm my reservation' }}</a>
+                <a href="{{ route('shop.cart') }}" class="block text-center text-sm underline text-stone">View full cart</a>
+            </div>
+        @endif
+    </aside>
+</div>
 
 <main id="main">
     @yield('content')

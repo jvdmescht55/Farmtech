@@ -11,6 +11,7 @@ namespace App\Enums;
  */
 enum OrderStatus: string
 {
+    case Reserved = 'reserved';
     case PendingPayment = 'pending_payment';
     case Paid = 'paid';
     case ProcessingImport = 'processing_import';
@@ -22,6 +23,7 @@ enum OrderStatus: string
     public function label(): string
     {
         return match ($this) {
+            self::Reserved => 'Reserved (next batch)',
             self::PendingPayment => 'Pending Payment',
             self::Paid => 'Paid',
             self::ProcessingImport => 'Processing Import',
@@ -36,6 +38,7 @@ enum OrderStatus: string
     public function badgeColor(): string
     {
         return match ($this) {
+            self::Reserved => 'blue',
             self::PendingPayment => 'gray',
             self::Paid, self::ProcessingImport, self::InCustoms => 'yellow',
             self::Dispatched => 'green',
@@ -59,7 +62,7 @@ enum OrderStatus: string
     public function trackingStageIndex(): ?int
     {
         return match ($this) {
-            self::PendingPayment => 0,
+            self::Reserved, self::PendingPayment => 0,
             self::Paid => 1,
             self::ProcessingImport, self::InCustoms => 2,
             self::Dispatched => 3,

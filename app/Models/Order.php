@@ -15,6 +15,7 @@ class Order extends Model
         'subtotal_zar', 'shipping_zar', 'total_zar',
         'payment_gateway', 'payment_status', 'payment_reference', 'status',
         'tracking_number', 'courier_name',
+        'kind', 'farm_name', 'delivery_method', 'payment_method', 'customer_notes',
     ];
 
     protected function casts(): array
