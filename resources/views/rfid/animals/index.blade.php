@@ -26,7 +26,28 @@
     </div>
 </form>
 
-<div class="panel overflow-hidden">
+{{-- Phones: one tidy card per animal, the numbers that matter up front --}}
+<div class="sm:hidden panel divide-y divide-hairline overflow-hidden">
+    @forelse ($animals as $a)
+        @php
+            $w = $latestWeights->get($a->id);
+            $alert = $alertMap->get($a->id);
+        @endphp
+        <a href="{{ route('rfid.animals.show', $a) }}" class="flex items-center gap-3 px-4 py-3.5 active:bg-sand-light">
+            <span class="w-2 h-2 shrink-0 rounded-full {{ $alert ? $sev[$alert['severity']] : 'bg-transparent' }}"></span>
+            <span class="flex-1 min-w-0">
+                <span class="block font-num font-medium truncate">{{ $a->visual_id }}</span>
+                <span class="block text-xs text-stone truncate">{{ $a->sexLabel() }}{{ $a->birth_date ? ' · '.$a->birth_date->format('M Y') : '' }}{{ $alert ? ' · '.$alert['title'] : '' }}</span>
+            </span>
+            <x-tier :tier="$a->computed_tier" />
+            <span class="w-16 text-right font-num text-sm">{{ $w ? $w->weight_kg.' kg' : '—' }}</span>
+        </a>
+    @empty
+        <p class="py-16 text-center text-stone">Nothing here yet. <a class="link-u text-char" href="{{ route('rfid.data') }}">Bring your herd in</a> or just start scanning.</p>
+    @endforelse
+</div>
+
+<div class="hidden sm:block panel overflow-hidden">
     <div class="overflow-x-auto">
         <table class="tbl">
             <thead><tr><th class="w-6"></th><th>Animal</th><th>Tag (EID)</th><th>Sex</th><th>Born</th><th>Tier</th><th class="text-right">Weight</th><th>Last seen</th></tr></thead>

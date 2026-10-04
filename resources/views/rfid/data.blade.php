@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <div class="panel p-6 sm:p-8" x-data="{ open: {{ $errors->has('lines') ? 'true' : 'false' }} }">
+        <div id="paste" class="panel p-6 sm:p-8 scroll-mt-28" x-data="{ open: {{ $errors->has('lines') ? 'true' : 'false' }} || location.hash === '#paste' }">
             <button type="button" @click="open = !open" class="w-full flex items-center gap-4 text-left">
                 <span class="w-11 h-11 shrink-0 rounded-2xl bg-ochre text-char grid place-items-center">@include('partials.icon', ['name' => 'chip', 'class' => 'w-5 h-5'])</span>
                 <span class="flex-1"><span class="block font-headline text-3xl">Paste from the scale</span><span class="block text-sm text-stone">No Wi-Fi at the kraal? Press B on the scale and paste what it prints.</span></span>

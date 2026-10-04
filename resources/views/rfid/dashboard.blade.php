@@ -3,6 +3,8 @@
 @section('title', 'Howzit, '.\Illuminate\Support\Str::before($user->name, ' '))
 @section('eyebrow'){{ now()->format('l j F') }} · KraalTrac Pro @endsection
 
+@section('credits')<x-photo-credits :keys="['flock-golden']" class="!text-stone-light" />@endsection
+
 @section('content')
 @php
     $urgent = $alerts->whereIn('severity', ['critical', 'warning'])->count();
@@ -14,12 +16,12 @@
         [route('rfid.live'), 'live', 'Start weighing', 'Scan and see each animal pop up', 'start'],
         [route('rfid.animals.create'), 'plus', 'Add an animal', 'Or let the scale do it', null],
         [route('rfid.catalogues.index'), 'book', 'Auction book', $bookCount ? $bookCount.' made so far' : 'Logix layout, ready to print', null],
-        [route('rfid.data'), 'upload', 'Bring records in', 'Excel, CSV or straight off the scale', null],
+        [route('rfid.data.scale'), 'usb', 'Sync the scale', 'Wi-Fi or plug in — it clears itself', null],
     ];
 @endphp
 
 <section class="relative overflow-hidden rounded-[28px] bg-char text-sand">
-    <img src="{{ Img::url('karoo-mist', true) }}" alt="" class="absolute inset-0 h-full w-full object-cover opacity-50 img-grade">
+    <img src="{{ Img::url('flock-golden', true) }}" srcset="{{ Img::srcset('flock-golden') }}" sizes="(min-width: 1320px) 1320px, 100vw" alt="" class="absolute inset-0 h-full w-full object-cover opacity-60 img-grade kenburns">
     <div class="absolute inset-0 bg-gradient-to-r from-char via-char/80 to-char/20"></div>
     <div class="relative p-7 sm:p-10">
         <p class="text-lg sm:text-2xl max-w-2xl leading-snug font-headline">{{ $summary }}</p>
@@ -129,10 +131,10 @@
 @section('tour')
     <x-tour key="rfid" :auto="! $tourSeen || request()->boolean('tour')" :steps="[
         ['target' => null, 'title' => 'Welcome to KraalTrac Pro, '.\Illuminate\Support\Str::before($user->name, ' ').'!', 'body' => 'Let\'s take a one-minute look around. You can skip any time, and replay this from the <strong>?</strong> button.'],
-        ['target' => 'tabs', 'title' => 'Everything lives in these tabs', 'body' => '<strong>Overview</strong> is today. <strong>Herd</strong> is your herd book. <strong>Weighing</strong> has every weigh day, comparisons and sorting. <strong>Alerts</strong> and <strong>Records</strong> do what they say. The rest is under <strong>More</strong>.'],
+        ['target' => 'tabs', 'title' => 'Everything lives in these tabs', 'body' => '<strong>Overview</strong> is today. <strong>Herd</strong> is your herd book. <strong>Weighing</strong> has every weigh day, comparisons and sorting. <strong>Alerts</strong> and <strong>Records</strong> do what they say. <strong>Auction books</strong> and <strong>Sync the scale</strong> are right there too, and the rest sits under <strong>More</strong> (on a phone: the <strong>Menu</strong> button at the bottom).'],
         ['target' => 'start', 'title' => 'Weigh day? Start here.', 'body' => 'Opens the live view. Scan with your KraalTrac and each animal pops up with its weight, gain and any warnings.'],
         ['target' => 'attention', 'title' => 'We keep an eye out for you', 'body' => 'Weight loss, missed drinks, lambs due, low birth weights, withdrawal dates — anything that needs you lands here.'],
         ['target' => 'switcher', 'title' => 'All your devices', 'body' => 'Switch between KraalTrac Pro, KraalTrac Watch and your own gadgets. They all share one herd book.'],
-        ['target' => 'help', 'title' => 'Stuck? Tap the ?', 'body' => 'Step-by-step guides for Excel uploads, connecting the scale, auction books and more — and you can replay this tour.', 'cta' => 'Lekker, let\'s go'],
+        ['target' => 'help', 'title' => 'Stuck? Help is always here', 'body' => 'Step-by-step guides for Excel uploads, connecting the scale, auction books and more — and you can replay this tour.', 'cta' => 'Lekker, let\'s go'],
     ]" />
 @endsection

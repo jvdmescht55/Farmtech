@@ -7,7 +7,7 @@
     $nav = [
         [route('site.store').'#devices', 'Devices'],
         [route('site.store').'#software', 'Software'],
-        [route('site.suggest'), 'Made for you'],
+        [route('site.store').'#possible', 'What\'s possible'],
         [route('site.contact'), 'Contact'],
     ];
 @endphp
@@ -55,22 +55,23 @@
         </button>
     </div>
 
-    {{-- Mobile menu --}}
-    <div x-show="menu" x-cloak x-transition.opacity.duration.300ms
-         class="md:hidden fixed inset-x-0 bottom-0 top-[calc(76px+env(safe-area-inset-top,0px))] bg-sand text-char overflow-y-auto">
-        <div class="wrap py-10 flex flex-col min-h-full" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px))">
-            <nav class="flex flex-col">
-                @foreach ([[route('site.store'), 'Store'], ...$nav] as [$href, $label])
-                    <a href="{{ $href }}" @click="menu = false" class="font-headline text-5xl py-3 border-b border-hairline">{{ $label }}</a>
-                @endforeach
-            </nav>
-            <div class="mt-auto pt-10 grid gap-3">
-                <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Get yours</a>
-                <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Herd Manager →</a>
-            </div>
+</header>
+    {{-- Mobile menu — outside the header on purpose: the header's backdrop-blur would trap a fixed child inside its 76px. --}}
+<div x-show="menu" x-cloak x-transition.opacity.duration.300ms
+     class="md:hidden fixed inset-x-0 bottom-0 top-[calc(76px+env(safe-area-inset-top,0px))] z-40 bg-sand text-char overflow-y-auto">
+    <div class="wrap py-10 flex flex-col min-h-full" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px))">
+        <nav class="flex flex-col">
+            @foreach ([[route('site.store'), 'Store'], ...$nav] as [$href, $label])
+                <a href="{{ $href }}" @click="menu = false" class="font-headline text-5xl py-3 border-b border-hairline">{{ $label }}</a>
+            @endforeach
+        </nav>
+        <div class="mt-auto pt-10 grid gap-3">
+            <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Get yours</a>
+            <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Herd Manager →</a>
         </div>
     </div>
-</header>
+</div>
+
 
 <main>
     @yield('content')

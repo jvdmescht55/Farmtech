@@ -54,7 +54,7 @@ foreach ($rec in $lines) {
 }
 
 if ($failed -eq 0) {
-  $sp.WriteLine("CLEAR")
+  $sp.WriteLine("CLEAR $($lines.Count)")
   Write-Host "All $($lines.Count) saved to Herd Manager. Scale memory cleared. Lekker!" -ForegroundColor Green
 } else {
   Write-Host "$failed record(s) did not save — the scale keeps everything. Check internet / device key and run again." -ForegroundColor Yellow

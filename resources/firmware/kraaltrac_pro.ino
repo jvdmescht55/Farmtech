@@ -67,7 +67,7 @@ WiFiMulti wifiMulti;
 
 const char* SERVER    = "https://farmtech.site";
 const char* MODEL     = "KraalTrac Pro";
-const char* FIRMWARE  = "3.0.0";
+const char* FIRMWARE  = "3.1.0";
 // Optional: paste a device key from Herd Manager → Devices → "Add a device by
 // hand" here to skip pairing. Leave empty to pair with a 6-digit code.
 const char* DEVICE_KEY = "";
@@ -703,15 +703,39 @@ void dumpQueueToSerial() {
   Serial.println("Paste the lines between BEGIN/END into Herd Manager > Import & export > Paste from the scale.");
 }
 
+// USB commands (115200 baud), used by Herd Manager's "Plug in the scale" page
+// and sync_from_scale.ps1:
+//   HELLO    -> "KRAALTRAC PRO <fw> QUEUE <n>"
+//   DUMP     -> the queue between ----BEGIN QUEUE---- / ----END QUEUE----
+//   CLEAR n  -> drops only the FIRST n records (the ones that were dumped and
+//               confirmed saved), so anything scanned meanwhile is kept.
+//   CLEAR    -> drops everything (old behaviour)
+void dropFirstRecords(int n) {
+  String q = prefs.getString("queue", "");
+  int pos = 0;
+  for (int i = 0; i < n && pos < (int)q.length(); i++) {
+    int nl = q.indexOf('\n', pos);
+    if (nl < 0) { pos = q.length(); break; }
+    pos = nl + 1;
+  }
+  prefs.putString("queue", q.substring(pos));
+}
+
 void handleSerialCommands() {
   if (!Serial.available()) return;
   String cmd = Serial.readStringUntil('\n');
   cmd.trim();
-  if (cmd == "DUMP") dumpQueueToSerial();
-  else if (cmd == "CLEAR") {
-    prefs.putString("queue", "");
-    Serial.println("Queue cleared (confirmed saved by sync_from_scale.ps1).");
-    if (state == ENTER_ID) resetScreen();
+  if (cmd == "HELLO") {
+    Serial.println("KRAALTRAC PRO " + String(FIRMWARE) + " QUEUE " + String(queueCount()));
+  } else if (cmd == "DUMP") {
+    dumpQueueToSerial();
+  } else if (cmd.startsWith("CLEAR")) {
+    int n = cmd.length() > 5 ? cmd.substring(6).toInt() : -1;
+    if (n > 0) dropFirstRecords(n); else prefs.putString("queue", "");
+    Serial.println("CLEARED " + String(n > 0 ? n : 0) + " LEFT " + String(queueCount()));
+    updateDisplay("USB sync done!", "Saved on farmtech", "Scale memory cleared", "Lekker!");
+    delay(2500);
+    resetScreen();
   }
 }
 

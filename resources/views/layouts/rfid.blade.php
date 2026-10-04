@@ -3,35 +3,25 @@
     $u = auth()->user();
     $alertCount = \Illuminate\Support\Facades\Cache::remember("alert-count:{$u->id}", 60, fn () => app(\App\Services\Herd\HerdAlerts::class)->forUser($u->id)->whereIn('severity', ['critical', 'warning'])->count());
     $is = fn (...$p) => request()->routeIs(...$p);
-    $more = [
-        [route('rfid.live'), 'Live view', $is('rfid.live')],
-        [route('rfid.catalogues.index'), 'Auction books', $is('rfid.catalogues.*')],
-        [route('help.index'), 'Help & guides', false],
-        [route('rfid.readers.index'), 'Devices', $is('rfid.readers.*', 'rfid.sync.*')],
-        [route('rfid.data'), 'Import & export', $is('rfid.data*', 'rfid.import.*')],
-        [route('rfid.settings.edit'), 'Farm settings', $is('rfid.settings.*')],
+    // Everything is visible: main tabs (first 4 also sit in the phone's bottom bar), then the rest.
+    $nav = [
+        ['href' => route('rfid.dashboard'), 'label' => 'Overview', 'icon' => 'home', 'on' => $is('rfid.dashboard')],
+        ['href' => route('rfid.animals.index'), 'label' => 'Herd', 'icon' => 'herd', 'on' => $is('rfid.animals.*')],
+        ['href' => route('rfid.weighings.index'), 'label' => 'Weighing', 'icon' => 'scale', 'on' => $is('rfid.weighings.*', 'rfid.compare', 'rfid.draft*')],
+        ['href' => route('rfid.alerts'), 'label' => 'Alerts', 'icon' => 'bell', 'on' => $is('rfid.alerts*'), 'badge' => $alertCount ?: null],
+        ['href' => route('rfid.events.index'), 'label' => 'Records', 'icon' => 'note', 'on' => $is('rfid.events.*')],
+        ['href' => route('rfid.catalogues.index'), 'label' => 'Auction books', 'icon' => 'book', 'on' => $is('rfid.catalogues.*')],
+        ['href' => route('rfid.data.scale'), 'label' => 'Sync the scale', 'icon' => 'usb', 'on' => $is('rfid.data.scale')],
     ];
-    $moreOn = collect($more)->contains(fn ($m) => $m[2]);
+    $navMore = [
+        ['href' => route('rfid.live'), 'label' => 'Live view', 'icon' => 'live', 'on' => $is('rfid.live')],
+        ['href' => route('rfid.data'), 'label' => 'Import & export', 'icon' => 'table', 'on' => $is('rfid.data', 'rfid.data.preview', 'rfid.import.*')],
+        ['href' => route('rfid.readers.index'), 'label' => 'Devices', 'icon' => 'chip', 'on' => $is('rfid.readers.*', 'rfid.sync.*')],
+        ['href' => route('rfid.settings.edit'), 'label' => 'Farm settings', 'icon' => 'gear', 'on' => $is('rfid.settings.*')],
+    ];
 @endphp
 
-@section('tabs')
-    @include('partials.tab', ['href' => route('rfid.dashboard'), 'label' => 'Overview', 'icon' => 'home', 'on' => $is('rfid.dashboard')])
-    @include('partials.tab', ['href' => route('rfid.animals.index'), 'label' => 'Herd', 'icon' => 'herd', 'on' => $is('rfid.animals.*')])
-    @include('partials.tab', ['href' => route('rfid.weighings.index'), 'label' => 'Weighing', 'icon' => 'scale', 'on' => $is('rfid.weighings.*', 'rfid.compare', 'rfid.draft*')])
-    @include('partials.tab', ['href' => route('rfid.alerts'), 'label' => 'Alerts', 'icon' => 'bell', 'on' => $is('rfid.alerts*'), 'badge' => $alertCount ?: null])
-    @include('partials.tab', ['href' => route('rfid.events.index'), 'label' => 'Records', 'icon' => 'note', 'on' => $is('rfid.events.*')])
-    @include('partials.tab', ['href' => $moreOn ? route('rfid.dashboard', ['more' => 1]) : request()->fullUrlWithQuery(['more' => request()->boolean('more') ? null : 1]), 'label' => $moreOn ? collect($more)->first(fn ($m) => $m[2])[1] : 'More', 'icon' => 'more', 'on' => $moreOn || request()->boolean('more')])
-@endsection
-
 @section('subnav')
-    {{-- "More" opens as a simple row of pills under the title — no fiddly dropdown on phones. --}}
-    @if ($moreOn || request()->boolean('more'))
-        <div class="flex flex-wrap gap-1 mb-8">
-            @foreach ($more as [$href, $label, $on])
-                <a href="{{ $href }}" class="rounded-full px-4 h-9 inline-flex items-center text-sm border {{ $on ? 'bg-char text-sand border-char' : 'bg-white border-hairline text-stone hover:text-char hover:border-char' }}">{{ $label }}</a>
-            @endforeach
-        </div>
-    @endif
     @if ($is('rfid.weighings.*', 'rfid.compare', 'rfid.draft*'))
         <div class="inline-flex rounded-full bg-white border border-hairline p-1 mb-8">
             @foreach ([['rfid.weighings.index', 'rfid.weighings.*', 'Sessions'], ['rfid.compare', 'rfid.compare', 'Compare'], ['rfid.draft', 'rfid.draft*', 'Sort by weight']] as [$r, $p, $l])

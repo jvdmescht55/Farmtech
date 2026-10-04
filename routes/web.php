@@ -152,6 +152,8 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
     Route::post('/data/preview', [RfidDataController::class, 'preview'])->name('data.preview');
     Route::post('/data/import', [RfidDataController::class, 'import'])->name('data.import');
     Route::post('/data/paste', [RfidDataController::class, 'paste'])->name('data.paste');
+    Route::get('/data/scale', [RfidDataController::class, 'scale'])->name('data.scale');
+    Route::post('/data/usb', [RfidDataController::class, 'usb'])->name('data.usb');
     Route::get('/data/backup', [RfidDataController::class, 'backup'])->name('data.backup');
     Route::get('/data/template/{kind}', [RfidDataController::class, 'template'])->name('data.template');
 

@@ -26,13 +26,21 @@ class AlertController extends Controller
 
     public function dismiss(Request $request)
     {
-        $data = $request->validate(['key' => ['required', 'string', 'max:120'], 'days' => ['nullable', 'integer', 'min:1', 'max:365']]);
-        AlertDismissal::updateOrCreate(
-            ['user_id' => $request->user()->id, 'alert_key' => $data['key']],
-            ['until' => isset($data['days']) ? now()->addDays((int) $data['days']) : null],
-        );
+        $data = $request->validate([
+            'key' => ['required_without:keys', 'string', 'max:120'],
+            'keys' => ['array', 'max:1000'], 'keys.*' => ['string', 'max:120'],
+            'days' => ['nullable', 'integer', 'min:1', 'max:365'],
+        ]);
+        $keys = $data['keys'] ?? [$data['key']];
+        foreach ($keys as $key) {
+            AlertDismissal::updateOrCreate(
+                ['user_id' => $request->user()->id, 'alert_key' => $key],
+                ['until' => isset($data['days']) ? now()->addDays((int) $data['days']) : null],
+            );
+        }
+        \Illuminate\Support\Facades\Cache::forget("alert-count:{$request->user()->id}");
 
-        return back()->with('status', 'Alert hidden.');
+        return back()->with('status', count($keys) > 1 ? count($keys).' alerts handled.' : 'Alert hidden.');
     }
 
     public function restore(Request $request)

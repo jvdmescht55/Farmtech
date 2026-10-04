@@ -24,7 +24,7 @@
         <div class="app-card overflow-hidden">
             <div class="px-6 py-4 border-b border-hairline flex flex-wrap items-center gap-4">
                 <h2 class="font-medium">Lots <span class="text-stone-light font-normal">({{ $lots->count() }})</span></h2>
-                <form method="POST" action="{{ route('rfid.catalogues.number', $catalogue) }}" class="ml-auto flex flex-wrap items-end gap-2 text-sm">
+                <form method="POST" action="{{ route('rfid.catalogues.number', $catalogue) }}" class="sm:ml-auto flex flex-wrap items-end gap-2 text-sm">
                     @csrf
                     <div><label class="app-label !mb-0.5">Start at</label><input type="number" name="start" value="{{ (int) ($lots->first()?->lot_number ?: 1) }}" min="1" class="app-input w-20 !py-1.5"></div>
                     <div><label class="app-label !mb-0.5">Per lot</label>
@@ -81,11 +81,11 @@
         </details>
     </div>
 
-    <div class="app-card overflow-hidden self-start" x-data="{ all: false }">
+    <div class="app-card overflow-hidden self-start {{ $lots->isEmpty() ? 'order-first xl:order-none' : '' }}" x-data="{ all: false }">
         <div class="px-5 py-4 border-b border-hairline">
             <h2 class="font-medium">Add from the herd</h2>
             <form method="GET" class="mt-3 flex gap-2">
-                <input name="q" value="{{ request('q') }}" placeholder="Search ID / tag" class="app-input !py-1.5">
+                <input name="q" value="{{ request('q') }}" placeholder="Search ID / tag" class="app-input !py-1.5 min-w-0 flex-1">
                 <select name="sex" class="app-input !py-1.5 w-24"><option value="">All</option><option value="F" @selected(request('sex')==='F')>Female</option><option value="M" @selected(request('sex')==='M')>Male</option></select>
                 <button class="btn-secondary !py-1.5">Go</button>
             </form>

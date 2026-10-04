@@ -209,3 +209,14 @@
 @keyframes v2-pop { 0% { transform: scale(.96); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .pop-in { animation: v2-pop .45s cubic-bezier(.2,.7,.2,1) both; }
 @media (prefers-reduced-motion: reduce) { .pop-in { animation: none; } }
+
+/* Photo page headers in Herd Manager: a slow, barely-there zoom + buttons that read on a photo. */
+@keyframes kenburns { from { transform: scale(1.06); } to { transform: scale(1); } }
+.kenburns { animation: kenburns 2.4s cubic-bezier(.2,.7,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .kenburns { animation: none; } }
+.on-photo .btn-line, .on-photo .btn-secondary { @apply border-white/35 text-white hover:border-white hover:bg-white/10; }
+.on-photo .btn-dark, .on-photo .btn-primary { @apply bg-white text-char hover:bg-sand; }
+
+/* Grid children default to min-width:auto, so one wide table/form pushes the
+   whole page sideways on a phone. Let them shrink; tables scroll inside. */
+:where(main .grid > *) { min-width: 0; }

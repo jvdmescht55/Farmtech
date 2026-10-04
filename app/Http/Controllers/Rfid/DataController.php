@@ -108,15 +108,7 @@ class DataController extends Controller
     public function paste(Request $request, ScanImporter $scans)
     {
         $text = (string) $request->validate(['lines' => ['required', 'string', 'max:500000']])['lines'];
-        $rows = [];
-        foreach (preg_split('/\R/', $text) as $line) {
-            $f = explode('|', trim($line));
-            if (count($f) === 9) {
-                $rows[] = array_combine(['ref', 'id', 'tag', 'type', 'gender', 'sire', 'dam', 'weight', 'ts'], $f);
-            } elseif (count($f) === 6) {
-                $rows[] = array_combine(['id', 'type', 'gender', 'sire', 'dam', 'weight'], $f) + ['ref' => 'paste-'.md5($line)];
-            }
-        }
+        $rows = $this->scaleRows(preg_split('/\R/', $text));
         if (! $rows) {
             return back()->withErrors(['lines' => 'We couldn\'t find any scale records in that. Copy the lines between ----BEGIN QUEUE---- and ----END QUEUE----.'])->withInput();
         }
@@ -125,6 +117,58 @@ class DataController extends Controller
         $dupes = collect($scans->results)->where('status', 'duplicate')->count();
 
         return redirect()->route('rfid.data')->with('status', "From the scale: {$sync->scan_count} saved".($dupes ? ", {$dupes} were already in (skipped)" : '').". It's now safe to clear the scale's queue (A + PIN).")->with('confetti', true);
+    }
+
+    /** "Get data off the scale" — Wi-Fi status, USB sync in the browser, paste. */
+    public function scale(Request $request)
+    {
+        $u = $request->user();
+
+        return view('rfid.scale', [
+            'scales' => \App\Models\Reader::where('user_id', $u->id)->where(fn ($q) => $q->whereNull('kind')->orWhere('kind', 'handheld'))->orderByDesc('last_synced_at')->get(),
+            'recent' => \App\Models\ReaderSync::where('user_id', $u->id)->latest()->limit(5)->get(),
+        ]);
+    }
+
+    /**
+     * "Plug in the scale": the browser reads the queue over USB (Web Serial),
+     * posts it here with the farmer's own login, and only tells the scale to
+     * clear once we answer ok=true (every line saved or already in).
+     */
+    public function usb(Request $request, ScanImporter $scans)
+    {
+        $lines = $request->validate(['lines' => ['required', 'array', 'max:2000'], 'lines.*' => ['string', 'max:500']])['lines'];
+        $rows = $this->scaleRows($lines);
+        if (! $rows) {
+            return response()->json(['ok' => false, 'message' => 'Those lines don\'t look like KraalTrac records.'], 422);
+        }
+
+        $sync = $scans->import($request->user(), null, 'paste', $rows, 'USB sync from the scale');
+        $by = collect($scans->results)->countBy('status');
+
+        return response()->json([
+            'ok' => count($rows) === count($lines),
+            'saved' => (int) $sync->scan_count,
+            'duplicates' => (int) ($by['duplicate'] ?? 0),
+            'skipped' => (int) ($by['skipped'] ?? 0) + count($lines) - count($rows),
+        ]);
+    }
+
+    /** KraalTrac queue lines → importer rows (9-field current, 6-field legacy). */
+    private function scaleRows(array $lines): array
+    {
+        $rows = [];
+        foreach ($lines as $line) {
+            $line = trim((string) $line);
+            $f = explode('|', $line);
+            if (count($f) === 9) {
+                $rows[] = array_combine(['ref', 'id', 'tag', 'type', 'gender', 'sire', 'dam', 'weight', 'ts'], $f);
+            } elseif (count($f) === 6) {
+                $rows[] = array_combine(['id', 'type', 'gender', 'sire', 'dam', 'weight'], $f) + ['ref' => 'paste-'.md5($line)];
+            }
+        }
+
+        return $rows;
     }
 
     public function backup(Request $request, DataExporter $exporter)

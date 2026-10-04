@@ -12,11 +12,11 @@
 @endphp
 
 @section('content')
-<div class="grid sm:grid-cols-3 gap-4">
+<div class="grid grid-cols-3 gap-2 sm:gap-4">
     @foreach ($sev as $k => [$label, $dot])
-        <a href="{{ route('rfid.alerts', request('severity') === $k ? [] : ['severity' => $k]) }}" class="panel p-6 flex items-center justify-between transition hover:border-char {{ request('severity') === $k ? 'border-char' : '' }}">
-            <div><div class="kpi-label flex items-center gap-2"><span class="w-2 h-2 rounded-full {{ $dot }}"></span>{{ $label }}</div><div class="kpi-num mt-3">{{ $counts[$k] ?? 0 }}</div></div>
-            <span class="text-stone-light">→</span>
+        <a href="{{ route('rfid.alerts', request('severity') === $k ? [] : ['severity' => $k]) }}" class="panel p-4 sm:p-6 flex items-center justify-between transition hover:border-char {{ request('severity') === $k ? 'border-char' : '' }}">
+            <div class="min-w-0"><div class="kpi-label !text-[10px] sm:!text-[12px] flex items-center gap-1.5 sm:gap-2"><span class="w-2 h-2 shrink-0 rounded-full {{ $dot }}"></span><span class="truncate">{{ $label }}</span></div><div class="kpi-num !text-[34px] sm:!text-[44px] mt-2 sm:mt-3">{{ $counts[$k] ?? 0 }}</div></div>
+            <span class="hidden sm:inline text-stone-light">→</span>
         </a>
     @endforeach
 </div>
@@ -31,27 +31,57 @@
     <a href="{{ route('rfid.alerts', ['dismissed' => request()->boolean('dismissed') ? null : 1]) }}" class="chip h-9 px-4 ml-auto text-stone hover:text-char">{{ request()->boolean('dismissed') ? 'Hide handled' : 'Show handled' }}</a>
 </div>
 
+@php
+    // Four or more of the same alert become one card — easier to take in than a long list.
+    $groups = $alerts->groupBy(fn ($a) => $a['title'].'|'.$a['severity'].'|'.(int) $a['dismissed'])
+        ->map(fn ($g) => $g->count() >= 4 ? collect([['group' => $g] + $g->first()]) : $g)->flatten(1);
+@endphp
 <div class="mt-6 space-y-3">
-    @forelse ($alerts as $a)
-        <div class="rounded-2xl border {{ $sev[$a['severity']][2] }} p-5 sm:p-6 grid sm:grid-cols-[1fr_auto] gap-4 items-start {{ $a['dismissed'] ? 'opacity-50' : '' }}">
-            <div class="flex gap-4">
+    @forelse ($groups as $a)
+        @php($g = $a['group'] ?? null)
+        <div class="rounded-2xl border {{ $sev[$a['severity']][2] }} p-5 sm:p-6 grid sm:grid-cols-[1fr_auto] gap-4 items-start {{ $a['dismissed'] ? 'opacity-50' : '' }}" @if ($g) x-data="{ open: false }" @endif>
+            <div class="flex gap-4 min-w-0">
                 <span class="mt-2 w-2.5 h-2.5 shrink-0 rounded-full {{ $sev[$a['severity']][1] }}"></span>
-                <div>
+                <div class="min-w-0">
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                         <span class="font-medium text-lg">{{ $a['title'] }}</span>
-                        @if ($a['animal'])<a href="{{ route('rfid.animals.show', $a['animal']) }}" class="font-num text-sm link-u">{{ $a['animal']->visual_id }}</a>@endif
+                        @if ($g)
+                            <span class="chip bg-char text-sand">{{ $g->count() }} animals</span>
+                        @elseif ($a['animal'])
+                            <a href="{{ route('rfid.animals.show', $a['animal']) }}" class="font-num text-sm link-u">{{ $a['animal']->visual_id }}</a>
+                        @endif
                         <span class="text-xs {{ $sev[$a['severity']][3] }}">{{ \App\Services\Herd\HerdAlerts::CATEGORIES[$a['category']] }}</span>
                     </div>
-                    <p class="mt-1 text-stone">{{ $a['detail'] }}</p>
+                    @if ($g)
+                        <div class="mt-3 flex flex-wrap gap-1.5">
+                            @foreach ($g->take(12) as $x)
+                                @if ($x['animal'])<a href="{{ route('rfid.animals.show', $x['animal']) }}" class="chip bg-white border border-hairline font-num hover:border-char">{{ $x['animal']->visual_id }}</a>@endif
+                            @endforeach
+                            @if ($g->count() > 12)<button type="button" @click="open = !open" class="chip text-stone underline" x-text="open ? 'Show less' : '+ {{ $g->count() - 12 }} more'"></button>@endif
+                        </div>
+                        <ul x-show="open" x-cloak class="mt-3 text-sm text-stone space-y-1">
+                            @foreach ($g->slice(12) as $x)
+                                <li>@if ($x['animal'])<a href="{{ route('rfid.animals.show', $x['animal']) }}" class="font-num link-u text-char">{{ $x['animal']->visual_id }}</a> — @endif{{ $x['detail'] }}</li>
+                            @endforeach
+                        </ul>
+                        <p class="mt-3 text-stone text-sm">e.g. {{ $a['detail'] }}</p>
+                    @else
+                        <p class="mt-1 text-stone">{{ $a['detail'] }}</p>
+                    @endif
                     @if ($a['action'])<p class="mt-2 text-sm"><span class="text-stone-light">What to do:</span> {{ $a['action'] }}</p>@endif
                 </div>
             </div>
             <div class="flex gap-2 sm:justify-end">
                 @if ($a['dismissed'])
-                    <form method="POST" action="{{ route('rfid.alerts.restore') }}">@csrf<input type="hidden" name="key" value="{{ $a['key'] }}"><button class="btn-line btn-sm">Show again</button></form>
+                    @unless ($g)<form method="POST" action="{{ route('rfid.alerts.restore') }}">@csrf<input type="hidden" name="key" value="{{ $a['key'] }}"><button class="btn-line btn-sm">Show again</button></form>@endunless
                 @else
-                    <form method="POST" action="{{ route('rfid.alerts.dismiss') }}">@csrf<input type="hidden" name="key" value="{{ $a['key'] }}"><input type="hidden" name="days" value="7"><button class="btn-line btn-sm" title="Hide for 7 days">Snooze 7 days</button></form>
-                    <form method="POST" action="{{ route('rfid.alerts.dismiss') }}">@csrf<input type="hidden" name="key" value="{{ $a['key'] }}"><button class="btn-dark btn-sm">Done ✓</button></form>
+                    @foreach ([[7, 'btn-line', 'Snooze 7 days'], [null, 'btn-dark', $g ? 'All done ✓' : 'Done ✓']] as [$days, $cls, $label])
+                        <form method="POST" action="{{ route('rfid.alerts.dismiss') }}">@csrf
+                            @if ($g) @foreach ($g as $x)<input type="hidden" name="keys[]" value="{{ $x['key'] }}">@endforeach @else <input type="hidden" name="key" value="{{ $a['key'] }}"> @endif
+                            @if ($days)<input type="hidden" name="days" value="{{ $days }}">@endif
+                            <button class="{{ $cls }} btn-sm">{{ $label }}</button>
+                        </form>
+                    @endforeach
                 @endif
             </div>
         </div>

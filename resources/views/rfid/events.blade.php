@@ -10,7 +10,21 @@
             <div class="panel-title">History</div>
             <form method="GET"><select name="type" class="field !h-9 !text-sm w-52" onchange="this.form.submit()"><option value="">Everything</option>@foreach (config('herd.event_types') as $k => $t)<option value="{{ $k }}" @selected(request('type') === $k)>{{ $t['label'] }}</option>@endforeach</select></form>
         </div>
-        <div class="overflow-x-auto">
+        <ul class="sm:hidden divide-y divide-hairline">
+            @forelse ($events as $e)
+                <li class="px-4 py-3.5 flex items-start gap-3">
+                    <span class="w-14 shrink-0 text-xs text-stone num pt-0.5">{{ $e->date->format('j M') }}<br>{{ $e->date->format('Y') }}</span>
+                    <span class="flex-1 min-w-0">
+                        <span class="block text-sm"><span class="font-medium">{{ $e->label() }}</span> · <a href="{{ route('rfid.animals.show', $e->animal) }}" class="font-num link-u">{{ $e->animal->visual_id }}</a></span>
+                        <span class="block text-xs text-stone mt-0.5">{{ collect([$e->product, $e->dose, $e->mate ? 'with '.$e->mate->visual_id : null, $e->count !== null ? $e->count.' born' : null, $e->result ? (config("herd.event_types.pregnancy_scan.result.{$e->result}") ?? $e->result) : null, $e->notes])->filter()->implode(' · ') }}</span>
+                        @if ($e->withdrawal_until && $e->withdrawal_until->isFuture())<span class="block text-xs text-ochre-dark mt-0.5">Withdrawal until {{ $e->withdrawal_until->format('d/m/Y') }}</span>@endif
+                    </span>
+                </li>
+            @empty
+                <li class="py-14 text-center text-stone text-sm px-6">Nothing recorded yet. Use “Record something” above.</li>
+            @endforelse
+        </ul>
+        <div class="hidden sm:block overflow-x-auto">
             <table class="tbl">
                 <thead><tr><th>Date</th><th>Animal</th><th>What</th><th>Details</th><th>Withdrawal</th><th></th></tr></thead>
                 <tbody>
@@ -32,7 +46,7 @@
         <div class="px-6 py-4">{{ $events->links() }}</div>
     </div>
 
-    <div class="panel self-start" x-data="{ type: '{{ old('type', 'treatment') }}', q: '' }">
+    <div class="panel self-start order-first xl:order-none" x-data="{ type: '{{ old('type', 'treatment') }}', q: '' }">
         <div class="panel-head"><div class="panel-title">Record something</div></div>
         <form method="POST" action="{{ route('rfid.events.store') }}" class="p-6 space-y-4">
             @csrf

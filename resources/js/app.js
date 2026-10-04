@@ -224,7 +224,6 @@ document.addEventListener('alpine:init', () => {
     Alpine.store('intro', { alreadyPlayed });
 });
 
-Alpine.start();
 
 // ── Herd Manager polish ─────────────────────────────────────────────────
 document.addEventListener('alpine:init', () => {
@@ -239,7 +238,12 @@ document.addEventListener('alpine:init', () => {
         },
         get step() { return this.steps[this.i] || {}; },
         start() { this.i = 0; this.open = true; this.$nextTick(() => this.go()); },
-        target() { return this.step.target ? document.querySelector(`[data-tour="${this.step.target}"]`) : null; },
+        target() {
+            // Prefer whichever copy is visible (desktop tabs vs the phone's bottom bar).
+            const t = this.step.target;
+            if (!t) return null;
+            return [...document.querySelectorAll(`[data-tour="${t}"],[data-tour="${t}-mobile"]`)].find((el) => el.getClientRects().length && el.offsetWidth) || null;
+        },
         go() {
             const el = this.target();
             if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => this.place(), 380); } else { this.rect = null; }
@@ -305,3 +309,92 @@ window.farmtechConfetti = () => {
         ], { duration: 1300 + Math.random() * 700, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => d.remove();
     }
 };
+
+// ── "Plug in the scale": USB sync straight from the browser (Web Serial) ──
+// Talks to the KraalTrac Pro firmware: HELLO → DUMP → post to Herd Manager →
+// CLEAR n. The scale only forgets records after the server said every one is in.
+document.addEventListener('alpine:init', () => {
+    Alpine.data('scaleSync', (postUrl) => ({
+        supported: 'serial' in navigator,
+        step: 'idle', // idle | connecting | reading | sending | clearing | done | empty | error
+        message: '', found: 0, saved: 0, dupes: 0, firmware: '',
+        get busy() { return ['connecting', 'reading', 'sending', 'clearing'].includes(this.step); },
+        async run() {
+            let port, reader, writer;
+            try { port = await navigator.serial.requestPort(); } catch { return; } // farmer cancelled the picker
+            this.step = 'connecting'; this.message = ''; this.saved = this.dupes = this.found = 0;
+            try {
+                await port.open({ baudRate: 115200 });
+                try { await port.setSignals({ dataTerminalReady: false, requestToSend: false }); } catch { /* not all adapters */ }
+                reader = port.readable.getReader();
+                writer = port.writable.getWriter();
+                const dec = new TextDecoder(), enc = new TextEncoder();
+                let buf = '', pending = null;
+                const chunk = () => (pending ??= reader.read().then((r) => { pending = null; return r; }));
+                const line = async (ms) => {
+                    const end = Date.now() + ms;
+                    for (;;) {
+                        const i = buf.indexOf('\n');
+                        if (i >= 0) { const l = buf.slice(0, i).replace(/\r$/, '').trim(); buf = buf.slice(i + 1); return l; }
+                        const left = end - Date.now();
+                        if (left <= 0) return null;
+                        const r = await Promise.race([chunk(), new Promise((res) => setTimeout(() => res({ timeout: true }), left))]);
+                        if (r.timeout || r.done) return null;
+                        buf += dec.decode(r.value, { stream: true });
+                    }
+                };
+                const send = (cmd) => writer.write(enc.encode(cmd + '\n'));
+
+                // The ESP32 may restart when the port opens — keep saying hello until it answers.
+                let hello = null;
+                for (let t = 0; t < 12 && !hello; t++) {
+                    await send('HELLO');
+                    const until = Date.now() + 1000;
+                    let l;
+                    while ((l = await line(until - Date.now())) !== null) if (l.startsWith('KRAALTRAC')) { hello = l; break; }
+                }
+                if (!hello) throw new Error("The scale didn't answer. Check the cable (some are charge-only), then try again. Older firmware? Update it from Devices.");
+                this.firmware = hello.split(' ')[2] || '';
+
+                this.step = 'reading';
+                await send('DUMP');
+                const lines = []; let inside = false, l;
+                while ((l = await line(15000)) !== null) {
+                    if (l === '----BEGIN QUEUE----') { inside = true; continue; }
+                    if (l === '----END QUEUE----') break;
+                    if (inside && l && !l.startsWith('(empty')) lines.push(l);
+                }
+                this.found = lines.length;
+                if (!lines.length) { this.step = 'empty'; return; }
+
+                this.step = 'sending';
+                for (let i = 0; i < lines.length; i += 500) {
+                    const res = await fetch(postUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
+                        body: JSON.stringify({ lines: lines.slice(i, i + 500) }),
+                    });
+                    const j = await res.json().catch(() => ({}));
+                    if (!res.ok || !j.ok) throw new Error((j.message || 'Herd Manager could not save everything') + ' — nothing was cleared from the scale, so no harm done. Try again.');
+                    this.saved += j.saved; this.dupes += j.duplicates;
+                }
+
+                this.step = 'clearing';
+                await send('CLEAR ' + lines.length);
+                while ((l = await line(4000)) !== null) if (l.startsWith('CLEARED')) break;
+                this.step = 'done';
+                window.farmtechConfetti?.();
+            } catch (e) {
+                this.step = 'error';
+                this.message = e?.message || String(e);
+            } finally {
+                try { reader?.cancel(); reader?.releaseLock(); } catch {}
+                try { writer?.releaseLock(); } catch {}
+                try { await port?.close(); } catch {}
+            }
+        },
+    }));
+});
+
+// Start last, so every alpine:init listener above (tour, countup…) is registered first.
+Alpine.start();
