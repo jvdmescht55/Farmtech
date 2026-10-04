@@ -9,14 +9,14 @@
 @php
     $urgent = $alerts->whereIn('severity', ['critical', 'warning'])->count();
     $summary = $herdCount === 0
-        ? 'Nothing in the herd book yet — start with one of the tiles below.'
+        ? 'Nothing in the herd book yet. Start with one of the tiles below.'
         : ($urgent ? $urgent.' '.\Illuminate\Support\Str::plural('thing', $urgent).' need you today.' : 'Nothing urgent today. Lekker.')
             .($latestSession ? ' Last weigh day '.\Carbon\Carbon::parse($latestSession->date)->format('j M').'.' : '');
     $tiles = [
         [route('rfid.live'), 'live', 'Start weighing', 'Scan and see each animal pop up', 'start'],
         [route('rfid.animals.create'), 'plus', 'Add an animal', 'Or let the scale do it', null],
         [route('rfid.catalogues.index'), 'book', 'Auction book', $bookCount ? $bookCount.' made so far' : 'Logix layout, ready to print', null],
-        [route('rfid.data.scale'), 'usb', 'Sync the scale', 'Wi-Fi or plug in — it clears itself', null],
+        [route('rfid.data.scale'), 'usb', 'Sync the scale', 'Wi-Fi or plug in. It clears itself', null],
     ];
 @endphp
 
@@ -27,7 +27,7 @@
         <p class="text-lg sm:text-2xl max-w-2xl leading-snug font-headline">{{ $summary }}</p>
         <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3">
             @foreach ($tiles as [$href, $icon, $title, $sub, $tour])
-                <a href="{{ $href }}" @if ($tour) data-tour="{{ $tour }}" @endif class="group rounded-2xl bg-white/8 hover:bg-white/15 border border-white/10 backdrop-blur p-4 sm:p-5 transition">
+                <a href="{{ $href }}" @if ($tour) data-tour="{{ $tour }}" @endif class="group rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur p-4 sm:p-5 transition">
                     <span class="w-10 h-10 rounded-xl bg-sand text-char grid place-items-center group-hover:scale-105 transition">@include('partials.icon', ['name' => $icon, 'class' => 'w-5 h-5'])</span>
                     <div class="mt-4 font-medium">{{ $title }}</div>
                     <div class="text-xs text-sand/60 mt-0.5">{{ $sub }}</div>
@@ -41,7 +41,7 @@
     <div class="panel p-8 mt-6 grid md:grid-cols-3 gap-6">
         <div class="md:col-span-2">
             <div class="font-headline text-3xl">New here? Start with the 10-minute guide.</div>
-            <p class="text-stone mt-2">Pair your KraalTrac, bring your records in from Excel, and do your first weigh day — step by step.</p>
+            <p class="text-stone mt-2">Pair your KraalTrac, bring your records in from Excel, and do your first weigh day. Step by step.</p>
         </div>
         <div class="flex md:justify-end items-center gap-2">
             <a href="{{ route('help.show', 'getting-started') }}" class="btn-dark">Open the guide</a>

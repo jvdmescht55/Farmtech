@@ -61,7 +61,7 @@
                         </div>
                         <ul x-show="open" x-cloak class="mt-3 text-sm text-stone space-y-1">
                             @foreach ($g->slice(12) as $x)
-                                <li>@if ($x['animal'])<a href="{{ route('rfid.animals.show', $x['animal']) }}" class="font-num link-u text-char">{{ $x['animal']->visual_id }}</a> — @endif{{ $x['detail'] }}</li>
+                                <li>@if ($x['animal'])<a href="{{ route('rfid.animals.show', $x['animal']) }}" class="font-num link-u text-char">{{ $x['animal']->visual_id }}</a>: @endif{{ $x['detail'] }}</li>
                             @endforeach
                         </ul>
                         <p class="mt-3 text-stone text-sm">e.g. {{ $a['detail'] }}</p>
@@ -88,7 +88,7 @@
     @empty
         <div class="panel p-16 text-center">
             <div class="h-display text-5xl">All lekker.</div>
-            <p class="mt-3 text-stone">No alerts. The herd looks healthy — keep it up.</p>
+            <p class="mt-3 text-stone">No alerts. The herd looks healthy. Keep it up.</p>
         </div>
     @endforelse
 </div>
@@ -96,18 +96,18 @@
 <details class="mt-10 panel p-6 text-sm text-stone">
     <summary class="cursor-pointer text-char font-medium">What do we watch for?</summary>
     <ul class="mt-4 grid md:grid-cols-2 gap-x-10 gap-y-2 leading-relaxed">
-        <li><strong class="text-char">Weight loss</strong> — any drop since the last weighing; 5% or more is urgent. It's the earliest sign of illness.</li>
-        <li><strong class="text-char">Not thriving</strong> — growing at less than half the rate of others the same age.</li>
-        <li><strong class="text-char">Low birth weight</strong> — lambs under 3 kg, kids under 2.5 kg, calves under 25 kg.</li>
-        <li><strong class="text-char">Twins &amp; triplets</strong> — about 15% and 33% losses against 10% for singles.</li>
-        <li><strong class="text-char">Due / overdue</strong> — from mating dates (147 days sheep, 150 goats, 283 cattle).</li>
-        <li><strong class="text-char">Pregnancy scans</strong> — twins, triplets and empties.</li>
-        <li><strong class="text-char">Inbreeding</strong> — parents that are close family on the pedigree.</li>
-        <li><strong class="text-char">Withdrawal periods</strong> — don't sell or slaughter before the date.</li>
-        <li><strong class="text-char">Missed drinks</strong> (KraalTrac Watch) and <strong class="text-char">not seen</strong> — 60+ days unscanned; 120+ days is a warning.</li>
+        <li><strong class="text-char">Weight loss</strong>: any drop since the last weighing; 5% or more is urgent. It's the earliest sign of illness.</li>
+        <li><strong class="text-char">Not thriving</strong>: growing at less than half the rate of others the same age.</li>
+        <li><strong class="text-char">Low birth weight</strong>: lambs under 3 kg, kids under 2.5 kg, calves under 25 kg.</li>
+        <li><strong class="text-char">Twins &amp; triplets</strong>: about 15% and 33% losses against 10% for singles.</li>
+        <li><strong class="text-char">Due / overdue</strong>: from mating dates (147 days sheep, 150 goats, 283 cattle).</li>
+        <li><strong class="text-char">Pregnancy scans</strong>: twins, triplets and empties.</li>
+        <li><strong class="text-char">Inbreeding</strong>: parents that are close family on the pedigree.</li>
+        <li><strong class="text-char">Withdrawal periods</strong>: don't sell or slaughter before the date.</li>
+        <li><strong class="text-char">Missed drinks</strong> (KraalTrac Watch) and <strong class="text-char">not seen</strong>: 60+ days unscanned; 120+ days is a warning.</li>
         <li><strong class="text-char">Scanned after death/sale</strong>, <strong class="text-char">duplicate tags</strong> and <strong class="text-char">odd weight jumps</strong> (probably misreads).</li>
         <li><strong class="text-char">Weaning overdue</strong>, <strong class="text-char">lost lambs</strong>, <strong class="text-char">old ewes</strong> to cull, and <strong class="text-char">custom device limits</strong>.</li>
     </ul>
-    <p class="mt-4">Every farm's different — tell us if a limit doesn't suit yours and we'll tune it. This is a helping hand, not a vet.</p>
+    <p class="mt-4">Every farm's different. Tell us if a limit doesn't suit yours and we'll tune it. This is a helping hand, not a vet.</p>
 </details>
 @endsection

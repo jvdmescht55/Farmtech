@@ -9,7 +9,7 @@
         <div class="rounded-[24px] bg-char text-sand p-7 sm:p-8">
             <p class="eyebrow text-sand/50">Easiest way</p>
             <div class="font-headline text-4xl mt-2">Pair a device</div>
-            <p class="text-sand/70 mt-3">Switch it on. It shows a 6-digit code — type it here. The device collects its own key. Sommer easy.</p>
+            <p class="text-sand/70 mt-3">Switch it on. It shows a 6-digit code. Type it here. The device collects its own key. Sommer easy.</p>
             <form method="POST" action="{{ route('rfid.readers.pair') }}" class="mt-6 space-y-3">
                 @csrf
                 <input type="hidden" name="kind" value="handheld">
@@ -20,7 +20,7 @@
 
         <details class="panel p-6">
             <summary class="cursor-pointer font-medium">No signal in the kraal? Upload the file instead</summary>
-            <p class="text-sm text-stone mt-3">The KraalTrac keeps every read. Plug it in and upload the session file — any column order works.</p>
+            <p class="text-sm text-stone mt-3">The KraalTrac keeps every read. Plug it in and upload the session file. Any column order works.</p>
             <form method="POST" action="{{ route('rfid.sync.upload') }}" enctype="multipart/form-data" class="mt-4 space-y-3">
                 @csrf
                 <input type="file" name="file" accept=".xlsx,.csv,.txt,.tsv" required class="field !h-auto py-2.5 file:mr-3 file:rounded-full file:border-0 file:bg-char file:text-sand file:px-4 file:py-1.5 file:text-sm">
@@ -65,7 +65,7 @@
                 </div>
                 <div x-show="show" x-cloak class="px-6 py-5 border-t border-hairline text-sm">
                     @if (isset($shownToken[$r->id]))
-                        <div class="font-medium text-ochre-dark">Copy it now — we only show it once.</div>
+                        <div class="font-medium text-ochre-dark">Copy it now. We only show it once.</div>
                         <code class="mt-2 block break-all font-num bg-white border border-hairline rounded-xl px-4 py-3 select-all">{{ $shownToken[$r->id] }}</code>
                     @else
                         <p class="text-stone">Keys are only shown once. Click <strong class="text-char">New key</strong> to connect the device again (the old key stops working).</p>
@@ -78,7 +78,7 @@
 
         <details class="rounded-[24px] bg-char text-sand p-6 sm:p-7" x-data="{ tab: 'pair' }">
             <summary class="cursor-pointer font-medium">For builders: how devices talk to Herd Manager</summary>
-            <p class="text-sm text-sand/70 mt-4 leading-relaxed">Everything goes to <span class="font-num">farmtech.site</span> over HTTPS — no local server or XAMPP needed. Reads show up on the live view within seconds, and the reply tells the device who it read and any alerts.</p>
+            <p class="text-sm text-sand/70 mt-4 leading-relaxed">Everything goes to <span class="font-num">farmtech.site</span> over HTTPS. No local server or XAMPP needed. Reads show up on the live view within seconds, and the reply tells the device who it read and any alerts.</p>
             <div class="mt-4 text-xs text-sand/60 font-num space-y-1">
                 <div>POST {{ url('/api/v1/scans') }}</div><div>GET&nbsp; {{ url('/api/v1/ping') }}</div><div>Authorization: Bearer &lt;device key&gt;</div>
             </div>
@@ -93,7 +93,7 @@
    show 482 913 on the LCD; farmer types it here
 
 POST /api/v1/pair/status  {"secret":"…"}   (every 5 s)
-→ {"status":"paired","token":"…"}   once — save it in flash</code></pre>
+→ {"status":"paired","token":"…"}   once. Save it in flash</code></pre>
 <pre x-show="tab === 'json'" x-cloak class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-[11px] leading-relaxed font-num"><code>{"compact": true,
  "device": {"battery": 87, "firmware": "1.0.3"},
  "scans": [{"ref": "KT-000124", "id": "250912", "eid": "982000123456789",

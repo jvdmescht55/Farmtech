@@ -18,7 +18,18 @@ class SiteController extends Controller
 
     public function store()
     {
-        return view('site.store', ['provinces' => self::PROVINCES, 'listings' => \App\Models\StoreListing::published()->get()]);
+        return view('site.store', [
+            'provinces' => self::PROVINCES,
+            'listings' => \App\Models\StoreListing::published()->get(),
+            // The flagship is always marketed; while its listing is a draft, people reserve instead of order.
+            'pro' => \App\Models\StoreListing::where('slug', 'kraaltrac-pro')->first(),
+        ]);
+    }
+
+    /** Custom builds: what we can make for one farm, and how to plug in your own gadget. */
+    public function custom()
+    {
+        return view('site.custom');
     }
 
     public function product(\App\Models\StoreListing $listing)

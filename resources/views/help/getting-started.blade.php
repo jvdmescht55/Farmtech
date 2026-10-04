@@ -7,5 +7,5 @@
     @include('help._step', ['n' => 5, 'title' => 'Check what needs you', 'body' => '<p>The Overview and Alerts tab tell you about weight loss, lambs due, low birth weights and more — with what to do about each.</p>', 'cta' => [route('rfid.alerts'), 'See alerts']])
 @endsection
 @section('aside')
-    <div class="rounded-[24px] bg-char text-sand p-6"><div class="font-headline text-3xl">Made for your farm</div><p class="text-sand/70 mt-2 text-sm">Something doesn't fit the way you work? Tell us — we shape Herd Manager around the farmers using it.</p><a href="{{ route('herd.suggest') }}" class="btn-light btn-sm mt-4">Suggest something</a></div>
+    <div class="rounded-[24px] bg-char text-sand p-6"><div class="font-headline text-3xl">Made for your farm</div><p class="text-sand/70 mt-2 text-sm">Something doesn't fit the way you work? Tell us. We shape Herd Manager around the farmers using it.</p><a href="{{ route('herd.suggest') }}" class="btn-light btn-sm mt-4">Suggest something</a></div>
 @endsection

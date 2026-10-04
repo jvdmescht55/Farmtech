@@ -10,7 +10,7 @@
 @section('content')
 @if (isset($shownToken[$device->id]))
     <div class="mb-6 rounded-2xl border border-ochre/30 bg-ochre/5 p-5 text-sm">
-        <div class="font-medium text-ochre-dark">Device key — copy it now, we only show it once:</div>
+        <div class="font-medium text-ochre-dark">Device key. Copy it now, we only show it once:</div>
         <code class="mt-2 block break-all font-num select-all">{{ $shownToken[$device->id] }}</code>
     </div>
 @endif

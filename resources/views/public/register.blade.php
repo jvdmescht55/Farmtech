@@ -1,4 +1,4 @@
-<x-public-shell title="Activate — Herd Manager" image="windpomp-storm" headline="Lekker!<br><em class='text-ochre-light'>Let's get going.</em>">
+<x-public-shell title="Activate · Herd Manager" image="flock-bakkie" headline="Let's get your<br>herd in.">
     <h1 class="h-display text-6xl">Activate your device</h1>
     <p class="text-stone mt-3">Create your account with the code from the card in your device's box.</p>
 

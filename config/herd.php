@@ -31,8 +31,8 @@ return [
         ],
         'custom' => [
             'name' => 'Custom devices',
-            'kind' => 'Your own sensors & gadgets',
-            'tagline' => 'Built your own tank gauge, rain meter or cold-room sensor? Plug it in here — you choose what it measures and when to get worried.',
+            'kind' => 'Trough, fence, pump & cold-room sensors',
+            'tagline' => 'Keep an eye on the trough, fence, borehole pump or vaccine fridge. We can build the sensor for you, or you plug in one you built. You set when to get worried.',
             'route' => 'custom.index',
             'image' => 'karoo-mist',
             'device_kind' => 'custom',

@@ -35,7 +35,7 @@
                         @if ($s->reply)<div class="mt-3 rounded-xl bg-sand-light px-4 py-3 text-sm"><span class="text-stone">Farmtech:</span> {{ $s->reply }}</div>@endif
                     </li>
                 @empty
-                    <li class="px-6 py-16 text-center text-stone">Nothing yet — your ideas will show here with what we're doing about them.</li>
+                    <li class="px-6 py-16 text-center text-stone">Nothing yet. Your ideas will show here with what we're doing about them.</li>
                 @endforelse
             </ul>
         </div>

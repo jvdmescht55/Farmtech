@@ -8,12 +8,12 @@
         <img src="{{ Img::url('golden-valley', true) }}" srcset="{{ Img::srcset('golden-valley') }}" sizes="50vw" alt="{{ Img::alt('golden-valley') }}" class="absolute inset-0 h-full w-full object-cover img-grade">
         <div class="absolute inset-0 bg-gradient-to-t from-char/80 to-transparent"></div>
         <div class="absolute bottom-12 left-12 right-12 text-sand">
-            <h2 class="h-display text-6xl">Boer maak 'n plan.<br><em class="text-ochre-light">We help build it.</em></h2>
+            <h2 class="h-display text-6xl">Boer maak 'n plan.<br>We help build it.</h2>
         </div>
     </div>
     <div class="px-5 sm:px-12 lg:px-20 pt-32 pb-24 flex flex-col justify-center" x-data="{ kind: '{{ old('kind', request('kind', 'device')) }}' }">
         <p class="eyebrow">Made for your farm</p>
-        <h1 class="h-display mt-5 text-[clamp(3rem,6vw,5rem)]">What should we build <em>for you?</em></h1>
+        <h1 class="h-display mt-5 text-[clamp(3rem,6vw,5rem)]">What should we build for you?</h1>
         <p class="mt-5 text-lg text-stone max-w-md">Every device and every feature in Herd Manager started with a farmer saying "I wish…". Tell us yours.</p>
         @if (session('suggest_ok'))
             <div class="mt-10 rounded-[24px] bg-white border border-hairline p-10"><div class="font-headline text-4xl">Lekker, thanks!</div><p class="mt-3 text-stone">We read every one and we'll get back to you.</p></div>

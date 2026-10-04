@@ -1,6 +1,6 @@
 @extends('layouts.rfid')
 @section('title', $animal->visual_id)
-@section('eyebrow'){{ $animal->bio('label') }} · {{ $animal->sexLabel() }}{{ $animal->breed ? ' · '.$animal->breed : '' }}{{ $animal->status !== 'active' ? ' · '.\App\Models\Animal::STATUSES[$animal->status] : '' }} @endsection
+@section('eyebrow'){{ collect([$animal->bio('label'), $animal->sexLabel(), $animal->breed, $animal->status !== 'active' ? \App\Models\Animal::STATUSES[$animal->status] : null])->filter(fn ($v) => $v && $v !== '—')->implode(' · ') }} @endsection
 @section('actions')
     <a href="{{ route('rfid.events.index', ['animal' => $animal->id]) }}" class="btn-secondary">+ Record</a>
     <a href="{{ route('rfid.animals.edit', $animal) }}" class="btn-primary">Edit</a>
@@ -19,10 +19,10 @@
 @endforeach
 
 <div class="panel grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-hairline overflow-hidden {{ $alerts->isNotEmpty() ? 'mt-6' : '' }}">
-    <div class="p-5"><div class="kpi-label">Weight now</div><div class="mt-2 font-headline text-4xl num">{{ $weights->last()?->weight_kg ?? '—' }}<span class="text-sm text-stone font-ui ml-1">kg</span></div></div>
-    <div class="p-5"><div class="kpi-label">Daily gain</div><div class="mt-2 font-headline text-4xl num {{ ($recentAdg ?? 0) < 0 ? 'down' : '' }}">{{ $recentAdg !== null ? ($recentAdg > 0 ? '+' : '').$recentAdg : '—' }}<span class="text-sm text-stone font-ui ml-1">g</span></div></div>
-    <div class="p-5"><div class="kpi-label">Age</div><div class="mt-2 font-headline text-4xl">{{ $animal->ageLabel() ?? '—' }}</div></div>
-    <div class="p-5"><div class="kpi-label">Tag (EID)</div><div class="mt-3 font-num text-sm">{{ $animal->eid ?? '—' }}</div></div>
+    <div class="p-5"><div class="kpi-label">Weight now</div><div class="mt-2 font-headline text-4xl num">@if ($weights->last()){{ $weights->last()->weight_kg }}<span class="text-sm text-stone font-ui ml-1">kg</span>@else<span class="font-ui text-base text-stone">Not weighed yet</span>@endif</div></div>
+    <div class="p-5"><div class="kpi-label">Daily gain</div><div class="mt-2 font-headline text-4xl num {{ ($recentAdg ?? 0) < 0 ? 'down' : '' }}">@if ($recentAdg !== null){{ ($recentAdg > 0 ? '+' : '').$recentAdg }}<span class="text-sm text-stone font-ui ml-1">g</span>@else<span class="font-ui text-base text-stone">Needs 2 weighings</span>@endif</div></div>
+    <div class="p-5"><div class="kpi-label">Age</div><div class="mt-2 font-headline text-4xl">{!! $animal->ageLabel() ?? '<span class="font-ui text-base text-stone">Birth date unknown</span>' !!}</div></div>
+    <div class="p-5"><div class="kpi-label">Tag (EID)</div><div class="mt-3 font-num text-sm">{!! e($animal->eid) ?: '<span class="font-ui text-stone">No tag yet</span>' !!}</div></div>
     <div class="p-5 col-span-2 md:col-span-1"><div class="kpi-label">{{ $water ? 'Last drink' : 'Last seen' }}</div><div class="mt-3 text-sm">{{ $water ? $water->last_at->diffForHumans().' · '.$water->last_point : ($animal->last_seen_at?->diffForHumans() ?? 'Never') }}</div></div>
 </div>
 
@@ -39,8 +39,8 @@
             <div class="p-6"><x-chart.line :points="$weightPoints" unit="kg" :height="240" :target="$target" /></div>
             @if ($target)
                 <div class="px-6 pb-6 -mt-2 text-sm">
-                    @if ($daysToTarget === 0)<span class="chip bg-ochre/15 text-ochre-dark">Ready — already over {{ $target }} kg</span>
-                    @elseif ($daysToTarget === null)<span class="chip bg-[#B0452F]/10 text-[#B0452F]">Not growing right now — can't say when</span>
+                    @if ($daysToTarget === 0)<span class="chip bg-ochre/15 text-ochre-dark">Ready. Already over {{ $target }} kg</span>
+                    @elseif ($daysToTarget === null)<span class="chip bg-[#B0452F]/10 text-[#B0452F]">Not growing right now. Can't say when</span>
                     @else<span class="chip bg-sand-deep text-char">Hits {{ $target }} kg in about {{ $daysToTarget }} days · {{ now()->addDays($daysToTarget)->format('j M Y') }}</span>@endif
                 </div>
             @endif
@@ -102,7 +102,7 @@
                 <div class="mt-5 rounded-xl bg-sand-light px-5 py-4 text-sm">
                     <div class="font-medium">Why {{ $tier->tier ?? 'unknown' }}?</div>
                     <ol class="mt-1 list-decimal list-inside text-stone space-y-0.5">@foreach ($tier->reasons as $r)<li>{{ $r }}</li>@endforeach</ol>
-                    @if ($tier->official && $computed->tier && $computed->tier !== $tier->tier)<p class="mt-2 text-ochre-dark">The pedigree on its own gives <strong>{{ $computed->tier }}</strong> — double-check the recorded tier.</p>@endif
+                    @if ($tier->official && $computed->tier && $computed->tier !== $tier->tier)<p class="mt-2 text-ochre-dark">The pedigree on its own gives <strong>{{ $computed->tier }}</strong>: double-check the recorded tier.</p>@endif
                 </div>
             </div>
         </details>

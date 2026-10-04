@@ -1,4 +1,4 @@
-<x-public-shell title="Sign in — Herd Manager">
+<x-public-shell title="Sign in · Herd Manager">
     <h1 class="h-display text-6xl">Sign in</h1>
     <p class="text-stone mt-3">Your herd's waiting. Let's see how they're doing.</p>
 
@@ -17,7 +17,7 @@
 
     <div class="mt-12 pt-8 border-t border-hairline">
         <div class="font-medium">New KraalTrac in your hands?</div>
-        <p class="text-sm text-stone mt-1">The activation card is in the box. Use it to create your account — takes a minute.</p>
+        <p class="text-sm text-stone mt-1">The activation card is in the box. Use it to create your account. Takes a minute.</p>
         <a href="{{ route('register') }}" class="btn-line btn-sm mt-5">Activate my device →</a>
     </div>
 </x-public-shell>

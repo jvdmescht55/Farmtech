@@ -9,12 +9,12 @@
     </div>
     <div class="px-5 sm:px-12 lg:px-20 pt-36 pb-24 flex flex-col justify-center">
         <p class="eyebrow">Contact</p>
-        <h1 class="h-display mt-6 text-[clamp(3rem,6vw,5.5rem)]">Howzit. <em>Let's chat.</em></h1>
+        <h1 class="h-display mt-6 text-[clamp(3rem,6vw,5.5rem)]">Howzit. Let's talk.</h1>
         <p class="mt-6 text-lg text-stone max-w-md">Questions about a device, the software, or getting your stud records in? We usually reply within one working day.</p>
 
         @if (session('lead_ok'))
             <div class="mt-12 rounded-[24px] bg-white border border-hairline p-10">
-                <div class="font-headline text-4xl">Baie dankie — got it.</div>
+                <div class="font-headline text-4xl">Baie dankie. Got it.</div>
                 <p class="mt-3 text-stone">We'll get back to you soon.</p>
             </div>
         @else

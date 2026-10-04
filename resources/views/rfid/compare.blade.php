@@ -50,7 +50,7 @@
         </div>
         <div class="panel p-6 self-start text-sm text-stone leading-relaxed space-y-3">
             <div class="panel-title text-char">How to read this</div>
-            <p><strong class="text-char">Lifetime gain</strong> is the average grams per day from first to last weighing — the best single way to compare rams by their lambs.</p>
+            <p><strong class="text-char">Lifetime gain</strong> is the average grams per day from first to last weighing. The best single way to compare rams by their lambs.</p>
             <p><strong class="text-char">100-day weight</strong> is worked out from the weighings either side of day 100, so lambs of different ages compare fairly.</p>
             <p>Small groups (fewer than 5) can fool you. A wide spread means the average isn't the whole story.</p>
         </div>
@@ -83,7 +83,7 @@
                 </div>
             @endforeach
         </div>
-        @if ($onlyA || $onlyB)<p class="mt-4 text-sm text-stone">{{ $onlyA }} only in the earlier one, {{ $onlyB }} only in the later one — they're left out.</p>@endif
+        @if ($onlyA || $onlyB)<p class="mt-4 text-sm text-stone">{{ $onlyA }} only in the earlier one, {{ $onlyB }} only in the later one. They're left out.</p>@endif
 
         <div class="panel mt-6 overflow-hidden">
             <div class="overflow-x-auto">

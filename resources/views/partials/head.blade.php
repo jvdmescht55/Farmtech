@@ -1,6 +1,6 @@
 @php
-    $metaTitle = trim($__env->yieldContent('title')) ?: 'Farmtech — Know every animal. Every kilo.';
-    $metaDesc = trim($__env->yieldContent('description')) ?: 'KraalTrac EID readers & weigh loggers with Herd Manager — weights, growth, alerts and auction books that build themselves. Built in South Africa, for South African farms.';
+    $metaTitle = trim($__env->yieldContent('title')) ?: 'Farmtech. Know every animal. Every kilo.';
+    $metaDesc = trim($__env->yieldContent('description')) ?: 'KraalTrac EID readers & weigh loggers with Herd Manager. Weights, growth, alerts and auction books that build themselves. Built in South Africa, for South African farms.';
 @endphp
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

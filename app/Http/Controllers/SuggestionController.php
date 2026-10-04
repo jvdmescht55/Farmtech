@@ -27,6 +27,8 @@ class SuggestionController extends Controller
         ]);
         Suggestion::create($data + ['user_id' => $user?->id, 'name' => $data['name'] ?? $user?->name, 'email' => $data['email'] ?? $user?->email]);
 
-        return back()->with('status', 'Lekker, thanks! We read every one — you\'ll see the status change here as we work on it.')->with('suggest_ok', true);
+        $back = str_contains(url()->previous(), '/custom') ? redirect()->to(strtok(url()->previous(), '#').'#ask') : back();
+
+        return $back->with('status', 'Lekker, thanks! We read every one — you\'ll see the status change here as we work on it.')->with('suggest_ok', true);
     }
 }

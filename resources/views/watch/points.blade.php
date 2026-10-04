@@ -38,7 +38,7 @@
                     <div><label class="field-label">Shout after (hours)</label><input name="alert_hours" type="number" min="2" max="240" value="{{ $p->point->alert_hours }}" placeholder="24" class="field font-num"></div>
                 </div>
                 @if (isset($shownToken[$p->point->id]))
-                    <div class="mt-4 rounded-xl bg-ochre/10 p-4 text-sm"><div class="font-medium text-ochre-dark">Device key — copy it now, we only show it once:</div><code class="mt-1 block break-all font-num select-all">{{ $shownToken[$p->point->id] }}</code></div>
+                    <div class="mt-4 rounded-xl bg-ochre/10 p-4 text-sm"><div class="font-medium text-ochre-dark">Device key. Copy it now, we only show it once:</div><code class="mt-1 block break-all font-num select-all">{{ $shownToken[$p->point->id] }}</code></div>
                 @endif
                 <div class="mt-4 flex justify-end"><button class="btn-line btn-sm">Save</button></div>
             </form>

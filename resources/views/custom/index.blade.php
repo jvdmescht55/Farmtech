@@ -1,6 +1,6 @@
 @extends('layouts.custom')
 @section('title', 'Custom devices')
-@section('eyebrow')Your own sensors — your farm, your rules @endsection
+@section('eyebrow')Trough, fence, pump, cold room: anything you want to keep an eye on @endsection
 
 @section('content')
 <div class="grid xl:grid-cols-5 gap-6">
@@ -21,35 +21,72 @@
                 </div>
             </a>
         @empty
-            <div class="panel p-10">
-                <div class="font-headline text-4xl">Built something lekker?</div>
-                <p class="text-stone mt-3 max-w-xl">A tank-level float, a rain gauge, a cold-room thermometer, a borehole pump counter — if it has a microcontroller and Wi-Fi, it can report here. Name it, say what it measures, set the limits that matter on <em>your</em> farm, and we'll shout when something's off.</p>
+            <div class="panel overflow-hidden">
+                <div class="p-7 sm:p-9">
+                    <div class="font-headline text-4xl">Keep an eye on more than the animals.</div>
+                    <p class="text-stone mt-3 max-w-xl">A custom device is any gadget on the farm that sends a number: a trough level, fence voltage, pump flow, a cold-room temperature. Herd Manager draws the graph and warns you when it goes outside your limits.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 border-t border-hairline">
+                    <a href="{{ route('site.custom') }}#examples" class="p-7 sm:p-8 hover:bg-sand-light transition border-b sm:border-b-0 sm:border-r border-hairline">
+                        <div class="text-sm text-ochre-dark font-medium">Don't have one?</div>
+                        <div class="font-headline text-2xl mt-1">We'll build it for you</div>
+                        <p class="text-sm text-stone mt-2">See what we can build and ask for a quote. No obligation.</p>
+                        <span class="mt-4 inline-block text-sm font-medium link-u">See custom builds →</span>
+                    </a>
+                    <div class="p-7 sm:p-8">
+                        <div class="text-sm text-ochre-dark font-medium">Built your own?</div>
+                        <div class="font-headline text-2xl mt-1">Add it on the right</div>
+                        <p class="text-sm text-stone mt-2">Pick a starting point, give it a name and you'll get a key for your ESP32 or Arduino.</p>
+                        <a href="{{ route('help.show', 'custom') }}" class="mt-4 inline-block text-sm font-medium link-u">How to connect it →</a>
+                    </div>
+                </div>
             </div>
         @endforelse
     </div>
 
     <div class="xl:col-span-2">
-        <form method="POST" action="{{ route('custom.store') }}" class="panel p-6 sm:p-7 space-y-4" x-data="{ rows: [{}, {}] }">
+        <form method="POST" action="{{ route('custom.store') }}" class="panel p-6 sm:p-7 space-y-4"
+              x-data="{
+                name: '', location: '',
+                rows: [{ label: '', unit: '', min: '', max: '' }, { label: '', unit: '', min: '', max: '' }],
+                presets: {
+                    'Trough level': [['Trough. North camp', 'At the windpomp'], [['Level', '%', 25, ''], ['Battery', 'V', 11.5, '']]],
+                    'Fence voltage': [['Fence. Lambing camp', ''], [['Voltage', 'kV', 4, '']]],
+                    'Pump flow': [['Borehole pump', ''], [['Flow', 'm³/h', 0.2, ''], ['Battery', 'V', 11.5, '']]],
+                    'Cold room': [['Vaccine fridge', 'Store room'], [['Temperature', '°C', 2, 8]]],
+                    'Rain gauge': [['Rain gauge. Home camp', ''], [['Rain', 'mm', '', '']]],
+                },
+                use(k) { const [[n, l], m] = this.presets[k]; this.name = n; this.location = l; this.rows = m.map(([label, unit, min, max]) => ({ label, unit, min, max })); },
+              }">
             @csrf
             <div class="font-headline text-3xl">Add a device</div>
-            <div><label class="field-label">What is it?</label><input name="name" required placeholder="e.g. Tank — Bergkamp" class="field"></div>
-            <div><label class="field-label">Where (optional)</label><input name="location" placeholder="e.g. Next to the windpomp" class="field"></div>
             <div>
-                <label class="field-label">What does it measure? <span class="font-normal text-stone-light">Limits are optional — we alert outside them.</span></label>
+                <div class="field-label">Start from</div>
+                <div class="flex flex-wrap gap-1.5">
+                    <template x-for="k in Object.keys(presets)" :key="k">
+                        <button type="button" @click="use(k)" class="chip h-8 px-3 border border-hairline bg-white hover:border-char" :class="name && presets[k][0][0] === name && 'bg-char text-sand border-char'" x-text="k"></button>
+                    </template>
+                </div>
+            </div>
+            <div><label class="field-label">What is it?</label><input name="name" x-model="name" required placeholder="e.g. Tank — Bergkamp" class="field"></div>
+            <div><label class="field-label">Where (optional)</label><input name="location" x-model="location" placeholder="e.g. Next to the windpomp" class="field"></div>
+            <div>
+                <div class="field-label">What does it measure? <span class="font-normal text-stone-light">We warn you below min or above max.</span></div>
+                <div class="grid grid-cols-[1fr_4.5rem_4.5rem_4.5rem] gap-2 text-[11px] text-stone px-1 mb-1"><span>Reading</span><span>Unit</span><span>Min</span><span>Max</span></div>
                 <div class="space-y-2">
                     <template x-for="(row, i) in rows" :key="i">
                         <div class="grid grid-cols-[1fr_4.5rem_4.5rem_4.5rem] gap-2">
-                            <input :name="`metrics[${i}][label]`" placeholder="Tank level" class="field !h-10 text-sm">
-                            <input :name="`metrics[${i}][unit]`" placeholder="%" class="field !h-10 text-sm">
-                            <input :name="`metrics[${i}][min]`" type="number" step="any" placeholder="min" class="field !h-10 text-sm font-num">
-                            <input :name="`metrics[${i}][max]`" type="number" step="any" placeholder="max" class="field !h-10 text-sm font-num">
+                            <input :name="`metrics[${i}][label]`" x-model="row.label" aria-label="Reading name" placeholder="Tank level" class="field !h-10 text-sm">
+                            <input :name="`metrics[${i}][unit]`" x-model="row.unit" aria-label="Unit" placeholder="%" class="field !h-10 text-sm">
+                            <input :name="`metrics[${i}][min]`" x-model="row.min" aria-label="Minimum" type="number" step="any" placeholder="min" class="field !h-10 text-sm font-num">
+                            <input :name="`metrics[${i}][max]`" x-model="row.max" aria-label="Maximum" type="number" step="any" placeholder="max" class="field !h-10 text-sm font-num">
                         </div>
                     </template>
                 </div>
-                <button type="button" @click="rows.push({})" x-show="rows.length < 8" class="mt-2 text-sm link-u">+ another reading</button>
+                <button type="button" @click="rows.push({ label: '', unit: '', min: '', max: '' })" x-show="rows.length < 8" class="mt-2 text-sm link-u">+ another reading</button>
             </div>
             <button class="btn-dark w-full">Add &amp; get its key</button>
-            <p class="text-xs text-stone">Don't fancy building it yourself? <a href="{{ route('herd.suggest') }}" class="link-u text-char">Tell us what you need</a> — we build custom devices for farms too.</p>
+            <p class="text-xs text-stone">Rather have us build it? <a href="{{ route('site.custom') }}#ask" class="link-u text-char">Ask for a custom build</a>.</p>
         </form>
     </div>
 </div>

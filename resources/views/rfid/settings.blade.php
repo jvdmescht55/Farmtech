@@ -34,7 +34,7 @@
             @forelse ($user->licenses as $l)
                 <li class="flex justify-between gap-3"><span>{{ $l->moduleLabel() }} <span class="font-mono text-xs text-stone-light">{{ $l->code }}</span></span><span class="text-xs {{ $l->revoked_at ? 'text-[#B0452F]' : 'text-[#3F7A3A]' }}">{{ $l->revoked_at ? 'Revoked' : 'Active since '.$l->activated_at?->format('d/m/Y') }}</span></li>
             @empty
-                <li class="text-stone">{{ $user->isAdmin() ? 'Admin account — everything unlocked.' : 'No device activated yet.' }}</li>
+                <li class="text-stone">{{ $user->isAdmin() ? 'Admin account. Everything unlocked.' : 'No device activated yet.' }}</li>
             @endforelse
         </ul>
         <a href="{{ route('account.activate') }}" class="inline-block mt-4 text-sm font-medium text-char hover:underline">Activate another device →</a>

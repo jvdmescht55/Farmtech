@@ -7,7 +7,7 @@
 @if ($points->isEmpty())
     <div class="panel p-8 sm:p-10">
         <h2 class="font-headline text-4xl">Put your first Watch up, oom.</h2>
-        <p class="text-stone mt-2 max-w-2xl">Mount the KraalTrac Watch at a trough or gate, switch it on, and pair it with the 6-digit code on its screen. Every tagged animal that walks past gets counted — and if one skips the water, you'll hear about it.</p>
+        <p class="text-stone mt-2 max-w-2xl">Mount the KraalTrac Watch at a trough or gate, switch it on, and pair it with the 6-digit code on its screen. Every tagged animal that walks past gets counted. And if one skips the water, you'll hear about it.</p>
         <a href="{{ route('watch.points') }}" class="btn-dark mt-8">Pair a Watch</a>
     </div>
 @else
@@ -31,7 +31,7 @@
                         <span class="text-sm num w-24 text-right down">{{ round($w->hours_since) }} h ago</span>
                     </li>
                 @empty
-                    <li class="px-6 py-12 text-center"><div class="font-headline text-3xl">Everyone's had a drink.</div><p class="text-stone text-sm mt-1">Lekker — nothing to chase today.</p></li>
+                    <li class="px-6 py-12 text-center"><div class="font-headline text-3xl">Everyone's had a drink.</div><p class="text-stone text-sm mt-1">Lekker. Nothing to chase today.</p></li>
                 @endforelse
             </ul>
         </div>

@@ -5,9 +5,9 @@
 @php
     $overHero = trim($__env->yieldContent('hero_dark')) !== '';
     $nav = [
-        [route('site.store').'#devices', 'Devices'],
-        [route('site.store').'#software', 'Software'],
-        [route('site.store').'#possible', 'What\'s possible'],
+        [route('site.store').'#pro', 'KraalTrac Pro'],
+        [route('site.store').'#software', 'Herd Manager'],
+        [route('site.custom'), 'Custom builds'],
         [route('site.contact'), 'Contact'],
     ];
 @endphp
@@ -15,7 +15,7 @@
 <html lang="en-ZA">
 <head>
     @include('partials.head')
-    <title>@yield('title', 'Farmtech — Know your herd')</title>
+    <title>@yield('title', 'Farmtech — Ken jou kudde')</title>
     <meta name="description" content="@yield('description', 'Farmtech KraalTrac devices and Herd Manager herd software — scan in the kraal, see every kilo, every animal, every day. Built around your farm.')">
     @stack('head')
 </head>
@@ -42,10 +42,10 @@
         </nav>
 
         <div class="hidden md:flex items-center gap-5 shrink-0">
-            <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">Herd Manager →</a>
+            <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="text-[15px] opacity-80 hover:opacity-100">{{ auth()->check() ? 'My herd' : 'Sign in' }}</a>
             <a href="{{ route('site.store') }}#order"
                class="btn btn-sm"
-               :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Get yours</a>
+               :class="(scrolled || {{ $overHero ? 'false' : 'true' }}) ? 'bg-char text-sand hover:bg-char-soft' : 'bg-white text-char hover:bg-sand'">Reserve yours</a>
         </div>
 
         <button type="button" class="md:hidden ml-auto -mr-2 w-11 h-11 grid place-items-center" @click="menu = !menu" :aria-expanded="menu" aria-label="Menu">
@@ -67,7 +67,7 @@
             @endforeach
         </nav>
         <div class="mt-auto pt-10 grid gap-3">
-            <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Get yours</a>
+            <a href="{{ route('site.store') }}#order" @click="menu = false" class="btn-dark w-full">Reserve yours</a>
             <a href="{{ auth()->check() ? route('herd.hub') : route('landing') }}" class="btn-line w-full">Herd Manager →</a>
         </div>
     </div>
@@ -82,8 +82,8 @@
     <div class="wrap pt-24 pb-10" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px))">
         <div class="grid lg:grid-cols-12 gap-12">
             <div class="lg:col-span-6">
-                <div class="font-headline text-sand text-[clamp(3.5rem,9vw,8rem)] leading-[0.85] tracking-[-0.03em]">Know your<br><em class="text-ochre-light">herd.</em></div>
-                <p class="mt-6 max-w-sm">KraalTrac devices &amp; Herd Manager. Built for the kraal, not the office — and built around your farm.</p>
+                <div class="font-headline text-sand text-[clamp(3.5rem,9vw,8rem)] leading-[0.85] tracking-[-0.03em]">Ken jou<br>kudde.</div>
+                <p class="mt-6 max-w-sm">KraalTrac devices &amp; Herd Manager. Built for the kraal, not the office. And built around your farm.</p>
             </div>
             <div class="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-8 text-[15px]">
                 <div>
@@ -92,6 +92,7 @@
                         <li><a class="hover:text-sand" href="{{ route('portal') }}">Home</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.store') }}">Store</a></li>
                         <li><a class="hover:text-sand" href="{{ route('landing') }}">Herd Manager</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.custom') }}">Custom builds</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.suggest') }}">Suggest a device</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.contact') }}">Contact</a></li>
                     </ul>

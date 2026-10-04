@@ -1,6 +1,6 @@
 @extends('layouts.rfid')
 @section('title', 'Live view')
-@section('eyebrow')Scan in the kraal — it pops up here within seconds @endsection
+@section('eyebrow')Scan in the kraal. It pops up here within seconds @endsection
 
 @section('content')
 <div x-data="liveFeed('{{ route('rfid.live.feed') }}')" x-init="start()">

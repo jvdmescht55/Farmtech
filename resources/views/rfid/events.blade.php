@@ -38,7 +38,7 @@
                         <td class="text-right"><form method="POST" action="{{ route('rfid.events.destroy', $e) }}" x-data @submit="if (!$el.dataset.ok) { $event.preventDefault(); $el.dataset.ok = 1; $el.querySelector('button').textContent = 'Sure?'; }">@csrf @method('DELETE')<button class="text-xs text-stone hover:text-[#B0452F]">Remove</button></form></td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="py-16 text-center text-stone">Nothing recorded yet. Start on the right — or bring a CSV in under Import & export.</td></tr>
+                    <tr><td colspan="6" class="py-16 text-center text-stone">Nothing recorded yet. Use “Record something”, or bring a CSV in under Import & export.</td></tr>
                 @endforelse
                 </tbody>
             </table>

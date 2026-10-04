@@ -12,7 +12,7 @@
 @endif
 @if ($errors->any())
     <div class="mb-6 rounded-2xl border border-[#B0452F]/25 bg-[#B0452F]/5 px-5 py-4 text-sm text-[#B0452F]">
-        <div class="font-medium mb-1">Eish — something needs fixing:</div>
+        <div class="font-medium mb-1">Eish. Something needs fixing:</div>
         @foreach ($errors->all() as $e)<div>{{ $e }}</div>@endforeach
     </div>
 @endif

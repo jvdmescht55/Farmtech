@@ -73,7 +73,7 @@
                     <label class="relative block">
                         <span class="sr-only">Find an animal</span>
                         @include('partials.icon', ['name' => 'search', 'class' => 'w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-sand/40'])
-                        <input type="search" name="q" placeholder="Find an animal…" autocomplete="off" class="w-44 focus:w-64 transition-[width] duration-300 h-9 rounded-full bg-white/8 border border-white/10 pl-9 pr-3 text-sm text-sand placeholder:text-sand/40 focus:outline-none focus:border-white/40">
+                        <input type="search" name="q" placeholder="Find an animal…" autocomplete="off" class="w-44 focus:w-64 transition-[width] duration-300 h-9 rounded-full bg-white/10 border border-white/10 pl-9 pr-3 text-sm text-sand placeholder:text-sand/40 focus:outline-none focus:border-white/40">
                     </label>
                 </form>
             @endif
@@ -132,8 +132,8 @@
             <div class="absolute inset-0 bg-gradient-to-t from-char/85 via-char/35 to-char/5"></div>
             <div class="relative w-full p-6 sm:p-9 flex flex-wrap items-end justify-between gap-5">
                 <div class="min-w-0">
-                    @hasSection('eyebrow')<p class="eyebrow !text-white/70 mb-3">@yield('eyebrow')</p>@endif
                     <h1 class="h-display text-[clamp(2.4rem,5vw,4rem)]">@yield('title', 'Herd Manager')</h1>
+                    @hasSection('eyebrow')<p class="mt-2 text-white/75 sm:text-lg max-w-xl">@yield('eyebrow')</p>@endif
                 </div>
                 <div class="flex flex-wrap items-center gap-2 on-photo">@yield('actions')</div>
             </div>
@@ -141,8 +141,8 @@
     @else
         <div class="flex flex-wrap items-end justify-between gap-6 mb-8">
             <div class="min-w-0">
-                @hasSection('eyebrow')<p class="eyebrow mb-3">@yield('eyebrow')</p>@endif
                 <h1 class="h-display text-[clamp(2.4rem,4.6vw,3.6rem)]">@yield('title', 'Herd Manager')</h1>
+                @hasSection('eyebrow')<p class="mt-2 text-stone sm:text-lg max-w-xl">@yield('eyebrow')</p>@endif
             </div>
             <div class="flex flex-wrap items-center gap-2">@yield('actions')</div>
         </div>

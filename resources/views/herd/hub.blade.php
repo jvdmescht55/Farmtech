@@ -22,7 +22,7 @@
         </div>
         <div class="pt-16 pb-14 sm:pt-24 sm:pb-20">
             <p class="eyebrow text-sand/60">Herd Manager · {{ $user->farm_name ?: 'your farm' }}</p>
-            <h1 class="h-display mt-5 text-[clamp(3rem,8vw,7rem)]">Howzit, <em class="text-ochre-light">{{ \Illuminate\Support\Str::before($user->name, ' ') }}.</em></h1>
+            <h1 class="h-display mt-5 text-[clamp(3rem,8vw,7rem)]">Howzit, {{ \Illuminate\Support\Str::before($user->name, ' ') }}.</h1>
             <div class="mt-10 flex flex-wrap gap-x-14 gap-y-6">
                 <div><div class="font-headline text-5xl num">{{ number_format($stats['animals']) }}</div><div class="text-sm text-sand/60 mt-1">head in the herd book</div></div>
                 <div><div class="font-headline text-5xl num">{{ $stats['devices'] }}</div><div class="text-sm text-sand/60 mt-1">devices connected</div></div>
@@ -36,8 +36,7 @@
     @include('partials.toast')
     <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
         <div>
-            <p class="eyebrow">Pick a device</p>
-            <h2 class="h-display mt-3 text-5xl">Where to, boet?</h2>
+            <h2 class="h-display mt-3 text-5xl">Your devices</h2>
         </div>
         <a href="{{ route('account.activate') }}" class="btn-line btn-sm">+ Activate a device</a>
     </div>
@@ -69,16 +68,15 @@
         <a href="{{ route('herd.suggest') }}" class="group rounded-[24px] bg-char text-sand p-8 sm:p-10 flex flex-col justify-between min-h-[15rem] hover:bg-char-soft transition-colors">
             <p class="eyebrow text-sand/50">Made for your farm</p>
             <div>
-                <div class="h-display text-4xl sm:text-5xl">Farm a bit differently? <em class="text-ochre-light">Tell us.</em></div>
+                <div class="h-display text-4xl sm:text-5xl">Farm a bit differently? Tell us.</div>
                 <p class="mt-3 text-sand/70 max-w-lg">Suggest a device, a feature, or ask us to build something just for your setup. Herd Manager grows around the farmers using it.</p>
             </div>
             <span class="mt-6 inline-flex items-center gap-3 font-medium">Make a suggestion <span class="transition-transform group-hover:translate-x-1">→</span></span>
         </a>
         <div class="panel p-8 sm:p-10 flex flex-col justify-between">
-            <p class="eyebrow">One herd book</p>
             <div>
                 <div class="h-display text-4xl">Every device, same animals.</div>
-                <p class="mt-3 text-stone max-w-lg">Weights from the KraalTrac Pro, water visits from the Watch, readings from your own gadgets — it all lands on the same animal pages and the same alerts. Switch sections any time from the menu at the top.</p>
+                <p class="mt-3 text-stone max-w-lg">Weights from the KraalTrac Pro, water visits from the Watch, readings from your own gadgets. It all lands on the same animal pages and the same alerts. Switch sections any time from the menu at the top.</p>
             </div>
             <a href="{{ route('rfid.animals.index') }}" class="mt-6 link-u self-start font-medium">Open the herd book →</a>
         </div>

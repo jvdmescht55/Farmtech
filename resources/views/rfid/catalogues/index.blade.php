@@ -1,6 +1,6 @@
 @extends('layouts.rfid')
 @section('title', 'Auction books')
-@section('eyebrow')Your veiling catalogue — lot numbers, pedigree and EBVs, ready to print @endsection
+@section('eyebrow')Your veiling catalogue. Lot numbers, pedigree and EBVs, ready to print @endsection
 
 @section('content')
 <div class="grid xl:grid-cols-5 gap-6">
@@ -17,7 +17,7 @@
         @empty
             <div class="panel p-10">
                 <div class="font-headline text-4xl">No auction books yet.</div>
-                <p class="text-stone mt-3 max-w-lg">Three steps and you're done: give it a name, pick the animals, number the lots. It prints in the same layout as the Logix sale catalogue — tiers, EBVs, lambing records and pedigree included.</p>
+                <p class="text-stone mt-3 max-w-lg">Three steps and you're done: give it a name, pick the animals, number the lots. It prints in the same layout as the Logix sale catalogue. Tiers, EBVs, lambing records and pedigree included.</p>
             </div>
         @endforelse
     </div>
@@ -25,7 +25,7 @@
     <div class="xl:col-span-2">
         <div class="rounded-[24px] bg-char text-sand p-7 sm:p-8">
             <div class="font-headline text-4xl">Make an auction book</div>
-            <p class="text-sand/70 mt-2">Start with the basics — you can change them later.</p>
+            <p class="text-sand/70 mt-2">Start with the basics. You can change them later.</p>
             <form method="POST" action="{{ route('rfid.catalogues.store') }}" class="mt-6 space-y-3">
                 @csrf
                 <input name="title" required placeholder="Name — e.g. Kenhardt Production Sale 2026" class="w-full h-12 rounded-xl bg-white text-char px-4 focus:outline-none focus:ring-4 focus:ring-ochre/40">

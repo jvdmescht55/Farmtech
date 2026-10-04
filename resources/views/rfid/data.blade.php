@@ -1,6 +1,6 @@
 @extends('layouts.rfid')
 @section('title', 'Import & export')
-@section('eyebrow')Throw in any CSV — we sort out where it goes @endsection
+@section('eyebrow')Throw in any CSV. We sort out where it goes @endsection
 @section('actions')<a href="{{ route('rfid.data.backup') }}" class="btn-primary">Full backup (.zip)</a>@endsection
 
 @section('content')
@@ -46,13 +46,13 @@
 
         <div class="panel p-6 sm:p-8">
             <h2 class="font-headline text-3xl">Bring data in</h2>
-            <p class="text-stone mt-2">Drop in an Excel sheet or CSV — from Logix, your own spreadsheet or the scale. We look at the columns and show you what we found before anything is saved.</p>
+            <p class="text-stone mt-2">Drop in an Excel sheet or CSV from Logix, your own spreadsheet or the scale. We look at the columns and show you what we found before anything is saved.</p>
             <form method="POST" action="{{ route('rfid.data.preview') }}" enctype="multipart/form-data" class="mt-6" x-data="{ name: '' }">
                 @csrf
                 <label class="block rounded-2xl border-2 border-dashed border-hairline hover:border-char transition p-10 text-center cursor-pointer">
                     <input type="file" name="file" accept=".xlsx,.csv,.txt,.tsv" required class="sr-only" @change="name = $event.target.files[0]?.name || ''; $nextTick(() => $el.closest('form').requestSubmit())">
                     <div class="font-headline text-3xl" x-text="name || 'Choose or drop a file'"></div>
-                    <div class="text-sm text-stone mt-2">Excel (.xlsx) or .csv — up to 20 MB. <a href="{{ route('help.show', 'excel') }}" class="underline">How?</a></div>
+                    <div class="text-sm text-stone mt-2">Excel (.xlsx) or .csv. Up to 20 MB. <a href="{{ route('help.show', 'excel') }}" class="underline">How?</a></div>
                 </label>
             </form>
             <div class="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
@@ -76,7 +76,7 @@
                 <textarea name="lines" rows="7" required placeholder="----BEGIN QUEUE----&#10;KT-3a9f-41|250912|982000123456789|birth|F|222435|220120|4.2|1790798104&#10;…&#10;----END QUEUE----" class="field font-num text-xs">{{ old('lines') }}</textarea>
                 <div class="flex flex-wrap items-center gap-3">
                     <button class="btn-dark">Save these records</button>
-                    <span class="text-xs text-stone">Pasting twice is safe — duplicates are skipped. <a href="{{ route('help.show', 'esp32') }}" class="underline">Step by step</a></span>
+                    <span class="text-xs text-stone">Pasting twice is safe. Duplicates are skipped. <a href="{{ route('help.show', 'esp32') }}" class="underline">Step by step</a></span>
                 </div>
             </form>
         </div>
@@ -101,7 +101,7 @@
         <div class="panel p-6 text-sm text-stone leading-relaxed">
             <div class="panel-title text-char mb-2">How we sort it</div>
             <p>Columns like <span class="font-num text-char">sire, dam, birth_date</span> → herd book. <span class="font-num text-char">weight/kg</span> with a tag or ID → weighings. <span class="font-num text-char">type + date</span> → records. You can always change it before importing.</p>
-            <p class="mt-3">The herd book export uses exactly the import columns — open it in Excel, edit, and bring it back in.</p><p class="mt-3">Your data is yours: export it any time. <a href="{{ route('legal.show', 'data') }}" class="link-u text-char">How we handle it</a>.</p>
+            <p class="mt-3">The herd book export uses exactly the import columns. Open it in Excel, edit, and bring it back in.</p><p class="mt-3">Your data is yours: export it any time. <a href="{{ route('legal.show', 'data') }}" class="link-u text-char">How we handle it</a>.</p>
         </div>
     </div>
 </div>

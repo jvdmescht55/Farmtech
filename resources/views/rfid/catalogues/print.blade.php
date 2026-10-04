@@ -125,7 +125,7 @@
     </table>
 
     <div class="legend">
-        <b>Status</b> — genetic tier from pedigree: SP = full stud; C / B = grading-up (one step above the weaker parent); CC = commercial/foundation.
+        <b>Status</b>: Genetic tier from pedigree: SP = full stud; C / B = grading-up (one step above the weaker parent); CC = commercial/foundation.
         Birth type in superscript: 01 single, 02 twin, 03 triplet. EBV accuracy (%) in superscript. REG = registered.
     </div>
     <div class="foot">

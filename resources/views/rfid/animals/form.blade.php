@@ -19,7 +19,7 @@
                 <input name="visual_id" x-model="id" required placeholder="{{ $suggestedId ?? 'e.g. 250912' }}" class="app-input font-mono">
                 @if (! $animal->exists && isset($suggestedId))
                     <button type="button" x-show="!id" @click="id = '{{ $suggestedId }}'" class="mt-1.5 text-xs link-u text-char">Use next birthday number {{ $suggestedId }}</button>
-                    <p x-show="id && /^\d{2}(0[1-9]|1[0-2])\d{2}$/.test(id)" class="mt-1.5 text-xs text-stone">Birthday number — birth month filled in for you.</p>
+                    <p x-show="id && /^\d{2}(0[1-9]|1[0-2])\d{2}$/.test(id)" class="mt-1.5 text-xs text-stone">Birthday number. Birth month filled in for you.</p>
                 @endif
             </div>
             <div><label class="app-label">Tag number (EID, 15 digits)</label><input name="eid" value="{{ $v('eid', $animal->eid) }}" inputmode="numeric" placeholder="982000123456789" class="app-input font-mono"></div>

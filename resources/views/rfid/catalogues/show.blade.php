@@ -35,7 +35,7 @@
                 </form>
             </div>
             @if ($lots->isEmpty())
-                <p class="px-6 py-12 text-center text-stone">No animals yet — pick them from the herd on the right.</p>
+                <p class="px-6 py-12 text-center text-stone">No animals yet. Pick them from the herd on the right.</p>
             @else
                 <form method="POST" action="{{ route('rfid.catalogues.lots.update', $catalogue) }}">
                     @csrf @method('PUT')

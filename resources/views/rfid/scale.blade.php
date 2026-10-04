@@ -19,7 +19,7 @@
             <template x-if="supported">
                 <div class="mt-7">
                     <ol class="grid sm:grid-cols-3 gap-3 text-sm">
-                        @foreach (['Plug the scale into this computer with its USB cable.', 'Click the button and pick the scale (often “USB Serial” or “CP210x”).', 'Wait for the tick. Done — the scale is empty and ready.'] as $i => $t)
+                        @foreach (['Plug the scale into this computer with its USB cable.', 'Click the button and pick the scale (often “USB Serial” or “CP210x”).', 'Wait for the tick. Done. The scale is empty and ready.'] as $i => $t)
                             <li class="rounded-2xl bg-sand-light p-4 flex sm:block items-start gap-3"><span class="font-headline text-2xl leading-none text-ochre">{{ $i + 1 }}</span><p class="sm:mt-1 text-stone">{{ $t }}</p></li>
                         @endforeach
                     </ol>
@@ -43,12 +43,12 @@
                     </div>
 
                     <div x-show="step === 'done'" x-cloak class="mt-6 rounded-2xl bg-[#3F7A3A]/10 border border-[#3F7A3A]/30 p-5">
-                        <div class="font-headline text-3xl">Lekker — all in.</div>
+                        <div class="font-headline text-3xl">Lekker. All in.</div>
                         <p class="text-sm mt-1"><span x-text="saved"></span> new records saved<span x-show="dupes">, <span x-text="dupes"></span> were already here</span>. The scale's memory is cleared.</p>
                         <a href="{{ route('rfid.weighings.index') }}" class="btn-dark btn-sm mt-4">See the weigh day →</a>
                     </div>
                     <div x-show="step === 'empty'" x-cloak class="mt-6 rounded-2xl bg-sand-light p-5">
-                        <div class="font-headline text-2xl">Nothing waiting — all caught up.</div>
+                        <div class="font-headline text-2xl">Nothing waiting. All caught up.</div>
                         <p class="text-sm text-stone mt-1">The scale already sent everything (probably over Wi-Fi).</p>
                     </div>
                     <div x-show="step === 'error'" x-cloak class="mt-6 rounded-2xl bg-[#B0452F]/10 border border-[#B0452F]/30 p-5">
@@ -72,10 +72,10 @@
         <div class="panel p-6 sm:p-7">
             <div class="flex items-center gap-3">
                 <span class="w-10 h-10 rounded-2xl bg-ochre text-char grid place-items-center">@include('partials.icon', ['name' => 'wifi', 'class' => 'w-5 h-5'])</span>
-                <h3 class="font-headline text-2xl">Wi-Fi — automatic</h3>
+                <h3 class="font-headline text-2xl">Automatic over Wi-Fi</h3>
             </div>
             <p class="text-sm text-stone mt-3">In range of a saved network, the scale sends every record by itself within a minute and clears it once the website says “saved”.</p>
-            <p class="text-sm mt-3 rounded-xl bg-sand-light p-3"><strong>Tip:</strong> no Wi-Fi at the kraal? Add your phone's hotspot to the scale's networks — it syncs through your phone's data while you work.</p>
+            <p class="text-sm mt-3 rounded-xl bg-sand-light p-3"><strong>Tip:</strong> no Wi-Fi at the kraal? Add your phone's hotspot to the scale's networks. It syncs through your phone's data while you work.</p>
             <ul class="mt-4 divide-y divide-hairline text-sm">
                 @forelse ($scales as $s)
                     @php($fresh = $s->last_synced_at && $s->last_synced_at->gt(now()->subMinutes(10)))
@@ -85,7 +85,7 @@
                         <span class="text-xs text-stone">{{ $s->last_synced_at ? 'seen '.$s->last_synced_at->diffForHumans() : 'never synced' }}</span>
                     </li>
                 @empty
-                    <li class="py-2.5 text-stone">No scale paired yet. <a class="underline" href="{{ route('rfid.readers.index') }}">Pair it</a> — it takes a minute.</li>
+                    <li class="py-2.5 text-stone">No scale paired yet. <a class="underline" href="{{ route('rfid.readers.index') }}">Pair it</a>. It takes a minute.</li>
                 @endforelse
             </ul>
         </div>

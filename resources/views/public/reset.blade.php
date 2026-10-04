@@ -1,4 +1,4 @@
-<x-public-shell title="New password — Herd Manager" image="koppie-dawn" headline="New day,<br><em class='text-ochre-light'>new password.</em>">
+<x-public-shell title="New password · Herd Manager" image="koppie-dawn" headline="New day,<br>new password.">
     <h1 class="h-display text-6xl">New password</h1>
     <div class="mt-10">@include('partials.flash')</div>
     <form method="POST" action="{{ route('password.update') }}" class="space-y-5">

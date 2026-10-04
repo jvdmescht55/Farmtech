@@ -61,7 +61,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SiteController::class, 'gateway'])->name('portal');
 Route::get('/sitemap.xml', function () {
-    $urls = collect([route('portal'), route('site.store'), route('landing'), route('site.suggest'), route('site.contact'), route('legal.index')])
+    $urls = collect([route('portal'), route('site.store'), route('site.custom'), route('landing'), route('site.suggest'), route('site.contact'), route('legal.index')])
         ->merge(collect(array_keys(\App\Http\Controllers\LegalController::PAGES))->map(fn ($p) => route('legal.show', $p)))
         ->merge(\App\Models\StoreListing::published()->get()->map(fn ($l) => route('site.product', $l)));
 
@@ -69,6 +69,7 @@ Route::get('/sitemap.xml', function () {
 })->name('sitemap');
 Route::get('/store', [SiteController::class, 'store'])->name('site.store');
 Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.interest')->middleware('throttle:6,1');
+Route::get('/custom', [SiteController::class, 'custom'])->name('site.custom');
 Route::get('/store/{listing}', [SiteController::class, 'product'])->name('site.product');
 Route::get('/suggest', [SiteController::class, 'suggest'])->name('site.suggest');
 Route::post('/suggest', [SuggestionController::class, 'store'])->name('site.suggest.store')->middleware('throttle:6,1');

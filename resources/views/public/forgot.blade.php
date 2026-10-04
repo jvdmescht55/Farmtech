@@ -1,4 +1,4 @@
-<x-public-shell title="Forgot password — Herd Manager" image="karoo-mist" headline="Happens to<br><em class='text-ochre-light'>the best of us.</em>">
+<x-public-shell title="Forgot password · Herd Manager" image="karoo-mist" headline="Happens to<br>the best of us.">
     <h1 class="h-display text-6xl">Forgot your password?</h1>
     <p class="text-stone mt-3">Type your email and we'll send a link to choose a new one.</p>
     <div class="mt-10">@include('partials.flash')</div>

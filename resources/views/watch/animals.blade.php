@@ -22,7 +22,7 @@
                     <td class="text-right">@if ($w->missed)<span class="chip bg-[#B0452F]/10 text-[#B0452F]">Over {{ $w->limit }} h</span>@endif</td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="py-16 text-center text-stone">{{ request('show') === 'missed' ? 'Nobody\'s missed a drink. Lekker.' : 'No visits yet — once a Watch is up, animals show here as they come to drink.' }}</td></tr>
+                <tr><td colspan="7" class="py-16 text-center text-stone">{{ request('show') === 'missed' ? 'Nobody\'s missed a drink. Lekker.' : 'No visits yet. Once a Watch is up, animals show here as they come to drink.' }}</td></tr>
             @endforelse
             </tbody>
         </table>

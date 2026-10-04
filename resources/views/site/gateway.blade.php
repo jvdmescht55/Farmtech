@@ -18,10 +18,10 @@
     </header>
 
     <main class="flex-1 flex flex-col lg:flex-row">
-        <h1 class="sr-only">Farmtech — KraalTrac devices and Herd Manager herd software</h1>
+        <h1 class="sr-only">Farmtech: KraalTrac devices and Herd Manager herd software</h1>
         @foreach ([
-            [route('site.store'), 'windpomp-pink', '01', 'Store', 'KraalTrac devices — and everything they can do for your herd.', 'Go to the store'],
-            [auth()->check() ? route('herd.hub') : route('landing'), 'windpomp-storm', '02', 'Herd Manager', 'Your herd online — weights, growth, water, alerts and catalogues. Shaped around your farm.', auth()->check() ? 'Open my herd' : 'Sign in'],
+            [route('site.store'), 'windpomp-pink', '01', 'Store', 'KraalTrac devices, and everything they can do for your herd.', 'Go to the store'],
+            [auth()->check() ? route('herd.hub') : route('landing'), 'windpomp-storm', '02', 'Herd Manager', 'Your herd online. Weights, growth, water, alerts and catalogues. Shaped around your farm.', auth()->check() ? 'Open my herd' : 'Sign in'],
         ] as $i => [$href, $img, $n, $title, $body, $cta])
             <a href="{{ $href }}" class="group relative flex-1 min-h-[50svh] lg:min-h-[100svh] overflow-hidden lg:transition-[flex-grow] lg:duration-700 lg:ease-[cubic-bezier(.2,.7,.2,1)] lg:hover:grow-[1.35] {{ $i ? 'lg:border-l border-white/10' : '' }}">
                 <img src="{{ Img::url($img, true) }}" srcset="{{ Img::srcset($img) }}" sizes="(min-width: 1024px) 60vw, 100vw" alt="{{ Img::alt($img) }}"
@@ -45,7 +45,7 @@
 
     <footer class="absolute inset-x-0 bottom-0 z-10 pointer-events-none" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
         <div class="wrap h-10 flex items-center justify-between text-[11px] text-sand/35">
-            <span class="hidden sm:inline">Know your herd. Lekker boer.</span>
+            <span class="hidden sm:inline font-headline text-base text-sand/60">Ken jou kudde.</span>
             <x-photo-credits :keys="['windpomp-pink', 'windpomp-storm']" dark class="pointer-events-auto !text-sand/35 text-right max-w-[60%] sm:max-w-none" />
         </div>
     </footer>
