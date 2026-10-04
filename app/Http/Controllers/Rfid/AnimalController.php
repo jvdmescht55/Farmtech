@@ -40,6 +40,11 @@ class AnimalController extends Controller
             })
             ->when($request->filled('tier'), fn ($c) => $c->filter(fn ($a) => ($a->computed_tier ?? '?') === $request->input('tier')));
 
+        // Quick-find from the header: one match → straight to that animal.
+        if ($request->boolean('go') && $animals->count() === 1) {
+            return redirect()->route('rfid.animals.show', $animals->first());
+        }
+
         $sort = $request->input('sort', 'visual_id');
         $animals = (match ($sort) {
             'birth_date' => $animals->sortByDesc(fn ($a) => $a->birth_date?->timestamp ?? 0),

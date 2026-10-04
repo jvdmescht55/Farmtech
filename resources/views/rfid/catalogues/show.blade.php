@@ -46,13 +46,13 @@
                             @foreach ($lots as $lot)
                                 @php($a = $lot->animal)
                                 <tr>
-                                    <td><input type="number" name="lots[{{ $lot->id }}][position]" value="{{ $lot->position }}" class="app-input !px-2 !py-1 w-16 font-mono text-xs"></td>
-                                    <td><input name="lots[{{ $lot->id }}][lot_number]" value="{{ $lot->lot_number }}" class="app-input !px-2 !py-1 w-20 font-mono font-bold"></td>
+                                    <td><input type="number" name="lots[{{ $lot->id }}][position]" aria-label="Order of {{ $a->visual_id }}" value="{{ $lot->position }}" class="app-input !px-2 !py-1 w-16 font-mono text-xs"></td>
+                                    <td><input name="lots[{{ $lot->id }}][lot_number]" aria-label="Lot number for {{ $a->visual_id }}" value="{{ $lot->lot_number }}" class="app-input !px-2 !py-1 w-20 font-mono font-bold"></td>
                                     <td class="whitespace-nowrap"><a href="{{ route('rfid.animals.show', $a) }}" class="font-mono font-medium text-char hover:underline">{{ $a->visual_id }}</a><div class="text-[11px] text-stone-light">{{ $a->sexLabel() }}{{ $a->registered ? ' · REG' : '' }}</div></td>
                                     <td><x-tier :tier="$tiers->resolve($a)->tier" /></td>
                                     <td class="whitespace-nowrap text-xs">{{ $a->birth_date?->format('d/m/Y') ?? '—' }}</td>
                                     <td class="font-mono text-[11px] whitespace-nowrap">{{ $a->sire?->visual_id ?? '?' }}<br>{{ $a->dam?->visual_id ?? '?' }}</td>
-                                    <td><input name="lots[{{ $lot->id }}][comment]" value="{{ $lot->comment }}" class="app-input !py-1 text-xs min-w-[14rem]"></td>
+                                    <td><input name="lots[{{ $lot->id }}][comment]" aria-label="Comment for {{ $a->visual_id }}" value="{{ $lot->comment }}" class="app-input !py-1 text-xs min-w-[14rem]"></td>
                                     <td><button form="remove-{{ $lot->id }}" class="text-stone-light hover:text-[#B0452F] text-lg leading-none" title="Take out of the book">&times;</button></td>
                                 </tr>
                             @endforeach

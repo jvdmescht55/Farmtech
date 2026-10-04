@@ -22,7 +22,7 @@
             @else
                 <form method="POST" action="{{ route('site.interest') }}" class="grid sm:grid-cols-2 gap-4">
                     @csrf
-                    <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+                    <input type="text" name="website" aria-label="Leave empty" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
                     @if ($listing)<input type="hidden" name="listing" value="{{ $listing->id }}">@endif
                     <div class="sm:col-span-2"><label class="field-label" for="o-name">Name *</label><input id="o-name" name="name" value="{{ old('name') }}" required class="field"></div>
                     <div><label class="field-label" for="o-email">Email *</label><input id="o-email" type="email" name="email" value="{{ old('email') }}" required class="field"></div>

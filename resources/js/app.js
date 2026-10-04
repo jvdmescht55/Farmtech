@@ -396,5 +396,54 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
+// ── Sitewide polish ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Link every visible label to the field right after it (tap the label =
+    //    focus the field; screen readers read the label out).
+    let n = 0;
+    document.querySelectorAll('label:not([for])').forEach((label) => {
+        if (label.querySelector('input,select,textarea')) return;
+        const box = label.parentElement;
+        const field = box && [...box.querySelectorAll('input:not([type=hidden]),select,textarea')].find((f) => label.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING);
+        if (!field || field.labels?.length) return;
+        if (!field.id) field.id = `f-${++n}-${field.name || 'field'}`.replace(/[^\w-]/g, '_');
+        label.htmlFor = field.id;
+    });
+});
+
+// 2. "Saving…" on every POST form so nobody double-submits a weigh day.
+document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if ((form.method || '').toLowerCase() !== 'post' || form.target === '_blank' || form.hasAttribute('data-no-busy')) return;
+    setTimeout(() => {
+        if (e.defaultPrevented) return;
+        const btn = e.submitter || form.querySelector('button:not([type=button]),[type=submit]');
+        if (!btn || btn.dataset.busy) return;
+        btn.dataset.busy = '1';
+        btn.setAttribute('aria-busy', 'true');
+        btn.classList.add('is-busy');
+        window.farmtechProgress?.start();
+        setTimeout(() => { delete btn.dataset.busy; btn.removeAttribute('aria-busy'); btn.classList.remove('is-busy'); window.farmtechProgress?.done(); }, 8000);
+    }, 0);
+});
+
+// 3. A thin ochre bar while the next page loads.
+window.farmtechProgress = (() => {
+    let bar, timer;
+    const el = () => bar ??= Object.assign(document.body.appendChild(document.createElement('div')), { className: 'nav-progress' });
+    return {
+        start() { const b = el(); clearTimeout(timer); b.style.opacity = '1'; b.style.transform = 'scaleX(.08)'; requestAnimationFrame(() => { b.style.transform = 'scaleX(.72)'; }); },
+        done() { const b = el(); b.style.transform = 'scaleX(1)'; timer = setTimeout(() => { b.style.opacity = '0'; b.style.transform = 'scaleX(0)'; }, 250); },
+    };
+})();
+document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank' || a.hasAttribute('download')) return;
+    const url = new URL(a.href, location.href);
+    if (url.origin !== location.origin || url.hash && url.pathname === location.pathname || /\/(export|backup|template|firmware|print)/.test(url.pathname)) return;
+    window.farmtechProgress.start();
+});
+window.addEventListener('pageshow', () => window.farmtechProgress.done());
+
 // Start last, so every alpine:init listener above (tour, countup…) is registered first.
 Alpine.start();

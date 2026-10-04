@@ -36,7 +36,35 @@ class HerdAlerts
     /** @return Collection<int, array> */
     public function forUser(int $userId, bool $includeDismissed = false): Collection
     {
-        return self::$memo[$userId.'|'.(int) $includeDismissed] ??= $this->compute($userId, $includeDismissed);
+        return self::$memo[$userId.'|'.(int) $includeDismissed] ??= \Illuminate\Support\Facades\Cache::remember(
+            'herd-alerts:'.$userId.':'.(int) $includeDismissed.':'.$this->fingerprint($userId),
+            now()->addHours(2),
+            fn () => $this->compute($userId, $includeDismissed),
+        );
+    }
+
+    /**
+     * Changes whenever anything the rules look at changes (new scans, edited
+     * animals or records, dismissals, device readings) and every hour, for the
+     * time-based rules ("hasn't drunk in 24 h", "due this week"). Five cheap
+     * MAX() queries instead of re-running every rule on every page view.
+     */
+    private function fingerprint(int $userId): string
+    {
+        $db = \Illuminate\Support\Facades\DB::class;
+
+        return md5(implode('|', [
+            now()->format('YmdH'),
+            $db::table('scans')->where('user_id', $userId)->max('id'),
+            $db::table('animals')->where('user_id', $userId)->max('updated_at'),
+            $db::table('animals')->where('user_id', $userId)->count(),
+            $db::table('animal_events')->where('user_id', $userId)->max('updated_at'),
+            $db::table('animal_events')->where('user_id', $userId)->count(),
+            $db::table('alert_dismissals')->where('user_id', $userId)->max('updated_at'),
+            $db::table('alert_dismissals')->where('user_id', $userId)->count(),
+            $db::table('device_readings')->whereIn('reader_id', $db::table('readers')->where('user_id', $userId)->select('id'))->max('id'),
+            $db::table('readers')->where('user_id', $userId)->max('updated_at'),
+        ]));
     }
 
     private function compute(int $userId, bool $includeDismissed): Collection

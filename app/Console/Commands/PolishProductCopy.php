@@ -14,7 +14,7 @@ class PolishProductCopy extends Command
 
     public function handle(): int
     {
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.api_key');
         $model = config('services.gemini.model');
 
         if (!$apiKey) {

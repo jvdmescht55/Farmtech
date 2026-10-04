@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /app
+Disallow: /admin
+Disallow: /api
+Disallow: /activate
+
+Sitemap: https://farmtech.site/sitemap.xml

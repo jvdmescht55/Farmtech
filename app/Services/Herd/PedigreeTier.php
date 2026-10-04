@@ -34,9 +34,12 @@ class PedigreeTier
         return $all;
     }
 
+    /** @var array<string, TierResult> per-request memo — a big herd shares most ancestors */
+    private array $memo = [];
+
     public function resolve(Animal $animal): TierResult
     {
-        return $this->walk($animal, 0, []);
+        return $this->memo[$animal->id.'@'.$animal->updated_at?->timestamp.'|'.$animal->tier.'|'.$animal->sire_id.'|'.$animal->dam_id] ??= $this->walk($animal, 0, []);
     }
 
     /** Computed from the parents, ignoring any official tier stored on the animal itself. */

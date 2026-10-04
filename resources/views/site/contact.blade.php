@@ -20,7 +20,7 @@
         @else
             <form method="POST" action="{{ route('site.contact') }}" class="mt-12 grid sm:grid-cols-2 gap-4 max-w-xl">
                 @csrf
-                <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+                <input type="text" name="website" aria-label="Leave empty" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
                 <div class="sm:col-span-2"><label class="field-label" for="c-name">Name *</label><input id="c-name" name="name" value="{{ old('name') }}" required class="field"></div>
                 <div><label class="field-label" for="c-email">Email *</label><input id="c-email" type="email" name="email" value="{{ old('email') }}" required class="field"></div>
                 <div><label class="field-label" for="c-phone">Cellphone</label><input id="c-phone" name="phone" value="{{ old('phone') }}" class="field"></div>

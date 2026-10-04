@@ -29,12 +29,13 @@
     $photo = trim($__env->yieldContent('photo')) ?: ($photos[request()->route()?->getName()] ?? null);
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-ZA">
 <head>
     @include('partials.head')
     <title>@yield('title', 'Herd Manager') — {{ $current ? config("herd.modules.$current.name") : 'Herd Manager' }} · Farmtech</title>
 </head>
 <body class="bg-sand text-char font-ui antialiased min-h-screen bg-[radial-gradient(120%_60%_at_50%_0%,#EFE8DA_0%,#F4F1EA_55%)] bg-no-repeat" x-data="{ sheet: false }" :class="sheet && 'overflow-hidden'" @keydown.escape.window="sheet = false">
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-full focus:bg-ochre focus:text-char focus:px-5 focus:py-3 focus:text-sm">Skip to content</a>
 <header class="sticky top-0 z-40 bg-char text-sand" style="padding-top: env(safe-area-inset-top, 0px)">
     <div class="wrap h-16 flex items-center gap-3">
         <a href="{{ route('herd.hub') }}" class="flex items-baseline gap-1.5 shrink-0" title="All devices">
@@ -65,6 +66,17 @@
         </div>
 
         <div class="ml-auto flex items-center gap-1">
+            @if ($u->hasModule('rfid'))
+                {{-- Quick-find: tag, ID or name from anywhere --}}
+                <form method="GET" action="{{ route('rfid.animals.index') }}" role="search" class="hidden md:block">
+                    <input type="hidden" name="go" value="1">
+                    <label class="relative block">
+                        <span class="sr-only">Find an animal</span>
+                        @include('partials.icon', ['name' => 'search', 'class' => 'w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-sand/40'])
+                        <input type="search" name="q" placeholder="Find an animal…" autocomplete="off" class="w-44 focus:w-64 transition-[width] duration-300 h-9 rounded-full bg-white/8 border border-white/10 pl-9 pr-3 text-sm text-sand placeholder:text-sand/40 focus:outline-none focus:border-white/40">
+                    </label>
+                </form>
+            @endif
             <a href="{{ route('help.index') }}" class="hidden lg:inline-flex items-center gap-2 rounded-full px-3 h-9 text-sm text-sand/70 hover:text-sand hover:bg-white/5">@include('partials.icon', ['name' => 'help'])Help</a>
             <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
                 <button type="button" @click="open = !open" :aria-expanded="open" class="flex items-center gap-2 rounded-full pl-1 pr-1 md:pr-3 h-10 hover:bg-white/5" aria-label="Account">
@@ -112,7 +124,7 @@
     @endif
 </header>
 
-<main class="wrap pt-6 sm:pt-10 {{ $nav ? 'pb-28 lg:pb-14' : 'pb-14' }}">
+<main id="main" class="wrap pt-6 sm:pt-10 {{ $nav ? 'pb-28 lg:pb-14' : 'pb-14' }}">
     @if ($photo)
         {{-- Photo header --}}
         <div class="relative overflow-hidden rounded-[28px] bg-char text-white mb-8 min-h-[190px] sm:min-h-[240px] flex items-end">
@@ -182,6 +194,15 @@
             <div class="font-headline text-3xl">{{ $current ? config("herd.modules.$current.name") : 'Herd Manager' }}</div>
             <button type="button" @click="sheet = false" class="w-10 h-10 rounded-full bg-white border border-hairline grid place-items-center text-xl" aria-label="Close">×</button>
         </div>
+        @if ($u->hasModule('rfid'))
+            <form method="GET" action="{{ route('rfid.animals.index') }}" role="search" class="mb-4">
+                <input type="hidden" name="go" value="1">
+                <label class="relative block"><span class="sr-only">Find an animal</span>
+                    @include('partials.icon', ['name' => 'search', 'class' => 'w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-stone'])
+                    <input type="search" name="q" placeholder="Find an animal — tag, ID or name" class="field !rounded-full pl-11">
+                </label>
+            </form>
+        @endif
         <div class="grid grid-cols-3 gap-2">
             @foreach (array_merge($nav, $navMore) as $t)
                 <a href="{{ $t['href'] }}" class="relative rounded-2xl p-3 h-24 flex flex-col justify-between border {{ $t['on'] ? 'bg-char text-sand border-char' : 'bg-white border-hairline' }}">

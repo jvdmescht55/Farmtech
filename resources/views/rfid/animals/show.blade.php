@@ -32,7 +32,7 @@
             <div class="panel-head">
                 <div class="panel-title">Growth</div>
                 <form method="GET" class="flex items-center gap-2 text-sm">
-                    <input name="target" type="number" step="0.5" value="{{ $target }}" placeholder="Target kg" class="field !h-9 w-28 font-num">
+                    <input name="target" aria-label="Target weight in kg" type="number" step="0.5" value="{{ $target }}" placeholder="Target kg" class="field !h-9 w-28 font-num">
                     <button class="btn-line btn-sm">When?</button>
                 </form>
             </div>

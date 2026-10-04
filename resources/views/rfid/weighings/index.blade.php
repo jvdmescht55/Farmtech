@@ -28,7 +28,7 @@
                     <td class="text-right"><a href="{{ route('rfid.weighings.show', $s->date) }}" class="text-sm text-stone hover:text-char">Open →</a></td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="py-16 text-center text-stone">No weighings yet. Scan with your KraalTrac, upload a session file, or add a weight on an animal's page.</td></tr>
+                <tr><td colspan="8" class="py-16 text-center text-stone"><div class="font-headline text-3xl text-char">No weigh days yet.</div><p class="mt-2">Weigh with your KraalTrac and they land here by themselves.</p><a href="{{ route('rfid.data.scale') }}" class="btn-dark btn-sm mt-5">Sync the scale</a></td></tr>
             @endforelse
             </tbody>
         </table>

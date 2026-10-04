@@ -13,16 +13,16 @@
 
     {{-- Action list --}}
     <div class="bg-white border rounded-xl overflow-hidden">
-        <div class="px-5 py-4 border-b flex items-center justify-between">
+        <div class="px-5 py-4 border-b flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 class="font-semibold">What needs your attention</h2>
-            <span class="text-xs text-gray-400">computed {{ now()->format('d M H:i') }}</span>
+            <span class="text-xs text-gray-400 whitespace-nowrap">computed {{ now()->format('d M H:i') }}</span>
         </div>
         <ul class="divide-y">
             @forelse ($actions as [$level, $text, $url, $cta])
-                <li class="px-5 py-3 flex items-center gap-4 {{ $pri[$level][0] }} border-l-4">
+                <li class="px-5 py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-1 {{ $pri[$level][0] }} border-l-4">
                     <span class="w-2 h-2 rounded-full {{ $pri[$level][1] }} shrink-0"></span>
-                    <span class="text-sm flex-1">{{ $text }}</span>
-                    <a href="{{ $url }}" class="text-sm font-semibold text-farmtech-green whitespace-nowrap hover:underline">{{ $cta }} →</a>
+                    <span class="text-sm flex-1 min-w-0">{{ $text }}</span>
+                    <a href="{{ $url }}" class="text-sm font-semibold text-farmtech-green whitespace-nowrap hover:underline pl-6 sm:pl-0">{{ $cta }} →</a>
                 </li>
             @empty
                 <li class="px-5 py-6 text-sm text-gray-500">Nothing flagged — everything checks out.</li>

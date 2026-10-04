@@ -12,7 +12,7 @@
     ];
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-ZA">
 <head>
     @include('partials.head')
     <title>@yield('title', 'Farmtech — Know your herd')</title>
@@ -25,6 +25,7 @@
       @scroll.window.passive="scrolled = window.scrollY > 24"
       :class="menu && 'overflow-hidden'">
 
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-full focus:bg-ochre focus:text-char focus:px-5 focus:py-3 focus:text-sm">Skip to content</a>
 <header class="fixed inset-x-0 top-0 z-50 transition-colors duration-500"
         :class="(scrolled || menu || {{ $overHero ? 'false' : 'true' }}) ? 'bg-sand/85 backdrop-blur-xl border-b border-hairline text-char' : 'bg-transparent border-b border-transparent {{ $overHero ? 'text-white' : 'text-char' }}'"
         style="padding-top: env(safe-area-inset-top, 0px)">
@@ -73,7 +74,7 @@
 </div>
 
 
-<main>
+<main id="main">
     @yield('content')
 </main>
 

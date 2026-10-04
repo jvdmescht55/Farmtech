@@ -20,7 +20,7 @@
         @else
             <form method="POST" action="{{ route('site.suggest.store') }}" class="mt-10 space-y-4 max-w-xl">
                 @csrf
-                <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+                <input type="text" name="website" aria-label="Leave empty" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
                 <div class="grid gap-2">
                     @foreach (\App\Models\Suggestion::KINDS as $k => $l)
                         <label class="flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition bg-white" :class="kind === '{{ $k }}' ? 'border-char' : 'border-hairline'"><input type="radio" name="kind" value="{{ $k }}" x-model="kind" class="text-char"> {{ $l }}</label>

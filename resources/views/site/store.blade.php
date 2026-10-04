@@ -297,6 +297,24 @@
     </div>
 </section>
 
+{{-- Peace of mind --}}
+<section class="wrap py-20 sm:py-24">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-hairline rounded-[28px] overflow-hidden border border-hairline">
+        @foreach ([
+            ['check', '6-month warranty', 'If it breaks from normal kraal use, we fix or replace it.', route('legal.show', 'returns')],
+            ['start', '7-day cooling-off', 'Changed your mind? Send it back within 7 days of delivery.', route('legal.show', 'returns')],
+            ['help', 'Real people, local support', 'Talk to someone who knows a kraal — not a call centre.', route('site.contact')],
+            ['download', 'Your data stays yours', 'Export everything any time. POPIA-compliant, never sold.', route('legal.show', 'data')],
+        ] as [$icon, $t, $d, $href])
+            <a href="{{ $href }}" class="bg-sand p-7 sm:p-8 hover:bg-white transition group">
+                <span class="w-10 h-10 rounded-full border border-hairline grid place-items-center text-ochre group-hover:bg-char group-hover:text-ochre-light group-hover:border-char transition">@include('partials.icon', ['name' => $icon, 'class' => 'w-4 h-4'])</span>
+                <div class="mt-5 font-medium">{{ $t }}</div>
+                <p class="mt-1.5 text-sm text-stone leading-relaxed">{{ $d }}</p>
+            </a>
+        @endforeach
+    </div>
+</section>
+
 @include('site._order', ['heading' => 'Get yours', 'listing' => $listings->first()])
 @endsection
 
