@@ -1,42 +1,26 @@
 @extends('layouts.admin')
-
 @section('heading', 'Settings')
-
 @section('content')
-    <form action="{{ route('admin.settings.update') }}" method="POST" class="bg-white border rounded-xl p-6 max-w-lg space-y-4">
-        @csrf
-        @method('PUT')
-
-        <div>
-            <label class="block text-sm font-medium mb-1">Default Target Margin (%)</label>
-            <input type="number" step="0.1" name="target_margin_pct" value="{{ $settings['target_margin_pct'] }}" class="w-full border rounded-md px-3 py-2">
-        </div>
-        <div>
-            <label class="block text-sm font-medium mb-1">Air Freight Rate (USD / kg)</label>
-            <input type="number" step="0.01" name="air_freight_usd_per_kg" value="{{ $settings['air_freight_usd_per_kg'] }}" class="w-full border rounded-md px-3 py-2">
-        </div>
-        <div>
-            <label class="block text-sm font-medium mb-1">Clearing Agent Flat Fee (ZAR)</label>
-            <input type="number" step="0.01" name="clearing_agent_fee_zar" value="{{ $settings['clearing_agent_fee_zar'] }}" class="w-full border rounded-md px-3 py-2">
-        </div>
-        <div>
-            <label class="block text-sm font-medium mb-1">SARS VAT Rate (fraction, e.g. 0.15)</label>
-            <input type="number" step="0.01" name="vat_rate" value="{{ $settings['vat_rate'] }}" class="w-full border rounded-md px-3 py-2">
-        </div>
-        <div>
-            <label class="block text-sm font-medium mb-1">Support WhatsApp Number</label>
-            <input type="text" name="support_whatsapp" value="{{ $settings['support_whatsapp'] }}" placeholder="e.g. +27821234567" class="w-full border rounded-md px-3 py-2">
-            <p class="text-xs text-gray-400 mt-1">Digits only (optional leading +). Leave blank to hide the WhatsApp CTA on the storefront entirely.</p>
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium mb-1">AI Auto-Publish Cap (per category)</label>
-            <input type="number" step="1" min="0" max="20" name="auto_publish_cap_per_category" value="{{ $settings['auto_publish_cap_per_category'] }}" class="w-full border rounded-md px-3 py-2">
-            <p class="text-xs text-gray-400 mt-1">The AI auto-publish job (<code>products:auto-publish</code>, runs hourly) only publishes a listing on its own when it's fully confident and this category isn't already at its live cap. Set to 0 to disable auto-publishing entirely.</p>
-        </div>
-
-        <p class="text-xs text-gray-400">API keys (Gemini, exchange rate, payment gateways) are managed via the server's .env file, not here — they're too sensitive for a web form without additional encryption-at-rest work.</p>
-
-        <button type="submit" class="bg-farmtech-green text-white font-semibold px-6 py-2 rounded-md hover:bg-farmtech-green-dark">Save Settings</button>
+<div class="grid xl:grid-cols-5 gap-6 items-start">
+    <div class="xl:col-span-3 panel overflow-hidden">
+        <div class="panel-head"><div class="panel-title">Shop &amp; email setup</div></div>
+        <ul class="divide-y divide-hairline">
+            @foreach ($checks as [$label, $ok, $keys])
+                <li class="px-5 py-4 flex gap-4">
+                    <span class="mt-0.5 w-6 h-6 shrink-0 rounded-full grid place-items-center text-xs {{ $ok ? 'bg-[#3F7A3A] text-white' : 'bg-ochre/20 text-ochre-dark' }}">{{ $ok ? '✓' : '!' }}</span>
+                    <div class="min-w-0"><div class="font-medium">{{ $label }} <span class="text-sm font-normal {{ $ok ? 'text-[#3F7A3A]' : 'text-ochre-dark' }}">{{ $ok ? 'set up' : 'not set up yet' }}</span></div>
+                        <div class="text-xs text-stone mt-1 break-words">In <code>.env</code>: {{ $keys }}</div></div>
+                </li>
+            @endforeach
+        </ul>
+        <p class="px-5 py-4 text-sm text-stone bg-sand-light">These are kept in the server's <code>.env</code> file because they're secret. After changing it, run <code>php artisan config:cache</code>.</p>
+    </div>
+    <form action="{{ route('admin.settings.update') }}" method="POST" class="xl:col-span-2 panel p-6 space-y-4">
+        @csrf @method('PUT')
+        <div class="panel-title">Support WhatsApp</div>
+        <div><label class="field-label">WhatsApp number</label><input name="support_whatsapp" value="{{ $whatsapp }}" placeholder="+27821234567" class="field"></div>
+        <p class="text-xs text-stone">Digits only, optional leading +. Leave blank to hide it.</p>
+        <button class="btn-dark">Save</button>
     </form>
+</div>
 @endsection

@@ -1,6 +1,0 @@
-node_modules
-*.log
-public/uploads
-scraped_data*.json
-vetted_input.json
-sourcing_queries.json

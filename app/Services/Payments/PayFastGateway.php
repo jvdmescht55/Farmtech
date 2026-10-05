@@ -26,8 +26,8 @@ class PayFastGateway implements PaymentGatewayInterface
         $fields = [
             'merchant_id' => $merchantId,
             'merchant_key' => $merchantKey,
-            'return_url' => route('checkout.success', $order),
-            'cancel_url' => route('checkout.index'),
+            'return_url' => route('shop.thanks', $order->order_number),
+            'cancel_url' => route('shop.checkout'),
             'notify_url' => route('checkout.webhook.payfast'),
             'name_first' => $order->customer_name,
             'email_address' => $order->email,

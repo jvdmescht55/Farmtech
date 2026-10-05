@@ -1,29 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
-use App\Http\Controllers\Admin\SourceController as AdminSourceController;
-use App\Http\Controllers\Admin\SupplierOutreachController as AdminSupplierOutreachController;
-use App\Http\Controllers\Admin\SupplierOutreachDashboardController as AdminSupplierOutreachDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Storefront\CartController;
-use App\Http\Controllers\Storefront\CheckoutController;
-use App\Http\Controllers\Storefront\CompareController;
-use App\Http\Controllers\Storefront\EquipmentController;
-use App\Http\Controllers\Storefront\FinderController;
-use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\PaymentWebhookController;
-use App\Http\Controllers\Storefront\ProductController;
-use App\Http\Controllers\Storefront\AboutController;
-use App\Http\Controllers\Storefront\HowItWorksController;
-use App\Http\Controllers\Storefront\PolicyController;
-use App\Http\Controllers\Storefront\SearchController;
-use App\Http\Controllers\Storefront\SupportController;
-use App\Http\Controllers\Storefront\TrackOrderController;
 use App\Http\Controllers\Admin\InsightsController as AdminInsightsController;
 use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\ListingController as AdminListingController;
@@ -39,8 +21,8 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\Rfid\AnimalController as RfidAnimalController;
-use App\Http\Controllers\Rfid\CatalogueController as RfidCatalogueController;
 use App\Http\Controllers\Rfid\CompareController as RfidCompareController;
+use App\Http\Controllers\Rfid\CatalogueController as RfidCatalogueController;
 use App\Http\Controllers\Rfid\DraftController as RfidDraftController;
 use App\Http\Controllers\Rfid\LiveController as RfidLiveController;
 use App\Http\Controllers\Rfid\AlertController as RfidAlertController;
@@ -218,57 +200,7 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
     Route::put('/settings', [RfidSettingsController::class, 'update'])->name('settings.update');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Product storefront — admin-only preview while the catalogue is being
-| reworked (the public site is marketing only). Route names unchanged.
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('admin/shop')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('/search', [SearchController::class, 'index'])->name('search.index')->middleware('throttle:search');
-    Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest')->middleware('throttle:search');
-    Route::get('/category/{category}', [ProductController::class, 'category'])->name('category.show');
-    Route::get('/industry/{industry}', [ProductController::class, 'industry'])->name('industry.show');
-
-    // Short "Domain hub" URLs for the 4 industries — same real controller/view as
-    // /industry/{industry}, just a friendlier path. The industry route parameter
-    // keeps its stable backing value (agriculture/construction/etc.); only the
-    // display label and this URL alias changed for the new domain naming.
-    foreach (\App\Enums\Industry::cases() as $domainIndustry) {
-        Route::get('/'.$domainIndustry->domainSlug(), [ProductController::class, 'industry'])
-            ->defaults('industry', $domainIndustry->value)
-            ->name('domain.'.$domainIndustry->domainSlug());
-    }
-    Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
-    Route::get('/compare', [CompareController::class, 'data'])->name('compare.data')->middleware('throttle:search');
-    Route::get('/equipment', [EquipmentController::class, 'index'])->name('equipment.index');
-    Route::get('/finder', [FinderController::class, 'index'])->name('finder.index');
-
-    Route::middleware('throttle:cart')->group(function () {
-        Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-        Route::get('/cart/summary', [CartController::class, 'summary'])->name('cart.summary');
-        Route::post('/cart/{product}/add', [CartController::class, 'add'])->name('cart.add');
-        Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
-        Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
-
-        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-        Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    });
-
-    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
-
-    Route::get('/how-it-works', [HowItWorksController::class, 'index'])->name('how-it-works');
-    Route::get('/about', [AboutController::class, 'index'])->name('about.index');
-
-    Route::get('/track', [TrackOrderController::class, 'index'])->name('track.index');
-    Route::post('/track', [TrackOrderController::class, 'show'])->name('track.show')->middleware('throttle:track');
-
-    Route::get('/support', [SupportController::class, 'index'])->name('support.index');
-    Route::post('/support', [SupportController::class, 'store'])->name('support.store')->middleware('throttle:support');
-});
-
+// Payment gateway callbacks (shop checkout).
 Route::post('/webhooks/payfast', [PaymentWebhookController::class, 'handle'])
     ->defaults('gateway', 'payfast')->name('checkout.webhook.payfast');
 Route::post('/webhooks/ozow', [PaymentWebhookController::class, 'handle'])
@@ -303,25 +235,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Admin-only from here down — Staff gets a 403 (see the
         // manage-catalog/manage-settings/manage-users Gates in AppServiceProvider).
-        Route::middleware('can:manage-catalog')->group(function () {
-            Route::get('/source', [AdminSourceController::class, 'create'])->name('source.create');
-            Route::post('/source', [AdminSourceController::class, 'store'])->name('source.store');
-
-            Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
-            Route::get('/products/live', [AdminProductController::class, 'live'])->name('products.live');
-            Route::get('/products/{product}', [AdminProductController::class, 'show'])->name('products.show');
-            Route::match(['post', 'patch', 'put'], '/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
-            Route::post('/products/{product}/approve', [AdminProductController::class, 'approve'])->name('products.approve');
-            Route::post('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('products.reject');
-            Route::post('/products/{product}/archive', [AdminProductController::class, 'archive'])->name('products.archive');
-            Route::post('/products/{product}/relist', [AdminProductController::class, 'relist'])->name('products.relist');
-
-            Route::get('/suppliers/outreach', [AdminSupplierOutreachController::class, 'index'])->name('suppliers.outreach');
-
-            Route::get('/outreach', [AdminSupplierOutreachDashboardController::class, 'index'])->name('outreach.index');
-            Route::patch('/outreach/{product}', [AdminSupplierOutreachDashboardController::class, 'update'])->name('outreach.update');
-        });
-
         Route::get('/suggestions', [AdminSuggestionController::class, 'index'])->name('suggestions.index');
         Route::patch('/suggestions/{suggestion}', [AdminSuggestionController::class, 'update'])->name('suggestions.update');
 
@@ -359,7 +272,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::middleware('can:view-financials')->group(function () {
-            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+            Route::redirect('/dashboard', '/admin/insights')->name('dashboard');
             Route::get('/insights', [AdminInsightsController::class, 'index'])->name('insights');
         });
     });

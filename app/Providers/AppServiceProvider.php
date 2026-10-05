@@ -9,7 +9,6 @@ use App\Listeners\SendNewOrderAdminAlert;
 use App\Listeners\SendOrderPlacedEmail;
 use App\Listeners\SendOrderStatusUpdatedEmail;
 use App\Models\User;
-use App\Services\Cart;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -40,19 +39,6 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Paginator::defaultView('vendor.pagination.farmtech');
-
-        View::composer('layouts.storefront', function ($view) {
-            $whatsapp = \App\Models\Setting::get('support_whatsapp', '');
-
-            $view->with('cartSummary', app(Cart::class)->summary());
-            $view->with('whatsappUrl', $whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $whatsapp) : null);
-        });
-
-        // Sticky Top-5 Trending sub-bar on catalog pages — composed here so
-        // the query runs once, shared, rather than duplicated per controller.
-        View::composer(['storefront.products.category', 'storefront.products.industry', 'storefront.search'], function ($view) {
-            $view->with('trending', \App\Models\Product::query()->trending()->with('thumbnail')->limit(5)->get());
-        });
 
         Event::listen(OrderPlaced::class, SendOrderPlacedEmail::class);
         Event::listen(OrderPaid::class, SendNewOrderAdminAlert::class);

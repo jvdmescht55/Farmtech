@@ -135,7 +135,7 @@ class ShopController extends Controller
             try {
                 $handoff = \App\Services\Payments\PaymentGatewayFactory::make('payfast')->initiate($order);
 
-                return view('storefront.cart.gateway-redirect', ['order' => $order, 'handoff' => $handoff]);
+                return view('shop.gateway-redirect', ['order' => $order, 'handoff' => $handoff]);
             } catch (\Throwable) {
                 $order->update(['payment_method' => 'eft', 'payment_gateway' => null]); // card not set up: fall back to EFT
             }

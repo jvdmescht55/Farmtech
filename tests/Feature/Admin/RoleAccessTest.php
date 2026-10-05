@@ -39,25 +39,13 @@ class RoleAccessTest extends TestCase
         $this->actingAs($staff)->get(route('admin.settings.edit'))->assertForbidden();
     }
 
-    public function test_staff_gets_403_on_products_staging_queue(): void
-    {
-        $staff = $this->makeUser('staff');
 
-        $this->actingAs($staff)->get(route('admin.products.index'))->assertForbidden();
-    }
-
-    public function test_staff_gets_403_on_source_new_listing(): void
-    {
-        $staff = $this->makeUser('staff');
-
-        $this->actingAs($staff)->get(route('admin.source.create'))->assertForbidden();
-    }
 
     public function test_staff_gets_403_on_dashboard(): void
     {
         $staff = $this->makeUser('staff');
 
-        $this->actingAs($staff)->get(route('admin.dashboard'))->assertForbidden();
+        $this->actingAs($staff)->get(route('admin.insights'))->assertForbidden();
     }
 
     public function test_admin_can_access_every_section(): void
@@ -67,9 +55,9 @@ class RoleAccessTest extends TestCase
         $this->actingAs($admin)->get(route('admin.orders.index'))->assertOk();
         $this->actingAs($admin)->get(route('admin.users.index'))->assertOk();
         $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk();
-        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk();
-        $this->actingAs($admin)->get(route('admin.source.create'))->assertOk();
-        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+        $this->actingAs($admin)->get(route('admin.listings.index'))->assertOk();
+        $this->actingAs($admin)->get(route('admin.insights'))->assertOk();
+        
     }
 
     private function makeUser(string $role): User

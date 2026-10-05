@@ -11,8 +11,6 @@
                     <thead class="bg-gray-50 text-left text-gray-500 uppercase text-xs">
                         <tr>
                             <th class="px-4 py-3">Item</th>
-                            <th class="px-4 py-3">SKU</th>
-                            <th class="px-4 py-3">Duty/VAT</th>
                             <th class="px-4 py-3">Qty</th>
                             <th class="px-4 py-3">Unit</th>
                             <th class="px-4 py-3 text-right">Line Total</th>
@@ -22,14 +20,6 @@
                         @foreach ($order->items as $item)
                             <tr>
                                 <td class="px-4 py-3 font-medium">{{ $item->title_snapshot }}@if ($item->is_reservation)<span class="ml-2 text-xs rounded-full bg-blue-50 text-blue-700 px-2 py-0.5">reserved</span>@endif</td>
-                                <td class="px-4 py-3 font-mono text-gray-500">{{ $item->product?->sku ?? '—' }}</td>
-                                <td class="px-4 py-3 text-gray-500">
-                                    @if ($item->product)
-                                        {{ number_format($item->product->customs_duty_rate * 100, 1) }}% / {{ number_format($item->product->vat_rate * 100, 0) }}%
-                                    @else
-                                        —
-                                    @endif
-                                </td>
                                 <td class="px-4 py-3">{{ $item->quantity }}</td>
                                 <td class="px-4 py-3 font-mono">R{{ number_format((float) $item->unit_price_zar, 2) }}</td>
                                 <td class="px-4 py-3 font-mono text-right">R{{ number_format((float) $item->line_total_zar, 2) }}</td>
@@ -38,42 +28,20 @@
                     </tbody>
                     <tfoot>
                         <tr class="border-t bg-gray-50">
-                            <td colspan="5" class="px-4 py-3 text-right font-semibold">Subtotal</td>
+                            <td colspan="3" class="px-4 py-3 text-right font-semibold">Subtotal</td>
                             <td class="px-4 py-3 font-mono text-right">R{{ number_format((float) $order->subtotal_zar, 2) }}</td>
                         </tr>
                         <tr>
-                            <td colspan="5" class="px-4 py-3 text-right font-semibold">Shipping</td>
+                            <td colspan="3" class="px-4 py-3 text-right font-semibold">Shipping</td>
                             <td class="px-4 py-3 font-mono text-right">R{{ number_format((float) $order->shipping_zar, 2) }}</td>
                         </tr>
                         <tr class="border-t">
-                            <td colspan="5" class="px-4 py-3 text-right font-bold">Total (incl. duty &amp; VAT)</td>
+                            <td colspan="3" class="px-4 py-3 text-right font-bold">Total (incl. VAT)</td>
                             <td class="px-4 py-3 font-mono text-right font-bold">R{{ number_format((float) $order->total_zar, 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-
-            @can('view-financials')
-                {{-- Profit Breakdown --}}
-                <div class="bg-white border rounded-xl p-5">
-                    <h2 class="font-semibold mb-3">Profit Breakdown</h2>
-                    <div class="grid grid-cols-3 gap-4 text-center py-3 border-y">
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase">Sales (Subtotal)</p>
-                            <p class="text-sm font-bold">R{{ number_format((float) $order->subtotal_zar, 2) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase">Landed Cost Basis</p>
-                            <p class="text-sm font-bold">R{{ number_format($costBasisZar, 2) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase">Your Cut</p>
-                            <p class="text-sm font-bold text-farmtech-green-dark">R{{ number_format($netProfitZar, 2) }}</p>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-2">Cost basis is each line item's current product landed cost × quantity — freight, duty, VAT and domestic delivery already included. Products without a recorded landed cost (e.g. entered before the sourcing pipeline) contribute R0 here, so this understates cost rather than guessing.</p>
-                </div>
-            @endcan
 
             {{-- Customer & delivery --}}
             <div class="grid sm:grid-cols-2 gap-6">

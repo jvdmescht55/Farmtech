@@ -7,7 +7,7 @@
 | Item | SKU | Qty | Line Total |
 |:-----|:----|:---:|-----------:|
 @foreach ($order->items as $item)
-| {{ $item->title_snapshot }} | {{ $item->product?->sku ?? '—' }} | {{ $item->quantity }} | R{{ number_format((float) $item->line_total_zar, 0, '', ' ') }} |
+| {{ $item->title_snapshot }}{{ $item->is_reservation ? ' (reserved)' : '' }} | — | {{ $item->quantity }} | R{{ number_format((float) $item->line_total_zar, 0, '', ' ') }} |
 @endforeach
 @endcomponent
 

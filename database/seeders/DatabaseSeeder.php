@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SettingsSeeder::class,
             AdminUserSeeder::class,
-            ExchangeRateSeeder::class,
         ]);
     }
 }

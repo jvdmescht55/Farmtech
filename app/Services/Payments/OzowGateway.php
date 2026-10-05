@@ -30,9 +30,9 @@ class OzowGateway implements PaymentGatewayInterface
             'TransactionReference' => $order->order_number,
             'BankReference' => "Farmtech {$order->order_number}",
             'IsTest' => $sandbox ? 'true' : 'false',
-            'SuccessUrl' => route('checkout.success', $order),
-            'CancelUrl' => route('checkout.index'),
-            'ErrorUrl' => route('checkout.index'),
+            'SuccessUrl' => route('shop.thanks', $order->order_number),
+            'CancelUrl' => route('shop.checkout'),
+            'ErrorUrl' => route('shop.checkout'),
             'NotifyUrl' => route('checkout.webhook.ozow'),
         ];
 

@@ -23,9 +23,9 @@ class YocoGateway implements PaymentGatewayInterface
             ->post('https://payments.yoco.com/api/checkouts', [
                 'amount' => (int) round((float) $order->total_zar * 100), // cents
                 'currency' => 'ZAR',
-                'successUrl' => route('checkout.success', $order),
-                'cancelUrl' => route('checkout.index'),
-                'failureUrl' => route('checkout.index'),
+                'successUrl' => route('shop.thanks', $order->order_number),
+                'cancelUrl' => route('shop.checkout'),
+                'failureUrl' => route('shop.checkout'),
                 'metadata' => ['order_number' => $order->order_number],
             ])
             ->throw()

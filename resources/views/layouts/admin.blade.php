@@ -10,7 +10,7 @@
     $item = fn ($route, $label, $pattern = null, $can = null, $badge = null) => ['route' => $route, 'label' => $label, 'pattern' => $pattern ?? $route, 'can' => $can, 'badge' => $badge];
     $newSuggestions = \App\Models\Suggestion::where('status', 'new')->count();
     $groups = [
-        'Overview' => [$item('admin.insights', 'Insights', null, 'view-financials'), $item('admin.dashboard', 'Finances', null, 'view-financials')],
+        'Overview' => [$item('admin.insights', 'Insights', null, 'view-financials')],
         'Customers' => [
             $item('admin.leads.index', 'Leads & orders', 'admin.leads.*', null, $openLeads ?: null),
             $item('admin.licenses.index', 'Activation codes & customers', 'admin.licenses.*', 'manage-users'),
@@ -19,11 +19,6 @@
         'Store' => [
             $item('admin.listings.index', 'Store listings', 'admin.listings.*', 'manage-catalog'),
             $item('admin.orders.index', 'Orders', 'admin.orders.*'),
-            $item('admin.products.index', 'Product staging', 'admin.products.index|admin.products.show', 'manage-catalog'),
-            $item('admin.products.live', 'Imported products', null, 'manage-catalog'),
-            $item('admin.source.create', 'Source a product', 'admin.source.*', 'manage-catalog'),
-            $item('admin.suppliers.outreach', 'Suppliers', null, 'manage-catalog'),
-            $item('admin.outreach.index', 'Video outreach', 'admin.outreach.*', 'manage-catalog'),
         ],
         'System' => [$item('admin.users.index', 'Staff', 'admin.users.*', 'manage-users'), $item('admin.settings.edit', 'Settings', 'admin.settings.*', 'manage-settings'), $item('admin.profile.edit', 'My profile', 'admin.profile.*')],
     ];
@@ -41,7 +36,6 @@
         <div class="ml-auto flex items-center gap-1 sm:gap-3 text-sm">
             <a href="{{ route('portal') }}" target="_blank" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Website ↗</a>
             <a href="{{ route('herd.hub') }}" class="hidden md:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Herd Manager ↗</a>
-            <a href="{{ route('home') }}" target="_blank" class="hidden lg:inline px-3 h-9 leading-9 rounded-full text-sand/70 hover:text-sand">Old product store ↗</a>
             <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
                 <button type="button" @click="open = !open" class="flex items-center gap-2 rounded-full pl-1 pr-3 h-10 hover:bg-white/5">
                     <span class="w-8 h-8 rounded-full bg-ochre text-char grid place-items-center text-sm font-semibold">{{ mb_strtoupper(mb_substr($u->name, 0, 1)) }}</span>
