@@ -47,32 +47,10 @@ class ReaderController extends Controller
             'kind' => ['nullable', 'in:'.implode(',', array_keys(Reader::KINDS))],
             'location' => ['nullable', 'string', 'max:160'],
         ]);
-        $code = preg_replace('/\D/', '', $data['code']);
-        $pairing = \App\Models\DevicePairing::open()->where('code', $code)->first();
-
-        if (! $pairing) {
-            return back()->withErrors(['code' => 'That code isn\'t valid or has expired. Start pairing again on the device.']);
+        [$reader, $error] = app(\App\Services\Herd\DevicePairer::class)->claim($request->user(), $data['code'], $data['name'] ?? null, $data['kind'] ?? null, $data['location'] ?? null);
+        if ($error) {
+            return back()->withErrors(['code' => $error]);
         }
-
-        $user = $request->user();
-        $reader = $pairing->serial ? $user->readers()->where('serial', $pairing->serial)->first() : null;
-        if ($reader) {
-            $plain = $reader->rotateToken();
-            $reader->update(array_filter(['model' => $pairing->model, 'firmware' => $pairing->firmware]));
-        } else {
-            $kind = $data['kind'] ?? (str_contains(strtolower((string) $pairing->model), 'watch') ? 'watch' : 'handheld');
-            $reader = $user->readers()->create([
-                'kind' => $kind,
-                'location' => $data['location'] ?? null,
-                'name' => ($data['name'] ?? null) ?: ($pairing->model ?: ($kind === 'watch' ? 'KraalTrac Watch' : 'KraalTrac Pro')).($pairing->serial ? ' · '.$pairing->serial : ''),
-                'serial' => $pairing->serial,
-                'model' => $pairing->model,
-                'firmware' => $pairing->firmware,
-            ]);
-            $plain = $reader->plainToken;
-        }
-
-        $pairing->update(['reader_id' => $reader->id, 'token_encrypted' => $plain, 'claimed_at' => now()]);
 
         return back()->with('status', "Paired! \"{$reader->name}\" is collecting its key — give it a few seconds.");
     }

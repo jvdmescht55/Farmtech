@@ -531,7 +531,7 @@
     @if ($hasVariants)
         <script>
             function ftFormatZar(n) {
-                return 'R' + Number(n).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return 'R' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
 
             function ftSelectVariant(variantId, priceZar, sku, optionName, buttonEl) {

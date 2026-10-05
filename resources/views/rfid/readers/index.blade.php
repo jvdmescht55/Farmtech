@@ -7,15 +7,18 @@
 <div class="grid xl:grid-cols-5 gap-6">
     <div class="xl:col-span-2 space-y-6">
         <div class="rounded-[24px] bg-char text-sand p-7 sm:p-8">
-            <p class="eyebrow text-sand/50">Easiest way</p>
-            <div class="font-headline text-4xl mt-2">Pair a device</div>
-            <p class="text-sand/70 mt-3">Switch it on. It shows a 6-digit code. Type it here. The device collects its own key. Sommer easy.</p>
+            <div class="font-headline text-4xl">Pair a device</div>
+            <p class="text-sand/70 mt-3">Switch it on. New devices first open a Wi-Fi called <em>KraalTrac-…</em>: join it on your phone and pick your farm Wi-Fi. Then the screen shows 6 numbers. Type them here (or at farmtech.site/pair).</p>
             <form method="POST" action="{{ route('rfid.readers.pair') }}" class="mt-6 space-y-3">
                 @csrf
                 <input type="hidden" name="kind" value="handheld">
                 <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required placeholder="482 913" class="w-full h-14 rounded-xl bg-white text-char text-center font-num text-2xl tracking-[0.35em] focus:outline-none focus:ring-4 focus:ring-ochre/40">
                 <button class="btn-light w-full">Pair it</button>
             </form>
+            <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <a href="{{ route('pair') }}" class="underline text-sand/80">Step-by-step pairing</a>
+                <a href="{{ route('firmware.install') }}" class="underline text-sand/80">Install software from the browser</a>
+            </div>
         </div>
 
         <details class="panel p-6">

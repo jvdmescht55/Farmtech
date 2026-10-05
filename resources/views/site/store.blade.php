@@ -33,8 +33,11 @@
     </div>
 </section>
 
+{{-- This week's prices --}}
+<section class="wrap -mt-10 relative z-10"><x-market-strip class="shadow-[0_30px_70px_-40px_rgba(0,0,0,.4)]" /></section>
+
 {{-- The shop --}}
-<section id="shop" class="wrap pt-24 sm:pt-32 pb-20 scroll-mt-20">
+<section id="shop" class="wrap pt-20 sm:pt-28 pb-20 scroll-mt-20">
     <div class="grid lg:grid-cols-12 gap-8 items-end">
         <h2 class="lg:col-span-7 h-display text-[clamp(2.8rem,6vw,5rem)]">Tag it, weigh it, watch it.</h2>
         <p class="lg:col-span-5 text-stone text-lg leading-relaxed">Everything here works with Herd Manager, included free. Sold out? Reserve from the next batch. You only pay when it's ready.</p>
@@ -304,7 +307,7 @@
 <section class="wrap py-24 sm:py-32" x-data="{ n: 300, kg: 1, price: 50, saved: 3, worth: 1800,
         get value() { return Math.round(this.n * this.kg * this.price + this.saved * this.worth); },
         get months() { return this.value ? Math.max(1, Math.round(7999 / (this.value / 12))) : null; },
-        fmt(v) { return 'R' + v.toLocaleString('en-ZA').replace(/,/g, ' '); } }">
+        fmt(v) { return 'R' + v.toLocaleString('en-US').replace(/,/g, ' '); } }">
     <div class="grid lg:grid-cols-2 gap-14 items-start">
         <div>
             <h2 class="h-display text-[clamp(2.6rem,5vw,4.2rem)]">Does it pay for itself?</h2>

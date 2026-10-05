@@ -126,6 +126,9 @@
         @endforeach
     </div>
 @endif
+
+<x-market-strip class="mt-6" />
+<p class="mt-2 text-sm text-stone">Selling soon? <a href="{{ route('site.calculator') }}" class="underline">Work out R/kg with the auction calculator</a>.</p>
 @endsection
 
 @section('tour')

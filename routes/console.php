@@ -23,3 +23,6 @@ Schedule::command('products:rank-featured')
     ->daily()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Weekly red meat prices from RPO (they publish once a week; twice a day keeps us current without hammering them).
+Schedule::command('market:prices')->twiceDaily(7, 15)->withoutOverlapping();

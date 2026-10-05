@@ -282,7 +282,7 @@ document.addEventListener('alpine:init', () => {
         const tick = (now) => {
             const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
             const v = (target * e).toFixed(decimals);
-            el.textContent = prefix + Number(v).toLocaleString('en-ZA', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).replace(/,/g, ' ');
+            el.textContent = prefix + Number(v).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).replace(/,/g, ' ');
             if (p < 1) requestAnimationFrame(tick);
         };
         el.textContent = prefix + '0';

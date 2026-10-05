@@ -26,6 +26,18 @@ class SiteController extends Controller
         ]);
     }
 
+    /** Weekly red meat prices (RPO). */
+    public function prices(\App\Services\MarketPrices $prices)
+    {
+        return view('site.prices', ['m' => $prices->summary()]);
+    }
+
+    /** Free auction calculator: R/head ⇄ R/kg, lots, costs, carcass equivalent. */
+    public function calculator(\App\Services\MarketPrices $prices)
+    {
+        return view('site.calculator', ['m' => $prices->summary()]);
+    }
+
     /** Custom builds: what we can make for one farm, and how to plug in your own gadget. */
     public function custom()
     {

@@ -18,6 +18,8 @@
         ['href' => route('rfid.data'), 'label' => 'Import & export', 'icon' => 'table', 'on' => $is('rfid.data', 'rfid.data.preview', 'rfid.import.*')],
         ['href' => route('rfid.readers.index'), 'label' => 'Devices', 'icon' => 'chip', 'on' => $is('rfid.readers.*', 'rfid.sync.*')],
         ['href' => route('rfid.settings.edit'), 'label' => 'Farm settings', 'icon' => 'gear', 'on' => $is('rfid.settings.*')],
+        ['href' => route('site.prices'), 'label' => 'Market prices', 'icon' => 'compare', 'on' => false],
+        ['href' => route('site.calculator'), 'label' => 'Auction calculator', 'icon' => 'table', 'on' => false],
     ];
 @endphp
 

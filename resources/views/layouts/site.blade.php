@@ -8,10 +8,10 @@
     $overHero = trim($__env->yieldContent('hero_dark')) !== '';
     $nav = [
         [route('site.store').'#shop', 'Shop'],
-        [route('site.store').'#pro', 'KraalTrac Pro'],
-        [route('site.store').'#watch', 'KraalTrac Watch'],
         [route('site.store').'#software', 'Herd Manager'],
         [route('site.custom'), 'Custom builds'],
+        [route('site.prices'), 'Market prices'],
+        [route('site.calculator'), 'Auction calculator'],
         [route('site.contact'), 'Contact'],
     ];
 @endphp
@@ -139,6 +139,8 @@
                         <li><a class="hover:text-sand" href="{{ route('site.store') }}">Store</a></li>
                         <li><a class="hover:text-sand" href="{{ route('landing') }}">Herd Manager</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.custom') }}">Custom builds</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.prices') }}">Market prices</a></li>
+                        <li><a class="hover:text-sand" href="{{ route('site.calculator') }}">Auction calculator</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.suggest') }}">Suggest a device</a></li>
                         <li><a class="hover:text-sand" href="{{ route('site.contact') }}">Contact</a></li>
                     </ul>

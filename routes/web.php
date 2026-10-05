@@ -61,7 +61,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SiteController::class, 'gateway'])->name('portal');
 Route::get('/sitemap.xml', function () {
-    $urls = collect([route('portal'), route('site.store'), route('site.custom'), route('landing'), route('site.suggest'), route('site.contact'), route('legal.index')])
+    $urls = collect([route('portal'), route('site.store'), route('site.custom'), route('site.prices'), route('site.calculator'), route('landing'), route('site.suggest'), route('site.contact'), route('legal.index')])
         ->merge(collect(array_keys(\App\Http\Controllers\LegalController::PAGES))->map(fn ($p) => route('legal.show', $p)))
         ->merge(\App\Models\StoreListing::published()->get()->map(fn ($l) => route('site.product', $l)));
 
@@ -70,6 +70,14 @@ Route::get('/sitemap.xml', function () {
 Route::get('/store', [SiteController::class, 'store'])->name('site.store');
 Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.interest')->middleware('throttle:6,1');
 Route::get('/custom', [SiteController::class, 'custom'])->name('site.custom');
+Route::get('/prices', [SiteController::class, 'prices'])->name('site.prices');
+Route::middleware('auth')->group(function () {
+    Route::get('/pair', [\App\Http\Controllers\PairController::class, 'show'])->name('pair');
+    Route::post('/pair', [\App\Http\Controllers\PairController::class, 'claim'])->name('pair.claim')->middleware('throttle:15,1');
+    Route::get('/pair/check/{code}', [\App\Http\Controllers\PairController::class, 'check'])->name('pair.check');
+    Route::get('/app/install', fn () => view('herd.install'))->name('firmware.install');
+});
+Route::get('/auction-calculator', [SiteController::class, 'calculator'])->name('site.calculator');
 Route::get('/cart', [\App\Http\Controllers\ShopController::class, 'cart'])->name('shop.cart');
 Route::post('/cart/{listing}', [\App\Http\Controllers\ShopController::class, 'add'])->name('shop.add')->middleware('throttle:60,1');
 Route::patch('/cart/{listing}', [\App\Http\Controllers\ShopController::class, 'update'])->name('shop.update');

@@ -457,7 +457,7 @@
                                         <span class="w-6 text-center text-xs font-mono font-semibold text-charcoal" x-text="item.quantity"></span>
                                         <button type="button" @click="$store.cart.updateQuantity(item, item.quantity + 1)" aria-label="Increase quantity" class="w-7 h-7 flex items-center justify-center text-ink-secondary hover:text-charcoal transition">+</button>
                                     </div>
-                                    <span class="font-mono text-sm font-semibold text-charcoal" x-text="'R' + item.line_total.toLocaleString('en-ZA', {minimumFractionDigits: 2})"></span>
+                                    <span class="font-mono text-sm font-semibold text-charcoal" x-text="'R' + item.line_total.toLocaleString('en-US', {minimumFractionDigits: 2})"></span>
                                 </div>
                             </div>
                             <button type="button" @click="$store.cart.removeItem(item)" aria-label="Remove item" class="flex-shrink-0 text-ink-muted hover:text-error transition self-start mt-0.5">
@@ -471,7 +471,7 @@
             <div x-show="$store.cart.items.length > 0" class="flex-shrink-0 border-t border-border px-5 py-4 space-y-3">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-ink-secondary">Subtotal</span>
-                    <span class="font-mono text-base font-bold text-charcoal" x-text="'R' + $store.cart.subtotal.toLocaleString('en-ZA', {minimumFractionDigits: 2})"></span>
+                    <span class="font-mono text-base font-bold text-charcoal" x-text="'R' + $store.cart.subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})"></span>
                 </div>
                 <p class="text-xs text-ink-muted">VAT included &middot; shipping calculated at checkout</p>
                 <a href="{{ route('checkout.index') }}" class="block text-center bg-mint hover:bg-mint-dark text-white font-semibold px-6 py-3 rounded-full transition">Checkout</a>

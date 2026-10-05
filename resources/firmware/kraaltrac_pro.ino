@@ -44,6 +44,8 @@
 #include <Keypad.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include <WebServer.h>
+#include <DNSServer.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <Preferences.h>
@@ -56,8 +58,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 Preferences prefs;
 
 // --- NETWORK CONFIG ---
-// Every network it might be near — farm Wi-Fi, your phone's hotspot (give
-// the hotspot a FIXED name/password in your phone's settings first).
+// You don't have to edit these any more: on first start the scale opens its own
+// Wi-Fi ("KraalTrac-xxxx") and you choose your network from your phone. Networks
+// you add there are saved on the device (up to 5). You may still list some here.
 struct WifiNet { const char* ssid; const char* password; };
 WifiNet knownNetworks[] = {
   { "YOUR_FARM_WIFI",      "YOUR_FARM_WIFI_PASSWORD" },
@@ -67,7 +70,7 @@ WiFiMulti wifiMulti;
 
 const char* SERVER    = "https://farmtech.site";
 const char* MODEL     = "KraalTrac Pro";
-const char* FIRMWARE  = "3.1.0";
+const char* FIRMWARE  = "3.2.0";
 // Optional: paste a device key from Herd Manager → Devices → "Add a device by
 // hand" here to skip pairing. Leave empty to pair with a 6-digit code.
 const char* DEVICE_KEY = "";
@@ -202,6 +205,100 @@ String urlEncode(String s) {
   return o;
 }
 
+
+// ---------------------------------------------------------------------------
+// Wi-Fi setup from your phone (no code editing): the scale opens an open Wi-Fi
+// "KraalTrac-xxxx", your phone shows a page to pick your network, it's saved and
+// the scale restarts. Saved networks live in flash (keys w0s/w0p … w4s/w4p).
+// ---------------------------------------------------------------------------
+int loadNetworks() {
+  int n = 0;
+  for (int i = 0; i < 5; i++) {
+    String ss = prefs.getString(("w" + String(i) + "s").c_str(), "");
+    if (ss.length()) { wifiMulti.addAP(ss.c_str(), prefs.getString(("w" + String(i) + "p").c_str(), "").c_str()); n++; }
+  }
+  for (auto &k : knownNetworks) {
+    if (strncmp(k.ssid, "YOUR_", 5) != 0 && strlen(k.ssid)) { wifiMulti.addAP(k.ssid, k.password); n++; }
+  }
+  return n;
+}
+
+void saveNetwork(const String &ssid, const String &pass) {
+  String ss[5], pp[5]; int n = 0;
+  ss[n] = ssid; pp[n++] = pass;                      // newest first
+  for (int i = 0; i < 5 && n < 5; i++) {
+    String s2 = prefs.getString(("w" + String(i) + "s").c_str(), "");
+    if (s2.length() && s2 != ssid) { ss[n] = s2; pp[n++] = prefs.getString(("w" + String(i) + "p").c_str(), ""); }
+  }
+  for (int i = 0; i < 5; i++) {
+    prefs.putString(("w" + String(i) + "s").c_str(), i < n ? ss[i] : "");
+    prefs.putString(("w" + String(i) + "p").c_str(), i < n ? pp[i] : "");
+  }
+}
+
+String htmlEscape(const String &in) {
+  String o; for (char c : in) { if (c == '<') o += "&lt;"; else if (c == '>') o += "&gt;"; else if (c == '&') o += "&amp;"; else if (c == '"') o += "&quot;"; else o += c; }
+  return o;
+}
+
+void wifiSetupPortal() {
+  String ap = "KraalTrac-" + serialNo.substring(serialNo.length() - 4);
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(ap.c_str());
+  delay(300);
+  updateDisplay("Wi-Fi setup. On your", "phone join Wi-Fi:", ap, "*: Cancel");
+  int found = WiFi.scanNetworks();
+
+  DNSServer dns; dns.start(53, "*", WiFi.softAPIP());
+  WebServer web(80);
+  bool saved = false;
+
+  auto page = [&]() {
+    String opts;
+    for (int i = 0; i < found && i < 20; i++) {
+      String ss = htmlEscape(WiFi.SSID(i));
+      if (ss.length() && opts.indexOf(">" + ss + "<") < 0) opts += "<option>" + ss + "</option>";
+    }
+    String h = F("<!doctype html><html><head><meta name=viewport content='width=device-width,initial-scale=1'><title>KraalTrac Wi-Fi</title>"
+      "<style>body{font-family:system-ui,sans-serif;background:#F4F1EA;color:#15140F;margin:0;padding:28px}h1{font-family:Georgia,serif;font-weight:400;font-size:34px;margin:0 0 6px}"
+      "p{color:#6b665b}label{display:block;font-size:14px;margin:18px 0 6px}select,input{width:100%;box-sizing:border-box;height:48px;border:1px solid #d9d2c3;border-radius:12px;padding:0 14px;font-size:16px;background:#fff}"
+      "button{margin-top:22px;width:100%;height:52px;border:0;border-radius:99px;background:#15140F;color:#F4F1EA;font-size:16px}small{color:#8b8577}</style></head><body>"
+      "<h1>Connect your KraalTrac</h1><p>Choose the Wi-Fi it should use: farm Wi-Fi or your phone's hotspot.</p>"
+      "<form method=post action=/save><label>Network</label><select name=s>");
+    h += opts;
+    h += F("</select><label>Or type the name</label><input name=m placeholder='e.g. My iPhone'><label>Password</label><input name=p type=password>"
+      "<button>Save &amp; connect</button></form><p><small>Saved on the scale only. You can add up to 5 networks.</small></p></body></html>");
+    web.send(200, "text/html", h);
+  };
+  web.on("/", page);
+  web.on("/save", HTTP_POST, [&]() {
+    String ss = web.arg("m").length() ? web.arg("m") : web.arg("s");
+    if (!ss.length()) { page(); return; }
+    saveNetwork(ss, web.arg("p"));
+    web.send(200, "text/html", "<!doctype html><meta name=viewport content='width=device-width,initial-scale=1'><body style='font-family:system-ui;padding:28px;background:#F4F1EA'><h1 style='font-family:Georgia;font-weight:400'>Lekker, saved.</h1><p>The scale restarts and connects to <b>" + htmlEscape(ss) + "</b>. You can close this page.</p>");
+    saved = true;
+  });
+  web.onNotFound([&]() { web.sendHeader("Location", "http://192.168.4.1/", true); web.send(302, "text/plain", ""); });
+  web.begin();
+
+  unsigned long until = millis() + 10UL * 60UL * 1000UL;   // 10 minutes
+  while (!saved && millis() < until) {
+    dns.processNextRequest();
+    web.handleClient();
+    if (keypad.getKey() == '*') break;
+    delay(2);
+  }
+  if (saved) {
+    updateDisplay("Wi-Fi saved!", "Restarting...", "", "");
+    delay(1500);
+    ESP.restart();
+  }
+  web.stop(); dns.stop(); WiFi.softAPdisconnect(true);
+  WiFi.mode(WIFI_STA);
+  resetScreen();
+}
+
 // ---------------------------------------------------------------------------
 // Pairing — shows a 6-digit code, farmer types it into Herd Manager
 // ---------------------------------------------------------------------------
@@ -218,7 +315,7 @@ void pairDevice() {
     JsonDocument r; deserializeJson(r, reply);
     String code = r["code"].as<String>(), secret = r["secret"].as<String>();
     unsigned long until = millis() + r["expires_in"].as<unsigned long>() * 1000UL;
-    updateDisplay("Pair at farmtech.site", "Devices > Pair it:", "      " + code.substring(0, 3) + " " + code.substring(3), "Waiting...");
+    updateDisplay("Go to farmtech.site", "/pair and type:", "      " + code.substring(0, 3) + " " + code.substring(3), "Waiting...");
     while (millis() < until) {
       delay(5000);
       JsonDocument s; s["secret"] = secret; String sb, sr; serializeJson(s, sb);
@@ -301,10 +398,22 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
-  for (auto &n : knownNetworks) wifiMulti.addAP(n.ssid, n.password);
+  int nets = loadNetworks();
+  if (nets == 0) wifiSetupPortal();          // brand new: choose Wi-Fi on your phone (restarts when saved)
   updateDisplay("KraalTrac Pro", "Connecting...", "", serialNo);
   unsigned long t0 = millis();
-  while (wifiMulti.run() != WL_CONNECTED && millis() - t0 < 8000) { delay(200); }
+  while (wifiMulti.run() != WL_CONNECTED && millis() - t0 < 10000) { delay(200); }
+  if (WiFi.status() != WL_CONNECTED && deviceKey.length() == 0) {
+    // Never paired and no Wi-Fi in range: offer the phone setup instead of waiting forever.
+    updateDisplay("No Wi-Fi found.", "A: Set up Wi-Fi", "*: Carry on offline", "");
+    unsigned long w = millis();
+    while (millis() - w < 20000) {
+      char k = keypad.getKey();
+      if (k == 'A') wifiSetupPortal();
+      if (k == '*') break;
+      delay(20);
+    }
+  }
 
   if (WiFi.status() == WL_CONNECTED) {
     if (deviceKey.length() == 0) pairDevice();
@@ -403,7 +512,7 @@ void loop() {
           updateDisplay(WiFi.status() == WL_CONNECTED ? "Wi-Fi: " + WiFi.SSID() : "Wi-Fi: not connected",
                         deviceKey.length() ? "Paired: yes" : "Paired: NO",
                         "Queued: " + String(queueCount()) + "  fw " + FIRMWARE,
-                        "#: Re-pair  *: Back");
+                        "#:Re-pair A:Wi-Fi *:Back");
         }
       }
       break;
@@ -413,6 +522,7 @@ void loop() {
         char key = keypad.getKey();
         if (!key) break;
         if (key == '*') { state = ENTER_ID; resetScreen(); }
+        else if (key == 'A') { wifiSetupPortal(); }
         else if (key == '#') { pinBuf = ""; state = CONFIRM_REPAIR_PIN; updateDisplay("PIN to re-pair:", "", "PIN: ", "#: OK  *: Cancel"); }
       }
       break;
