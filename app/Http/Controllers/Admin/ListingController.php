@@ -42,6 +42,9 @@ class ListingController extends Controller
 
     public function toggle(StoreListing $listing)
     {
+        if (! $listing->is_published && $listing->price_cents === null && in_array($listing->stock_status, ['in_stock', 'low_stock'], true)) {
+            return back()->withErrors(['price' => "Add a price to {$listing->name} first, or mark it Coming soon so people can reserve."]);
+        }
         $listing->update(['is_published' => ! $listing->is_published]);
 
         return back()->with('status', $listing->is_published ? "{$listing->name} is live on the store." : "{$listing->name} is hidden from the store.");

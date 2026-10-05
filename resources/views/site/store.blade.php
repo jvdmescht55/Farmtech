@@ -77,9 +77,16 @@
 {{-- The device --}}
 <section id="pro" class="scroll-mt-20 overflow-hidden">
     <div class="wrap py-24 sm:py-32 grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-        <div class="order-2 lg:order-1 rounded-[36px] bg-gradient-to-b from-sand-deep to-sand border border-hairline pt-12 pb-8 px-4 sm:px-8">
-            @include('site._device')
-            <p class="mt-6 text-center text-[13px] text-stone">The screens above are the real KraalTrac Pro screens, one weighing after another.</p>
+        <div class="order-2 lg:order-1" x-data="{ view: 'photo' }">
+            <div class="rounded-[36px] bg-gradient-to-b from-white to-sand-deep border border-hairline overflow-hidden min-h-[420px] flex items-center justify-center">
+                <img x-show="view === 'photo'" src="{{ asset('storage/listings/kraaltrac-pro-photo.webp') }}" alt="The KraalTrac Pro handheld EID reader with its 4×4 keypad and screen" class="w-full h-auto">
+                <div x-show="view === 'demo'" x-cloak class="w-full pt-12 pb-8 px-4 sm:px-8">@include('site._device')</div>
+            </div>
+            <div class="mt-4 flex justify-center gap-2">
+                <button type="button" @click="view = 'photo'" class="rounded-full px-4 h-10 text-sm border" :class="view === 'photo' ? 'bg-char text-sand border-char' : 'bg-white border-hairline'">The scanner</button>
+                <button type="button" @click="view = 'demo'" class="rounded-full px-4 h-10 text-sm border" :class="view === 'demo' ? 'bg-char text-sand border-char' : 'bg-white border-hairline'">See it work</button>
+            </div>
+            <p x-show="view === 'demo'" x-cloak class="mt-3 text-center text-[13px] text-stone">The real KraalTrac Pro screens, one weighing after another, landing on your phone.</p>
         </div>
         <div class="order-1 lg:order-2">
             <h2 class="h-display text-[clamp(3rem,6vw,5.2rem)]">KraalTrac Pro</h2>
@@ -95,7 +102,8 @@
                     ['Reads the tag for you', 'Hold the wand to the ear. The 134.2 kHz reader picks up standard FDX-B tags, so nobody types 15-digit numbers with cold fingers.'],
                     ['Keeps going without signal', 'Up to 300 records stay on the device. It sends them by itself when it finds Wi-Fi, or through your phone\'s hotspot.'],
                     ['Birth, wean, post-wean, mature', 'Weight type, sex, sire and dam straight from the keypad. New lambs get a birthday number like 250912.'],
-                    ['Made for the crush', 'PETG shell with 3.5 mm walls and internal ribs. Survives dust, drops and the odd kick.'],
+                    ['Programmed for your farm', 'We set it up the way you work before it ships: your ID system, the questions it asks, extra fields like FAMACHA or camp, your Wi-Fi. Changes later are free.'],
+                    ['Made for the crush', 'Tough housing with orange impact caps and a sealed keypad. Survives dust, drops and the odd kick.'],
                 ] as [$t, $d])
                     <div class="py-5 grid sm:grid-cols-[13rem_1fr] gap-1 sm:gap-6">
                         <dt class="font-medium">{{ $t }}</dt>

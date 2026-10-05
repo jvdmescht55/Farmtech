@@ -30,24 +30,25 @@
         {{-- Handheld --}}
         <div class="relative shrink-0 w-[230px] sm:w-[260px]">
             {{-- antenna wand --}}
-            <div class="mx-auto w-7 h-40 sm:h-48 rounded-t-full bg-gradient-to-b from-[#2a2925] to-[#1d1c18] shadow-inner relative">
-                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full border-[5px] border-[#2a2925] bg-transparent"></div>
-                <span class="absolute top-[18px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-ochre animate-pulse"></span>
+            <div class="mx-auto w-16 h-40 sm:h-48 rounded-t-[22px] bg-gradient-to-b from-[#26262a] to-[#1b1b1e] relative overflow-hidden">
+                <div class="absolute inset-x-0 top-0 h-9 bg-gradient-to-b from-[#F08A2C] to-[#D9701A]"></div>
+                <span class="absolute top-12 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#7FB069] animate-pulse"></span>
             </div>
-            <div class="rounded-[34px] bg-gradient-to-b from-[#2b2a26] to-[#191814] p-4 pb-5 shadow-[0_40px_80px_-30px_rgba(0,0,0,.6),inset_0_1px_0_rgba(255,255,255,.08)]">
+            <div class="relative rounded-[34px] bg-gradient-to-b from-[#28282c] to-[#18181b] p-4 pb-9 shadow-[0_40px_80px_-30px_rgba(0,0,0,.6),inset_0_1px_0_rgba(255,255,255,.08)]">
                 <div class="flex justify-between items-center px-1 mb-2.5 text-[9px] tracking-[0.2em] uppercase text-sand/40"><span>KraalTrac Pro</span><span class="w-1.5 h-1.5 rounded-full bg-[#7FB069]"></span></div>
                 {{-- 20×4 LCD --}}
-                <div class="rounded-xl bg-[#1c2a10] p-1.5">
-                    <div class="rounded-lg bg-[#9DBF3F] px-2 py-2 shadow-[inset_0_0_12px_rgba(0,0,0,.25)]">
+                <div class="rounded-xl bg-[#0b0f24] p-1.5">
+                    <div class="rounded-lg bg-[#2346d6] px-2 py-2 shadow-[inset_0_0_14px_rgba(0,0,30,.45)]">
                         <template x-for="(line, n) in screens[i]" :key="n">
-                            <div class="font-num text-[10.5px] sm:text-[12px] leading-[1.35] text-[#16220a] whitespace-pre tracking-[0.02em]" x-text="pad(line)"></div>
+                            <div class="font-num text-[10.5px] sm:text-[12px] leading-[1.35] text-[#dfe6ff] whitespace-pre tracking-[0.02em]" x-text="pad(line)"></div>
                         </template>
                     </div>
                 </div>
+                <div class="absolute inset-x-0 bottom-0 h-6 rounded-b-[34px] bg-gradient-to-b from-[#F08A2C] to-[#D9701A]"></div>
                 {{-- 4×4 keypad --}}
                 <div class="mt-4 grid grid-cols-4 gap-2">
                     @foreach (['1', '2', '3', 'A', '4', '5', '6', 'B', '7', '8', '9', 'C', '*', '0', '#', 'D'] as $k)
-                        <span class="h-8 sm:h-9 rounded-lg grid place-items-center text-[12px] font-medium {{ ctype_alpha($k) ? 'bg-ochre/90 text-char' : 'bg-[#34332e] text-sand/85' }} shadow-[inset_0_-2px_0_rgba(0,0,0,.35)]">{{ $k }}</span>
+                        <span class="h-8 sm:h-9 rounded-lg grid place-items-center text-[12px] font-medium text-white {{ ctype_digit($k) ? 'bg-[#2f6db3]' : 'bg-[#c9363b]' }} shadow-[inset_0_-2px_0_rgba(0,0,0,.35)]">{{ $k }}</span>
                     @endforeach
                 </div>
             </div>
