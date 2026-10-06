@@ -7,7 +7,7 @@
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <div class="grid lg:grid-cols-[1fr_22rem] gap-6 items-start">
     <div class="panel p-7 sm:p-10">
-        <div class="font-headline text-3xl">KraalTrac Pro <span class="text-stone text-xl">v3.2.0</span></div>
+        <div class="font-headline text-3xl">KraalTrac Pro <span class="text-stone text-xl">v3.4.0</span></div>
         <ol class="mt-6 space-y-5">
             @foreach ([
                 ['Use Chrome or Edge on a laptop', 'Phones and Safari can\'t do this part.'],

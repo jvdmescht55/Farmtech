@@ -18,7 +18,7 @@
     <div class="relative wrap h-full flex flex-col justify-end pb-14 sm:pb-20">
         <h1 class="h-display text-[clamp(4.2rem,15vw,13rem)] leading-[0.86] reveal-up">Ken jou<br>kudde.</h1>
         <div class="mt-10 grid lg:grid-cols-[1fr_auto] gap-8 items-end reveal-up" style="animation-delay:.15s">
-            <p class="max-w-xl text-lg sm:text-xl text-white/85 leading-relaxed">Scan the ear tag, punch in the weight. Your herd book, daily gains and auction book sort themselves out on your phone, even when there's no signal in the kraal.</p>
+            <p class="max-w-xl text-lg sm:text-xl text-white/85 leading-relaxed">For sheep, goats and cattle. Scan the ear tag, punch in the weight. Your herd book, daily gains and auction book sort themselves out on your phone, even when there's no signal in the kraal.</p>
             <div class="flex flex-wrap gap-3">
                 <a href="#shop" class="btn-light">Shop now</a>
                 <a href="#pro" class="btn-line-light">See how it works</a>
@@ -74,6 +74,34 @@
     </div>
 </section>
 
+{{-- Sheep, goats or cattle --}}
+<section class="wrap py-20 sm:py-28">
+    <div class="grid lg:grid-cols-12 gap-8 items-end">
+        <h2 class="lg:col-span-7 h-display text-[clamp(2.8rem,6vw,5rem)]">Sheep, goats or cattle. Same scanner.</h2>
+        <p class="lg:col-span-5 text-stone text-lg">One herd book for everything you run. Birth-weight alerts, due dates and gains are worked out for each kind of animal.</p>
+    </div>
+    <div class="mt-12 grid md:grid-cols-3 gap-5">
+        @foreach ([
+            ['flock-golden', 'Sheep', 'Lamb weights from birth to wean, ram performance through his lambs, and auction books with lot numbers.', ['Birth-weight alerts under 3 kg', '147-day lambing dates', 'Logix-style auction books']],
+            ['boer-goat', 'Goats', 'Kid growth, does that are losing condition, and which bucks throw the best kids.', ['Birth-weight alerts under 2.5 kg', '150-day kidding dates', 'Daily gain per kid']],
+            ['nguni-herd', 'Cattle', 'Weaner weights, feedlot gain and bull performance. Weigh at the crush and see who\'s ready to sell.', ['Weaner and 205-day weights', '283-day calving dates', 'Weight-loss alerts on cows']],
+        ] as [$img, $t, $d, $points])
+            <article class="group rounded-[28px] bg-white border border-hairline overflow-hidden flex flex-col">
+                <div class="relative aspect-[4/3] overflow-hidden">
+                    <img src="{{ Img::url($img, true) }}" alt="{{ Img::alt($img) }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover img-grade transition duration-[1.2s] group-hover:scale-[1.04]">
+                </div>
+                <div class="p-6 sm:p-7 flex-1 flex flex-col">
+                    <h3 class="font-headline text-4xl">{{ $t }}</h3>
+                    <p class="mt-2 text-stone leading-relaxed">{{ $d }}</p>
+                    <ul class="mt-5 space-y-1.5 text-sm">
+                        @foreach ($points as $pt)<li class="flex gap-2.5"><span class="mt-2 w-1.5 h-1.5 shrink-0 rounded-full bg-ochre"></span>{{ $pt }}</li>@endforeach
+                    </ul>
+                </div>
+            </article>
+        @endforeach
+    </div>
+</section>
+
 {{-- The device --}}
 <section id="pro" class="scroll-mt-20 overflow-hidden">
     <div class="wrap py-24 sm:py-32 grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
@@ -101,7 +129,7 @@
                 @foreach ([
                     ['Reads the tag for you', 'Hold the wand to the ear. The 134.2 kHz reader picks up standard FDX-B tags, so nobody types 15-digit numbers with cold fingers.'],
                     ['Keeps going without signal', 'Up to 300 records stay on the device. It sends them by itself when it finds Wi-Fi, or through your phone\'s hotspot.'],
-                    ['Birth, wean, post-wean, mature', 'Weight type, sex, sire and dam straight from the keypad. New lambs get a birthday number like 250912.'],
+                    ['Birth, wean, post-wean, mature', 'Weight type, sex, sire and dam straight from the keypad, for sheep, goats or cattle. New animals get a birthday number like 250912.'],
                     ['Programmed for your farm', 'We set it up the way you work before it ships: your ID system, the questions it asks, extra fields like FAMACHA or camp, your Wi-Fi. Changes later are free.'],
                     ['Made for the crush', 'Tough housing with orange impact caps and a sealed keypad. Survives dust, drops and the odd kick.'],
                 ] as [$t, $d])
@@ -358,7 +386,7 @@
         <div class="lg:col-span-8 divide-y divide-hairline border-y border-hairline" x-data="{ open: 0 }">
             @foreach ([
                 ['Will it read my existing tags?', 'If they are standard animal EID tags (134.2 kHz FDX-B, ISO 11784/11785), yes. Those are the usual ones in South Africa.'],
-                ['Does it work for goats and cattle?', 'Yes. Sheep, goats and cattle all live in the same herd book, each with their own birth-weight and alert limits.'],
+                ['Does it work for cattle and goats?', 'Yes. Sheep, goats and cattle all live in the same herd book, each with their own birth-weight, calving or lambing dates and alert limits. We set the scanner\'s screens to say cattle, goat or sheep for your farm, and the button tags fit cattle ears too.'],
                 ['What if there\'s no signal in the kraal?', 'The KraalTrac keeps up to 300 records on the device and sends them once it finds Wi-Fi. Easiest of all: switch on your phone\'s hotspot while you weigh.'],
                 ['And if there\'s no Wi-Fi at all?', 'Plug it into a laptop, open Herd Manager in Chrome and click Sync the scale. It uploads everything and clears the device only once every record is saved.'],
                 ['Does it connect to my scale?', 'For now you type the weight from your scale\'s display. It takes about two seconds a lamb. A direct scale cable is on our list.'],
@@ -411,4 +439,4 @@
 </section>
 @endsection
 
-@section('credits')<x-photo-credits :keys="['windpomp-pink', 'karoo-mist', 'merino-rams', 'flock-bakkie', 'tagged-ewe', 'flock-golden', 'dorper-ram', 'windpomp-storm', 'golden-valley', 'dirt-road']" dark />@endsection
+@section('credits')<x-photo-credits :keys="['boer-goat', 'nguni-herd', 'windpomp-pink', 'karoo-mist', 'merino-rams', 'flock-bakkie', 'tagged-ewe', 'flock-golden', 'dorper-ram', 'windpomp-storm', 'golden-valley', 'dirt-road']" dark />@endsection

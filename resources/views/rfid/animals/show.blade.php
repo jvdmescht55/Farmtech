@@ -150,4 +150,38 @@
         @endif
     </div>
 </div>
+
+{{-- Sold, died or a test animal? --}}
+<div class="mt-8 panel p-6 sm:p-7" x-data="{ open: {{ $errors->has('delete') ? 'true' : 'false' }}, confirm: false }">
+    <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-4 text-left">
+        <span><span class="font-medium">Sold, died, or a test animal?</span>
+            <span class="block text-sm text-stone mt-0.5">{{ $animal->status === 'active' ? 'Take it out of the active herd, or delete it if it was never real.' : 'This animal is marked as '.strtolower(\App\Models\Animal::STATUSES[$animal->status]).($animal->status_date ? ' on '.$animal->status_date->format('j M Y') : '').'. It stays in the database for pedigree.' }}</span></span>
+        <span class="text-stone text-xl" x-text="open ? '−' : '+'"></span>
+    </button>
+    <div x-show="open" x-cloak class="mt-6 grid lg:grid-cols-2 gap-6">
+        <form method="POST" action="{{ route('rfid.animals.status', $animal) }}" class="rounded-2xl bg-sand-light p-5 space-y-3">
+            @csrf
+            <div class="font-medium">Keep it for pedigree</div>
+            <p class="text-sm text-stone">Sold, dead and culled animals drop off your active herd and lists, but stay on their offspring's pedigree and in your history.</p>
+            <div class="flex flex-wrap gap-2 items-end">
+                <label class="block"><span class="field-label">When</span><input type="date" name="status_date" value="{{ $animal->status_date?->toDateString() ?? today()->toDateString() }}" max="{{ today()->toDateString() }}" class="field !h-10 !w-44"></label>
+                @foreach (['sold' => 'Mark as sold', 'dead' => 'Died', 'culled' => 'Culled'] as $k => $l)
+                    @if ($animal->status !== $k)<button name="status" value="{{ $k }}" class="btn-line btn-sm">{{ $l }}</button>@endif
+                @endforeach
+                @if ($animal->status !== 'active')<button name="status" value="active" class="btn-dark btn-sm">Back to active</button>@endif
+            </div>
+        </form>
+        <form method="POST" action="{{ route('rfid.animals.destroy', $animal) }}" class="rounded-2xl border border-[#B0452F]/25 p-5 space-y-3" @submit="if (!confirm) { $event.preventDefault(); confirm = true }">
+            @csrf @method('DELETE')
+            <div class="font-medium text-[#B0452F]">Delete for good</div>
+            @if ($offspring->isNotEmpty())
+                <p class="text-sm text-stone">{{ $animal->visual_id }} is the parent of {{ $offspring->count() }} {{ \Illuminate\Support\Str::plural('animal', $offspring->count()) }}, so it can't be deleted without breaking their pedigree. Mark it as sold or dead instead.</p>
+            @else
+                <p class="text-sm text-stone">Only for test animals or mistakes. Its weighings, records and auction-book lots are deleted too. This can't be undone.</p>
+                @error('delete')<p class="text-sm text-[#B0452F]">{{ $message }}</p>@enderror
+                <button class="btn-sm btn rounded-full px-5 bg-[#B0452F] text-white hover:brightness-110" x-text="confirm ? 'Tap again to delete {{ $animal->visual_id }}' : 'Delete {{ $animal->visual_id }}'"></button>
+            @endif
+        </form>
+    </div>
+</div>
 @endsection

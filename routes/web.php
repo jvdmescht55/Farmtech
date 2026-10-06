@@ -54,6 +54,13 @@ Route::post('/store/interest', [SiteController::class, 'interest'])->name('site.
 Route::get('/custom', [SiteController::class, 'custom'])->name('site.custom');
 Route::get('/prices', [SiteController::class, 'prices'])->name('site.prices');
 Route::middleware('auth')->group(function () {
+    Route::get('/terms/accept', fn () => view('public.terms-accept'))->name('terms.accept');
+    Route::post('/terms/accept', function (\Illuminate\Http\Request $request) {
+        $request->validate(['terms' => ['accepted']], ['terms.accepted' => 'Please tick the box to accept the terms.']);
+        $request->user()->forceFill(['terms_accepted_at' => now()])->save();
+
+        return redirect()->intended(route('herd.hub'));
+    })->name('terms.accept.store');
     Route::get('/pair', [\App\Http\Controllers\PairController::class, 'show'])->name('pair');
     Route::post('/pair', [\App\Http\Controllers\PairController::class, 'claim'])->name('pair.claim')->middleware('throttle:15,1');
     Route::get('/pair/check/{code}', [\App\Http\Controllers\PairController::class, 'check'])->name('pair.check');
@@ -143,6 +150,9 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
     Route::get('/animals/{animal}/edit', [RfidAnimalController::class, 'edit'])->name('animals.edit');
     Route::put('/animals/{animal}', [RfidAnimalController::class, 'update'])->name('animals.update');
     Route::post('/animals/{animal}/weights', [RfidAnimalController::class, 'addWeight'])->name('animals.weights.store');
+    Route::post('/animals/{animal}/status', [RfidAnimalController::class, 'status'])->name('animals.status');
+    Route::delete('/animals/{animal}', [RfidAnimalController::class, 'destroy'])->name('animals.destroy');
+    Route::post('/animals-bulk', [RfidAnimalController::class, 'bulk'])->name('animals.bulk');
 
     Route::get('/alerts', [RfidAlertController::class, 'index'])->name('alerts');
     Route::post('/alerts/dismiss', [RfidAlertController::class, 'dismiss'])->name('alerts.dismiss');

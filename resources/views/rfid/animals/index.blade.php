@@ -26,6 +26,11 @@
     </div>
 </form>
 
+<div x-data="{ picking: false, ids: [], all: @js($animals->pluck('id')), toggle(id) { this.ids.includes(id) ? this.ids = this.ids.filter(i => i !== id) : this.ids.push(id) } }">
+<div class="flex items-center justify-between gap-3 mb-3 text-sm">
+    <span class="text-stone">{{ $animals->total() }} {{ \Illuminate\Support\Str::plural('animal', $animals->total()) }}{{ request('status', 'active') === 'active' ? ' in the active herd' : '' }}</span>
+    <button type="button" @click="picking = !picking; ids = []" class="btn-line btn-sm" x-text="picking ? 'Done' : 'Select'"></button>
+</div>
 {{-- Phones: one tidy card per animal, the numbers that matter up front --}}
 <div class="sm:hidden panel divide-y divide-hairline overflow-hidden">
     @forelse ($animals as $a)
@@ -33,11 +38,12 @@
             $w = $latestWeights->get($a->id);
             $alert = $alertMap->get($a->id);
         @endphp
-        <a href="{{ route('rfid.animals.show', $a) }}" class="flex items-center gap-3 px-4 py-3.5 active:bg-sand-light">
+        <a href="{{ route('rfid.animals.show', $a) }}" @click="if (picking) { $event.preventDefault(); toggle({{ $a->id }}) }" class="flex items-center gap-3 px-4 py-3.5 active:bg-sand-light" :class="ids.includes({{ $a->id }}) && 'bg-ochre/10'">
+            <span x-show="picking" x-cloak class="w-5 h-5 shrink-0 rounded border-2 grid place-items-center text-[11px]" :class="ids.includes({{ $a->id }}) ? 'bg-char border-char text-sand' : 'border-hairline'"><span x-show="ids.includes({{ $a->id }})">✓</span></span>
             <span class="w-2 h-2 shrink-0 rounded-full {{ $alert ? $sev[$alert['severity']] : 'bg-transparent' }}"></span>
             <span class="flex-1 min-w-0">
                 <span class="block font-num font-medium truncate">{{ $a->visual_id }}</span>
-                <span class="block text-xs text-stone truncate">{{ $a->sexLabel() }}{{ $a->birth_date ? ' · '.$a->birth_date->format('M Y') : '' }}{{ $alert ? ' · '.$alert['title'] : '' }}</span>
+                <span class="block text-xs text-stone truncate">{{ $a->sexLabel() }}{{ $a->birth_date ? ' · '.$a->birth_date->format('M Y') : '' }}{{ $a->status !== 'active' ? ' · '.\App\Models\Animal::STATUSES[$a->status] : '' }}{{ $alert ? ' · '.$alert['title'] : '' }}</span>
             </span>
             <x-tier :tier="$a->computed_tier" />
             <span class="w-16 text-right font-num text-sm">{{ $w ? $w->weight_kg.' kg' : '—' }}</span>
@@ -50,15 +56,15 @@
 <div class="hidden sm:block panel overflow-hidden">
     <div class="overflow-x-auto">
         <table class="tbl">
-            <thead><tr><th class="w-6"></th><th>Animal</th><th>Tag (EID)</th><th>Sex</th><th>Born</th><th>Tier</th><th class="text-right">Weight</th><th>Last seen</th></tr></thead>
+            <thead><tr><th class="w-6"><input x-show="picking" x-cloak type="checkbox" aria-label="Select all on this page" @change="ids = $event.target.checked ? [...all] : []" class="rounded border-hairline"></th><th>Animal</th><th>Tag (EID)</th><th>Sex</th><th>Born</th><th>Tier</th><th class="text-right">Weight</th><th>Last seen</th></tr></thead>
             <tbody>
             @forelse ($animals as $a)
                 @php
                     $w = $latestWeights->get($a->id);
                     $alert = $alertMap->get($a->id);
                 @endphp
-                <tr class="cursor-pointer" onclick="if (!event.target.closest('a')) location.href='{{ route('rfid.animals.show', $a) }}'">
-                    <td>@if ($alert)<span class="block w-2 h-2 rounded-full {{ $sev[$alert['severity']] }}" title="{{ $alert['title'] }}"></span>@endif</td>
+                <tr class="cursor-pointer" :class="ids.includes({{ $a->id }}) && 'bg-ochre/10'" @click="if (event.target.closest('a,input')) return; picking ? toggle({{ $a->id }}) : location.href='{{ route('rfid.animals.show', $a) }}'">
+                    <td><input x-show="picking" x-cloak type="checkbox" aria-label="Select {{ $a->visual_id }}" :checked="ids.includes({{ $a->id }})" @change="toggle({{ $a->id }})" class="rounded border-hairline">@if ($alert)<span x-show="!picking" class="block w-2 h-2 rounded-full {{ $sev[$alert['severity']] }}" title="{{ $alert['title'] }}"></span>@endif</td>
                     <td class="whitespace-nowrap">
                         <a href="{{ route('rfid.animals.show', $a) }}" class="font-num font-medium link-u">{{ $a->visual_id }}</a>
                         @if ($a->status !== 'active')<span class="ml-2 chip bg-sand-deep text-stone">{{ \App\Models\Animal::STATUSES[$a->status] }}</span>@endif
@@ -78,4 +84,18 @@
     </div>
 </div>
 <div class="mt-6">{{ $animals->links() }}</div>
+
+{{-- Action bar for selected animals --}}
+<form method="POST" action="{{ route('rfid.animals.bulk') }}" x-show="picking && ids.length" x-cloak x-transition
+      class="fixed inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 bottom-20 lg:bottom-6 z-40 rounded-2xl bg-char text-sand shadow-2xl p-3 flex flex-wrap items-center gap-2"
+      x-data="{ sure: false }" @submit="if ($event.submitter.value === 'delete' && !sure) { $event.preventDefault(); sure = true }">
+    @csrf
+    <template x-for="id in ids" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+    <span class="px-2 text-sm"><span x-text="ids.length"></span> selected</span>
+    <button name="action" value="sold" class="rounded-full px-4 h-9 text-sm bg-white/10 hover:bg-white/20">Sold</button>
+    <button name="action" value="dead" class="rounded-full px-4 h-9 text-sm bg-white/10 hover:bg-white/20">Died</button>
+    @if (request('status', 'active') !== 'active')<button name="action" value="active" class="rounded-full px-4 h-9 text-sm bg-white/10 hover:bg-white/20">Back to active</button>@endif
+    <button name="action" value="delete" class="rounded-full px-4 h-9 text-sm bg-[#B0452F] hover:brightness-110" x-text="sure ? 'Tap again: delete for good' : 'Delete (test animals)'"></button>
+</form>
+</div>
 @endsection

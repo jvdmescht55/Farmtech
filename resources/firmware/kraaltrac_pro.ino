@@ -9,8 +9,8 @@
  *   1. Talks to https://farmtech.site directly. No PC, XAMPP, router port or
  *      DuckDNS needed — any Wi-Fi or phone hotspot with internet works.
  *   2. No more shared API key typed into the code. First time it starts, the
- *      LCD shows a 6-digit PAIR CODE. Type it in Herd Manager → KraalTrac Pro
- *      → More → Devices → "Pair it". The scale saves its own key in flash.
+ *      LCD shows a 6-digit PAIR CODE. Open farmtech.site/pair on your phone
+ *      and type it. The scale saves its own key in flash.
  *      (Idle screen → D shows device status; from there # + PIN re-pairs.)
  *   3. NEW SHEEP NUMBERS ARE BIRTHDAY CODES: 6 digits, YYMMNN.
  *        250912 = born 2025, September (09), 12th lamb that month.
@@ -26,6 +26,14 @@
  *   7. Uses HTTPS. setInsecure() skips the certificate check — fine to start;
  *      later swap in the ESP32 CA bundle.
  *
+ *  3.4.0: keeps a list of your animals (id, tag, sex, last weight, warnings)
+ *  so a scan shows "Last 42.5kg 12/09" and the gain after weighing, even
+ *  offline. Never drops old records: when memory is full it tells you to
+ *  sync. D → D shows animals known, memory used and room left.
+ *  3.3.0: queue, tag list and flock list are stored in files (LittleFS) so a
+ *  full 300-record queue fits; records upload in batches of 40; pairing can
+ *  be skipped with * (weigh offline, pair later via D → #).
+ *
  *  KEPT: offline queue (300 records), auto Wi-Fi from knownNetworks[],
  *  background sync, 8 s re-scan cooldown, B = dump queue over USB,
  *  A = clear queue with PIN, tag → sheep map on the device.
@@ -37,6 +45,7 @@
  *     scale". Or run sync_from_scale.ps1 (download from the Devices page).
  *
  *  Libraries: LiquidCrystal_I2C, Keypad, ArduinoJson 7 (Library Manager)
+ *  Board: ESP32 Dev Module · Partition scheme: Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
  * ==========================================================================*/
 
 #include <Wire.h>
@@ -49,6 +58,7 @@
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <Preferences.h>
+#include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <sys/time.h>
 #include <time.h>
@@ -70,12 +80,13 @@ WiFiMulti wifiMulti;
 
 const char* SERVER    = "https://farmtech.site";
 const char* MODEL     = "KraalTrac Pro";
-const char* FIRMWARE  = "3.2.0";
+const char* FIRMWARE  = "3.4.0";
 // Optional: paste a device key from Herd Manager → Devices → "Add a device by
 // hand" here to skip pairing. Leave empty to pair with a 6-digit code.
 const char* DEVICE_KEY = "";
 
 const char* CLEAR_PIN = "1379";   // PIN to clear the queue / re-pair on the keypad
+const char* ANIMAL    = "Sheep";  // word on the screens: "Sheep", "Cattle", "Goat" or "Animal"
 
 // --- LIMITS / TIMING ---
 const int MAX_ID_LEN            = 10;     // existing numbers can be 4–10 digits (2415, 21270, 197013…)
@@ -85,8 +96,10 @@ const int MAX_WEIGHT_LEN        = 6;
 const unsigned long RESCAN_COOLDOWN_MS = 8000;
 const unsigned long SYNC_INTERVAL_MS   = 60000UL;
 const unsigned long FLOCK_REFRESH_MS   = 6UL * 60 * 60 * 1000UL;
-const unsigned long WIFI_RETRY_MS      = 15000UL;
-const int MAX_QUEUE_LINES        = 300;
+const unsigned long WIFI_RETRY_MS      = 30000UL;   // only retried while the scale is idle
+const int SYNC_BATCH                = 40;       // records per upload
+const int RECORD_BYTES           = 80;       // average size of one queued record
+const size_t STORAGE_RESERVE     = 12288;    // always keep this free (animal list updates, safety)
 
 // --- KEYPAD SETUP (unchanged) ---
 const byte ROWS = 4;
@@ -141,7 +154,11 @@ unsigned long lastWifiAttempt = 0;
 unsigned long lastSyncAttempt = 0;
 unsigned long lastFlockRefresh = 0;
 bool wifiWasConnected = false;
+bool pairingSkipped = false;   // * on the pairing screen: weigh offline, pair later (D → #)
+String tagMapCache = "";       // "982000123456789=250912\n…" (also in /tags.txt)
 String pinBuf = "";
+
+void syncOfflineLogs(int maxBatches = 2);   // defined further down
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -205,6 +222,139 @@ String urlEncode(String s) {
   return o;
 }
 
+// ---------------------------------------------------------------------------
+// Storage: the queue, tag list and flock list live in files (LittleFS), not in
+// Preferences — Preferences can't hold a string over ~4 000 bytes, which a
+// full queue (300 records) or a big tag list easily is. Small settings stay in
+// Preferences. Files are replaced safely: write .tmp, then rename.
+// ---------------------------------------------------------------------------
+const char* Q_FILE = "/queue.txt";
+const char* TAG_FILE = "/tags.txt";
+const char* FLOCK_FILE = "/flock.txt";
+const char* INFO_FILE = "/animals.txt";   // id|tag|sex|last kg|dd/mm|warning — last line for an id wins
+
+// What the scale knows about the animal on screen (from /animals.txt)
+String curSex = "", curLastKg = "", curLastDate = "", curWarn = "";
+
+String readFile(const char* path) {
+  File f = LittleFS.open(path, "r");
+  if (!f) return "";
+  String s = f.readString();
+  f.close();
+  return s;
+}
+
+bool writeFile(const char* path, const String &data) {
+  String tmp = String(path) + ".tmp";
+  File f = LittleFS.open(tmp, "w");
+  if (!f) return false;
+  size_t n = f.print(data);
+  f.close();
+  if (n != data.length()) { LittleFS.remove(tmp); return false; }
+  LittleFS.remove(path);
+  return LittleFS.rename(tmp, path);
+}
+
+bool appendFile(const char* path, const String &data) {
+  File f = LittleFS.open(path, "a");
+  if (!f) return false;
+  size_t n = f.print(data);
+  f.close();
+  return n == data.length();
+}
+
+/** One-time move from the old Preferences keys into files. */
+void migrateStorage() {
+  const char* keys[] = { "queue", "tagmap", "flock" };
+  const char* files[] = { Q_FILE, TAG_FILE, FLOCK_FILE };
+  for (int i = 0; i < 3; i++) {
+    if (!prefs.isKey(keys[i])) continue;
+    String v = prefs.getString(keys[i], "");
+    if (v.length()) appendFile(files[i], v);
+    prefs.remove(keys[i]);
+  }
+}
+
+size_t storageFree() {
+  size_t total = LittleFS.totalBytes(), used = LittleFS.usedBytes();
+  return used >= total ? 0 : total - used;
+}
+
+/** Roughly how many more weighings fit before it must sync. */
+int recordsRoom() {
+  size_t f = storageFree();
+  return f <= STORAGE_RESERVE ? 0 : (int) ((f - STORAGE_RESERVE) / RECORD_BYTES);
+}
+
+int storagePct() {
+  size_t total = LittleFS.totalBytes();
+  return total ? (int) (LittleFS.usedBytes() * 100 / total) : 100;
+}
+
+int countLines(const char* path) {
+  File f = LittleFS.open(path, "r");
+  if (!f) return 0;
+  int c = 0;
+  while (f.available()) if (f.read() == '\n') c++;
+  f.close();
+  return c;
+}
+
+/** Looks the animal up in /animals.txt and fills cur* (the last line for that id wins). */
+void loadAnimalInfo(const String &id) {
+  curSex = ""; curLastKg = ""; curLastDate = ""; curWarn = "";
+  File f = LittleFS.open(INFO_FILE, "r");
+  if (!f) return;
+  String prefix = id + "|";
+  while (f.available()) {
+    String line = f.readStringUntil('\n');
+    if (!line.startsWith(prefix)) continue;
+    String p[6]; int n = 0, from = 0;
+    for (int i = 0; i <= (int) line.length() && n < 6; i++) {
+      if (i == (int) line.length() || line[i] == '|') { p[n++] = line.substring(from, i); from = i + 1; }
+    }
+    if (p[2].length()) curSex = p[2];
+    if (p[3].length()) { curLastKg = p[3]; curLastDate = p[4]; }
+    curWarn = p[5];
+  }
+  f.close();
+}
+
+/** Remember today's weight on the scale, so the next scan shows it even before syncing. */
+void noteWeighed(const String &id, const String &tag, const String &sex, const String &kg) {
+  String date = "";
+  if (clockIsSet()) { time_t now = time(nullptr); struct tm t; localtime_r(&now, &t); char d[6]; snprintf(d, sizeof d, "%02d/%02d", t.tm_mday, t.tm_mon + 1); date = d; }
+  appendFile(INFO_FILE, id + "|" + tag + "|" + sex + "|" + kg + "|" + date + "|" + curWarn + "\n");
+}
+
+/** Download the farm's animal list (id, tag, sex, last weight, warnings) straight into flash. */
+void downloadAnimalInfo() {
+  if (deviceKey.length() == 0) return;
+  WiFiClientSecure c; c.setInsecure();
+  HTTPClient http;
+  if (!http.begin(c, String(SERVER) + "/api/v1/flock?format=info")) return;
+  http.addHeader("Authorization", "Bearer " + deviceKey);
+  http.setConnectTimeout(4000); http.setTimeout(15000);
+  if (http.GET() == 200) {
+    String tmp = String(INFO_FILE) + ".tmp";
+    File f = LittleFS.open(tmp, "w");
+    if (f) {
+      int n = http.writeToStream(&f);
+      f.close();
+      if (n > 0) { LittleFS.remove(INFO_FILE); LittleFS.rename(tmp, INFO_FILE); }
+      else LittleFS.remove(tmp);
+    }
+  }
+  http.end();
+}
+
+/** The animal's card: who it is, what it weighed last, any warning — then the weigh-type menu. */
+void showAnimalCard(const String &headline) {
+  loadAnimalInfo(currentID);
+  String l1 = curWarn.length() ? "!" + curWarn
+            : (curLastKg.length() ? "Last " + curLastKg + "kg " + curLastDate : "No weight yet");
+  updateDisplay(headline + (curSex.length() ? " " + curSex : ""), l1, "A:Birth  B:Wean", "C:Post-W D:Mature");
+}
 
 // ---------------------------------------------------------------------------
 // Wi-Fi setup from your phone (no code editing): the scale opens an open Wi-Fi
@@ -302,22 +452,35 @@ void wifiSetupPortal() {
 // ---------------------------------------------------------------------------
 // Pairing — shows a 6-digit code, farmer types it into Herd Manager
 // ---------------------------------------------------------------------------
+/** Waits up to ms while still reading the keypad; true if * was pressed. */
+bool waitOrCancel(unsigned long ms) {
+  unsigned long until = millis() + ms;
+  while (millis() < until) { if (keypad.getKey() == '*') return true; delay(20); }
+  return false;
+}
+
 void pairDevice() {
+  pairingSkipped = false;
   while (deviceKey.length() == 0) {
     if (WiFi.status() != WL_CONNECTED) {
-      updateDisplay("KraalTrac Pro", "Needs Wi-Fi once", "to pair with the", "website. Waiting...");
-      wifiMulti.run(); delay(3000);
+      updateDisplay("KraalTrac Pro", "Needs Wi-Fi once", "to pair. Waiting...", "*: Weigh offline");
+      wifiMulti.run(3000);
+      if (waitOrCancel(2000)) { pairingSkipped = true; return; }
       continue;
     }
     JsonDocument q; q["serial"] = serialNo; q["model"] = MODEL; q["firmware"] = FIRMWARE;
     String body, reply; serializeJson(q, body);
-    if (httpPost("/api/v1/pair", body, "application/json", reply, false) != 201) { delay(4000); continue; }
+    if (httpPost("/api/v1/pair", body, "application/json", reply, false) != 201) {
+      updateDisplay("KraalTrac Pro", "Can't reach website", "Trying again...", "*: Weigh offline");
+      if (waitOrCancel(4000)) { pairingSkipped = true; return; }
+      continue;
+    }
     JsonDocument r; deserializeJson(r, reply);
     String code = r["code"].as<String>(), secret = r["secret"].as<String>();
     unsigned long until = millis() + r["expires_in"].as<unsigned long>() * 1000UL;
-    updateDisplay("Go to farmtech.site", "/pair and type:", "      " + code.substring(0, 3) + " " + code.substring(3), "Waiting...");
+    updateDisplay("Go to farmtech.site", "/pair and type:", "      " + code.substring(0, 3) + " " + code.substring(3), "*: Weigh offline");
     while (millis() < until) {
-      delay(5000);
+      if (waitOrCancel(4000)) { pairingSkipped = true; return; }
       JsonDocument s; s["secret"] = secret; String sb, sr; serializeJson(s, sb);
       httpPost("/api/v1/pair/status", sb, "application/json", sr, false);
       JsonDocument st; deserializeJson(st, sr);
@@ -336,7 +499,7 @@ void pairDevice() {
 void syncClock() {
   String reply;
   int code = httpGet("/api/v1/ping", reply);
-  if (code == 401) { deviceKey = ""; prefs.remove("devkey"); pairDevice(); return; }
+  if (code == 401) { deviceKey = ""; prefs.remove("devkey"); pairDevice(); return; }   // key was revoked on the website
   JsonDocument r;
   if (code == 200 && !deserializeJson(r, reply) && r["epoch"].is<uint32_t>()) {
     timeval tv = { (time_t) r["epoch"].as<uint32_t>(), 0 };
@@ -384,8 +547,11 @@ void setup() {
   lcd.backlight();
 
   prefs.begin("livestock", false);
+  if (!LittleFS.begin(true)) updateDisplay("Storage error!", "Records can't be", "saved. Re-flash the", "scale or call us.");
   migrateOldQueueFormat();
-  localFlockCache = prefs.getString("flock", "");
+  migrateStorage();
+  localFlockCache = readFile(FLOCK_FILE);
+  tagMapCache = readFile(TAG_FILE);
   refSeq = prefs.getUInt("refseq", 0);
   serialNo = "KT-" + String((uint32_t) ESP.getEfuseMac(), HEX);
   deviceKey = prefs.getString("devkey", "");
@@ -418,7 +584,7 @@ void setup() {
   if (WiFi.status() == WL_CONNECTED) {
     if (deviceKey.length() == 0) pairDevice();
     syncClock();
-    syncOfflineLogs();
+    syncOfflineLogs(8);
     downloadFlockCache();
   }
   resetScreen();
@@ -448,13 +614,13 @@ void loop() {
               currentID = resolvedId;
               currentTag = scannedRawTag;
               state = SELECT_WEIGHT_TYPE;
-              updateDisplay("Sheep: " + currentID, "Select Weight Type:", "A:Birth  B:Wean", "C:Post-W D:Mature");
+              showAnimalCard(String(ANIMAL) + ": " + currentID);
             }
           } else {
             pendingRawTag = scannedRawTag;
             currentID = "";
             state = UNKNOWN_TAG_PROMPT;
-            updateDisplay("New tag scanned", "Not a known sheep", "A: Give it a number", "*: Cancel / Retry");
+            updateDisplay("New tag scanned", "Not known: " + String(ANIMAL), "A: Give it a number", "*: Cancel / Retry");
           }
         }
       }
@@ -481,7 +647,7 @@ void loop() {
             currentTag = "";
             if (validateIDOffline(currentID)) {
               state = SELECT_WEIGHT_TYPE;
-              showWeightTypeMenu();
+              showAnimalCard(String(ANIMAL) + ": " + currentID);
             } else {
               pendingRawTag = "";
               state = UNKNOWN_TAG_PROMPT;
@@ -510,9 +676,9 @@ void loop() {
         else if (key == 'D') {
           state = DEVICE_STATUS;
           updateDisplay(WiFi.status() == WL_CONNECTED ? "Wi-Fi: " + WiFi.SSID() : "Wi-Fi: not connected",
-                        deviceKey.length() ? "Paired: yes" : "Paired: NO",
-                        "Queued: " + String(queueCount()) + "  fw " + FIRMWARE,
-                        "#:Re-pair A:Wi-Fi *:Back");
+                        deviceKey.length() ? "Paired: yes" : "Paired: NO (#)",
+                        "Queued " + String(queueCount()) + " Room " + String(recordsRoom()),
+                        "#:Pair A:WiFi D:More");
         }
       }
       break;
@@ -522,6 +688,12 @@ void loop() {
         char key = keypad.getKey();
         if (!key) break;
         if (key == '*') { state = ENTER_ID; resetScreen(); }
+        else if (key == 'D') {
+          updateDisplay("Animals known: " + String(countLines(INFO_FILE) > 0 ? countLines(INFO_FILE) : countLines(TAG_FILE)),
+                        "Memory used: " + String(storagePct()) + "%",
+                        "Room for ~" + String(recordsRoom()) + " recs",
+                        "fw " + String(FIRMWARE) + "  *:Back");
+        }
         else if (key == 'A') { wifiSetupPortal(); }
         else if (key == '#') { pinBuf = ""; state = CONFIRM_REPAIR_PIN; updateDisplay("PIN to re-pair:", "", "PIN: ", "#: OK  *: Cancel"); }
       }
@@ -547,7 +719,7 @@ void loop() {
               deviceKey = ""; prefs.remove("devkey");
               pairDevice();
             } else {
-              prefs.putString("queue", "");
+              writeFile(Q_FILE, "");
               updateDisplay("Queue cleared.", "Only do this AFTER", "the import worked", "on the website!");
               delay(2000);
             }
@@ -573,7 +745,7 @@ void loop() {
           // typed by hand already? keep it. Otherwise suggest the next birthday number.
           newSheepIdBuf = (currentID.length() > 0 && currentID.length() <= NEW_SHEEP_ID_LEN) ? currentID : suggestBirthdayId();
           state = ENTER_NEW_SHEEP_ID;
-          updateDisplay("New sheep's number:", "ID: " + newSheepIdBuf, "YYMMNN e.g. 250912", "#: OK C:Del *:Cancel");
+          updateDisplay("New " + String(ANIMAL) + " number:", "ID: " + newSheepIdBuf, "YYMMNN e.g. 250912", "#: OK C:Del *:Cancel");
         }
         else if (key == '*') {
           currentID = ""; pendingRawTag = ""; state = ENTER_ID; resetScreen();
@@ -605,10 +777,11 @@ void loop() {
             newSheepIdBuf = "";
             if (validateIDOffline(currentID)) {
               state = SELECT_WEIGHT_TYPE;
-              updateDisplay("Linked to " + currentID, "Select Weight Type:", "A:Birth  B:Wean", "C:Post-W D:Mature");
+              showAnimalCard("Linked " + currentID);
             } else {
+              curSex = ""; curLastKg = ""; curLastDate = ""; curWarn = "";
               state = SELECT_GENDER;
-              updateDisplay("New sheep " + currentID, "Select Gender:", "A: Male", "B: Female");
+              updateDisplay("New " + String(ANIMAL) + " " + currentID, "Select Gender:", "A: Male", "B: Female");
             }
           } else {
             updateDisplay("Needs 6 digits:", "YY MM NN", "e.g. 250912 = 2025,", "Sep, 12th. C:Del");
@@ -616,7 +789,7 @@ void loop() {
           }
           if (state != ENTER_NEW_SHEEP_ID) break;
         }
-        updateDisplay("New sheep's number:", "ID: " + newSheepIdBuf, "YYMMNN e.g. 250912", "#: OK C:Del *:Cancel");
+        updateDisplay("New " + String(ANIMAL) + " number:", "ID: " + newSheepIdBuf, "YYMMNN e.g. 250912", "#: OK C:Del *:Cancel");
       }
       break;
 
@@ -704,9 +877,14 @@ void loop() {
           float wv = currentWeightValue.toFloat();
           if (currentWeightValue.length() > 0 && wv > 0.0) {
             state = SHOW_SUMMARY;
+            String gain = "";
+            if (curLastKg.length() && currentWeightType != "birth") {
+              float d = wv - curLastKg.toFloat();
+              gain = String(d >= 0 ? "+" : "") + String(d, 1) + "kg since " + (curLastDate.length() ? curLastDate : "last");
+            }
             String status = saveRecordLocallyAndSend();
-            updateDisplay("Saved: " + currentID, currentWeightValue + "kg  " + typeLabel(currentWeightType), status, "");
-            delay(2500);
+            updateDisplay("Saved: " + currentID, currentWeightValue + "kg  " + typeLabel(currentWeightType), gain.length() ? gain : status, gain.length() ? status : "");
+            delay(gain.length() ? 3000 : 2500);
             currentID = ""; currentTag = ""; currentWeightType = ""; currentGender = "";
             currentSireID = ""; currentDamID = ""; currentWeightValue = "";
             pendingRawTag = ""; newSheepIdBuf = "";
@@ -730,9 +908,9 @@ void loop() {
 // RFID tag -> sheep number (on this device, merged with the website's list)
 // ---------------------------------------------------------------------------
 String lookupTagMap(String rawTag) {
-  String hay = "\n" + prefs.getString("tagmap", "");
+  String hay = "\n" + tagMapCache;
   String needle = "\n" + rawTag + "=";
-  int pos = hay.indexOf(needle);
+  int pos = hay.lastIndexOf(needle);
   if (pos < 0) return "";
   int start = pos + needle.length();
   int end = hay.indexOf('\n', start);
@@ -743,9 +921,9 @@ String lookupTagMap(String rawTag) {
 void saveTagMap(String rawTag, String farmId) {
   if (rawTag.length() == 0) return;
   if (lookupTagMap(rawTag) == farmId) return;
-  String map = prefs.getString("tagmap", "");
-  map += rawTag + "=" + farmId + "\n";
-  prefs.putString("tagmap", map);
+  String line = rawTag + "=" + farmId + "\n";
+  tagMapCache += line;          // a later line wins over an older one for the same tag
+  appendFile(TAG_FILE, line);
 }
 
 // ---------------------------------------------------------------------------
@@ -760,10 +938,11 @@ bool validateIDOffline(String idToCheck) {
 
 void downloadFlockCache() {
   if (deviceKey.length() == 0) return;
+  downloadAnimalInfo();
   String reply;
   if (httpGet("/api/v1/flock", reply) == 200 && reply.length() > 0 && !reply.startsWith("ERROR")) {
     localFlockCache = reply;
-    prefs.putString("flock", localFlockCache);
+    writeFile(FLOCK_FILE, localFlockCache);
   }
   // tags registered anywhere on the farm (other scales, the website) work here too
   if (httpGet("/api/v1/flock?format=tags", reply) == 200 && !reply.startsWith("ERROR")) {
@@ -785,27 +964,27 @@ void downloadFlockCache() {
 //   ref|id|tag|type|gender|sire|dam|weight|epoch
 // (old 6-field lines "id|type|gender|sire|dam|weight" are still understood)
 // ---------------------------------------------------------------------------
-void queueAppend(String rec) {
-  String q = prefs.getString("queue", "");
-  int lines = 0;
-  for (unsigned int i = 0; i < q.length(); i++) if (q[i] == '\n') lines++;
-  if (lines >= MAX_QUEUE_LINES) {
-    int firstNL = q.indexOf('\n');
-    if (firstNL >= 0) q = q.substring(firstNL + 1);
+/** Never throws records away: when memory is full the new one is refused (and you're told), not the oldest. */
+bool queueAppend(String rec) {
+  if (storageFree() < rec.length() + 4096 || !appendFile(Q_FILE, rec + "\n")) {
+    updateDisplay("MEMORY FULL!", "Record NOT saved.", "Sync first (Wi-Fi", "or plug in USB).");
+    delay(3000);
+    return false;
   }
-  q += rec + "\n";
-  prefs.putString("queue", q);
+  return true;
 }
 
 int queueCount() {
-  String q = prefs.getString("queue", "");
+  File f = LittleFS.open(Q_FILE, "r");
+  if (!f) return 0;
   int c = 0;
-  for (unsigned int i = 0; i < q.length(); i++) if (q[i] == '\n') c++;
+  while (f.available()) if (f.read() == '\n') c++;
+  f.close();
   return c;
 }
 
 void dumpQueueToSerial() {
-  String q = prefs.getString("queue", "");
+  String q = readFile(Q_FILE);
   Serial.println();
   Serial.println("----BEGIN QUEUE----");
   if (q.length() > 0) Serial.print(q); else Serial.println("(empty - nothing queued)");
@@ -821,14 +1000,14 @@ void dumpQueueToSerial() {
 //               confirmed saved), so anything scanned meanwhile is kept.
 //   CLEAR    -> drops everything (old behaviour)
 void dropFirstRecords(int n) {
-  String q = prefs.getString("queue", "");
+  String q = readFile(Q_FILE);
   int pos = 0;
   for (int i = 0; i < n && pos < (int)q.length(); i++) {
     int nl = q.indexOf('\n', pos);
     if (nl < 0) { pos = q.length(); break; }
     pos = nl + 1;
   }
-  prefs.putString("queue", q.substring(pos));
+  writeFile(Q_FILE, q.substring(pos));
 }
 
 void handleSerialCommands() {
@@ -836,12 +1015,12 @@ void handleSerialCommands() {
   String cmd = Serial.readStringUntil('\n');
   cmd.trim();
   if (cmd == "HELLO") {
-    Serial.println("KRAALTRAC PRO " + String(FIRMWARE) + " QUEUE " + String(queueCount()));
+    Serial.println("KRAALTRAC PRO " + String(FIRMWARE) + " QUEUE " + String(queueCount()) + " ROOM " + String(recordsRoom()));
   } else if (cmd == "DUMP") {
     dumpQueueToSerial();
   } else if (cmd.startsWith("CLEAR")) {
     int n = cmd.length() > 5 ? cmd.substring(6).toInt() : -1;
-    if (n > 0) dropFirstRecords(n); else prefs.putString("queue", "");
+    if (n > 0) dropFirstRecords(n); else writeFile(Q_FILE, "");
     Serial.println("CLEARED " + String(n > 0 ? n : 0) + " LEFT " + String(queueCount()));
     updateDisplay("USB sync done!", "Saved on farmtech", "Scale memory cleared", "Lekker!");
     delay(2500);
@@ -852,62 +1031,66 @@ void handleSerialCommands() {
 void migrateOldQueueFormat() {
   int oldCount = prefs.getInt("q_count", 0);
   if (oldCount <= 0) return;
-  String migrated = prefs.getString("queue", "");
+  String migrated = "";
   for (int i = 0; i < oldCount; i++) {
     String key = "q_" + String(i);
     String rec = prefs.getString(key.c_str(), "");
     if (rec.length() > 0) migrated += rec + "\n";
     prefs.remove(key.c_str());
   }
-  prefs.putString("queue", migrated);
+  appendFile(Q_FILE, migrated);
   prefs.remove("q_count");
 }
 
-/** Send one queued record. True only when the website confirms it (201 + SUCCESS). */
-bool postOneRecord(String rec) {
+/** Queue line → JSON scan for the website. False if the line is malformed. */
+bool recordToJson(const String &rec, JsonObject o) {
   String f[9]; int n = 0, from = 0;
   for (int i = 0; i <= (int) rec.length() && n < 9; i++) {
     if (i == (int) rec.length() || rec[i] == '|') { f[n++] = rec.substring(from, i); from = i + 1; }
   }
-  String ref, id, tag, type, gender, sire, dam, weight, ts;
-  if (n == 6) { // old format from before this update
-    id = f[0]; type = f[1]; gender = f[2]; sire = f[3]; dam = f[4]; weight = f[5];
-    ref = serialNo + "-old-" + id + "-" + weight;
-  } else if (n == 9) {
-    ref = f[0]; id = f[1]; tag = f[2]; type = f[3]; gender = f[4]; sire = f[5]; dam = f[6]; weight = f[7]; ts = f[8];
-  } else {
-    return true; // malformed — drop rather than jam the queue
+  if (n == 6) { // old format from before the October 2026 update
+    o["ref"] = serialNo + "-old-" + f[0] + "-" + f[5];
+    o["id"] = f[0]; o["type"] = f[1]; o["gender"] = f[2]; o["sire"] = f[3]; o["dam"] = f[4]; o["weight"] = f[5];
+    return true;
   }
-
-  String body = "ref=" + urlEncode(ref) + "&id=" + urlEncode(id) + "&weight=" + urlEncode(weight) + "&type=" + urlEncode(type);
-  if (tag.length())    body += "&tag=" + urlEncode(tag);
-  if (gender.length()) body += "&gender=" + urlEncode(gender);
-  if (sire.length())   body += "&sire=" + urlEncode(sire);
-  if (dam.length())    body += "&dam=" + urlEncode(dam);
-  if (ts.toInt() > 1700000000) body += "&ts=" + ts;
-
-  String reply;
-  int code = httpPost("/api/v1/scans", body, "application/x-www-form-urlencoded", reply);
-  if (code == 401) { deviceKey = ""; prefs.remove("devkey"); return false; }
-  return (code == 201 && reply.indexOf("SUCCESS") >= 0);
+  if (n != 9) return false;
+  o["ref"] = f[0]; o["id"] = f[1]; o["type"] = f[3]; o["weight"] = f[7];
+  if (f[2].length()) o["tag"] = f[2];
+  if (f[4].length()) o["gender"] = f[4];
+  if (f[5].length()) o["sire"] = f[5];
+  if (f[6].length()) o["dam"] = f[6];
+  if (f[8].toInt() > 1700000000) o["ts"] = f[8];
+  return true;
 }
 
-void syncOfflineLogs() {
+/**
+ * Sends the queue in batches of SYNC_BATCH (one HTTPS request each) and removes
+ * a batch only after the website answers SUCCESS. Stops at the first failure so
+ * nothing is lost; maxBatches keeps the keypad responsive (the rest goes next time).
+ */
+void syncOfflineLogs(int maxBatches) {
   if (WiFi.status() != WL_CONNECTED || deviceKey.length() == 0) return;
-  String q = prefs.getString("queue", "");
-  if (q.length() == 0) return;
+  for (int b = 0; b < maxBatches; b++) {
+    String q = readFile(Q_FILE);
+    if (q.length() == 0) return;
 
-  String remaining = "";
-  int start = 0;
-  while (start < (int) q.length()) {
-    int nl = q.indexOf('\n', start);
-    if (nl < 0) break;
-    String rec = q.substring(start, nl);
-    start = nl + 1;
-    if (rec.length() == 0) continue;
-    if (!postOneRecord(rec)) remaining += rec + "\n";
+    JsonDocument doc; doc["compact"] = true;
+    JsonArray arr = doc["scans"].to<JsonArray>();
+    int taken = 0, pos = 0;
+    while (taken < SYNC_BATCH && pos < (int) q.length()) {
+      int nl = q.indexOf('\n', pos); if (nl < 0) nl = q.length();
+      String rec = q.substring(pos, nl); pos = nl + 1; taken++;
+      if (rec.length()) { JsonObject o = arr.add<JsonObject>(); if (!recordToJson(rec, o)) arr.remove(arr.size() - 1); }
+    }
+
+    if (arr.size() > 0) {
+      String body, reply; serializeJson(doc, body);
+      int code = httpPost("/api/v1/scans", body, "application/json", reply);
+      if (code == 401) { deviceKey = ""; prefs.remove("devkey"); return; }   // key revoked: pair again (D → #)
+      if (code != 201 || reply.indexOf("SUCCESS") < 0) return;                 // offline / server busy: try later
+    }
+    dropFirstRecords(taken);
   }
-  prefs.putString("queue", remaining);
 }
 
 String saveRecordLocallyAndSend() {
@@ -915,17 +1098,18 @@ String saveRecordLocallyAndSend() {
   String ts = clockIsSet() ? String((unsigned long) time(nullptr)) : "";
   String record = serialNo + "-" + String(refSeq) + "|" + currentID + "|" + currentTag + "|" + currentWeightType + "|" +
                   currentGender + "|" + currentSireID + "|" + currentDamID + "|" + currentWeightValue + "|" + ts;
-  queueAppend(record);
+  if (!queueAppend(record)) return "NOT SAVED: full";
+  noteWeighed(currentID, currentTag, currentGender.length() ? currentGender : curSex, currentWeightValue);
 
   if (!validateIDOffline(currentID)) {
     localFlockCache += currentID + ",";
-    prefs.putString("flock", localFlockCache);
+    appendFile(FLOCK_FILE, currentID + ",");
   }
 
   lastSavedID = currentID;
   lastSaveMillis = millis();
 
-  if (WiFi.status() == WL_CONNECTED) syncOfflineLogs();
+  if (WiFi.status() == WL_CONNECTED) syncOfflineLogs(1);
 
   int qc = queueCount();
   return qc == 0 ? "Synced OK" : ("Queued: " + String(qc));
@@ -951,12 +1135,15 @@ void doSyncAndAnnounce() {
 
 void maintainWiFi() {
   bool nowConnected = (WiFi.status() == WL_CONNECTED);
-  if (!nowConnected && millis() - lastWifiAttempt > WIFI_RETRY_MS) {
+  bool idle = (state == ENTER_ID && currentID.length() == 0);
+  // A Wi-Fi search freezes the keypad for a moment, so only look while nobody is typing.
+  if (!nowConnected && idle && millis() - lastWifiAttempt > WIFI_RETRY_MS) {
     lastWifiAttempt = millis();
-    wifiMulti.run();
+    wifiMulti.run(2500);
+    nowConnected = (WiFi.status() == WL_CONNECTED);
   }
   if (nowConnected && !wifiWasConnected) {
-    if (deviceKey.length() == 0 && state == ENTER_ID) pairDevice();
+    if (deviceKey.length() == 0 && idle && !pairingSkipped) pairDevice();
     if (!clockIsSet()) syncClock();
     doSyncAndAnnounce();
     downloadFlockCache();
@@ -965,7 +1152,7 @@ void maintainWiFi() {
 }
 
 void periodicSync() {
-  if (millis() - lastSyncAttempt > SYNC_INTERVAL_MS) { lastSyncAttempt = millis(); doSyncAndAnnounce(); }
+  if (millis() - lastSyncAttempt > SYNC_INTERVAL_MS && state == ENTER_ID && currentID.length() == 0) { lastSyncAttempt = millis(); doSyncAndAnnounce(); }
 }
 
 void periodicFlockRefresh() {
@@ -977,6 +1164,8 @@ void periodicFlockRefresh() {
 
 void resetScreen() {
   int qc = queueCount();
-  if (qc > 0) updateDisplay(">> " + String(qc) + " QUEUED <<", "Scan Tag or Type ID", "ID: ", "B:Dump A:Clear D:Info");
+  int room = recordsRoom();
+  if (room < 150) updateDisplay(room == 0 ? "!! MEMORY FULL !!" : "Memory low: " + String(room) + " left", "Scan Tag or Type ID", "ID: ", "Sync soon! D:Info");
+  else if (qc > 0) updateDisplay(">> " + String(qc) + " QUEUED <<", "Scan Tag or Type ID", "ID: ", "B:Dump A:Clear D:Info");
   else updateDisplay("KraalTrac Pro", "Scan Tag or Type ID", "ID: ", deviceKey.length() ? "All synced. D:Info" : "Not paired. D:Info");
 }

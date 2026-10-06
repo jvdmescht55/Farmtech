@@ -112,9 +112,9 @@
         @foreach ([
             ['Your ID system', 'Birthday numbers (250912), stud numbers, or your own format.'],
             ['Your questions', 'Only the weigh types and fields you use: sex, sire, dam, or add FAMACHA, condition score, camp.'],
+            ['Your animals', 'Screens that say cattle, goat or sheep, with the weigh types you use for each.'],
             ['Your language', 'English or Afrikaans screens.'],
             ['Your Wi-Fi', 'Farm networks and your phone\'s hotspot loaded before delivery.'],
-            ['Your PIN', 'Set your own clear-memory PIN.'],
             ['Your flock', 'Your existing tag list loaded, so it knows your animals on day one.'],
         ] as [$t, $d])
             <div class="rounded-2xl bg-white border border-hairline p-5"><div class="font-medium">{{ $t }}</div><p class="mt-1 text-sm text-stone">{{ $d }}</p></div>

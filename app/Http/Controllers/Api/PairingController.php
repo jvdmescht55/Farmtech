@@ -11,10 +11,10 @@ use Illuminate\Support\Str;
 /**
  * Device pairing, so no key ever has to be typed into firmware:
  *
- *  1. Device:  POST /api/v1/pair  {"serial":"FT1-000123","model":"RFID Scanner V1","firmware":"1.0.0"}
+ *  1. Device:  POST /api/v1/pair  {"serial":"KT-1a2b3c4d","model":"KraalTrac Pro","firmware":"3.3.1"}
  *              ← {"code":"482913","secret":"…","expires_in":900,"poll_every":5}
  *              Device shows "482 913" on its screen.
- *  2. Farmer:  Herd Manager → Toestelle → "Koppel met kode" → types 482913.
+ *  2. Farmer:  opens farmtech.site/pair (or Devices) and types 482913.
  *  3. Device:  POST /api/v1/pair/status {"secret":"…"} every few seconds
  *              ← {"status":"pending"} … then once: {"status":"paired","token":"…","device":"…","farm":"…"}
  *              Device stores the token in flash and uses it as its Bearer key from then on.

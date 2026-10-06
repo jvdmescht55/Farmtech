@@ -7,6 +7,7 @@
     <li>Under section 44 of ECTA you may cancel an online order <strong>without giving a reason and without penalty</strong> within 7 days after you receive the device.</li>
     <li>Tell us in writing (email or the contact page) and return the device in the condition you received it, with all parts.</li>
     <li>The only cost you carry is the direct cost of sending it back. We refund what you paid within 30 days of your cancellation.</li>
+    <li><strong>Ear tags:</strong> unused tags in their pack can be returned within the 7 days. Tags that have been put into an animal's ear can't be returned (unless they're faulty).</li>
     <li>This doesn't apply to devices <strong>custom-built to your own specifications</strong> (for example a one-off build you asked us to design for your farm) — we'll tell you clearly if an order falls into this category before you pay.</li>
 </ul>
 

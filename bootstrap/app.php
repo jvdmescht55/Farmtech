@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'module' => \App\Http\Middleware\EnsureModuleAccess::class,
         ]);
 
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTermsAccepted::class);
+
         // Staff land on the admin login; device customers on the public one.
         $middleware->redirectGuestsTo(fn ($request) => $request->is('admin', 'admin/*') ? '/admin/login' : '/login');
         $middleware->redirectUsersTo(fn ($request) => $request->user()?->canAccessAdminPanel() ? '/admin' : '/app');

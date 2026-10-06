@@ -145,6 +145,59 @@ class AnimalController extends Controller
         return redirect()->route('rfid.animals.show', $animal)->with('status', 'Saved.');
     }
 
+    /** Sold / died / culled / back to active. The animal stays in the database, so pedigrees stay whole. */
+    public function status(Request $request, Animal $animal)
+    {
+        $this->own($animal);
+        $data = $request->validate([
+            'status' => ['required', Rule::in(array_keys(Animal::STATUSES))],
+            'status_date' => ['nullable', 'date', 'before_or_equal:today'],
+        ]);
+        $animal->update(['status' => $data['status'], 'status_date' => $data['status'] === 'active' ? null : ($data['status_date'] ?? today())]);
+
+        return redirect()->route('rfid.animals.show', $animal)->with('status', $data['status'] === 'active'
+            ? "{$animal->visual_id} is back in the active herd."
+            : "{$animal->visual_id} marked as ".strtolower(Animal::STATUSES[$data['status']]).'. Still kept for pedigree.');
+    }
+
+    /** Permanent delete, for test animals and mistakes. Parents can't be deleted (it would break their offspring's pedigree). */
+    public function destroy(Request $request, Animal $animal)
+    {
+        $this->own($animal);
+        if ($n = $this->offspringCount($animal)) {
+            return back()->withErrors(['delete' => "{$animal->visual_id} is the parent of $n animal".($n > 1 ? 's' : '').'. Mark it as sold or dead instead, so their pedigree stays complete.']);
+        }
+        $id = $animal->visual_id;
+        $animal->delete();   // weighings, records and auction-book lots go with it
+
+        return redirect()->route('rfid.animals.index')->with('status', "$id deleted for good.");
+    }
+
+    /** Several at once from the herd list. */
+    public function bulk(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'max:2000'], 'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['sold', 'dead', 'culled', 'active', 'delete'])],
+        ]);
+        $animals = Animal::where('user_id', $request->user()->id)->whereIn('id', $data['ids'])->get();
+        if ($data['action'] !== 'delete') {
+            Animal::whereIn('id', $animals->pluck('id'))->update(['status' => $data['action'], 'status_date' => $data['action'] === 'active' ? null : today()]);
+
+            return back()->with('status', $animals->count().' animal'.($animals->count() === 1 ? '' : 's').' marked as '.strtolower(Animal::STATUSES[$data['action']]).'.');
+        }
+        $kept = $animals->filter(fn ($a) => $this->offspringCount($a) > 0);
+        $gone = $animals->diff($kept);
+        Animal::whereIn('id', $gone->pluck('id'))->delete();
+
+        return back()->with('status', $gone->count().' deleted for good.'.($kept->isNotEmpty() ? ' '.$kept->count().' kept because they\'re parents ('.$kept->take(5)->pluck('visual_id')->implode(', ').($kept->count() > 5 ? '…' : '').'): mark those as sold instead.' : ''));
+    }
+
+    private function offspringCount(Animal $animal): int
+    {
+        return Animal::where('user_id', $animal->user_id)->where(fn ($q) => $q->where('sire_id', $animal->id)->orWhere('dam_id', $animal->id))->count();
+    }
+
     public function addWeight(Request $request, Animal $animal)
     {
         $this->own($animal);

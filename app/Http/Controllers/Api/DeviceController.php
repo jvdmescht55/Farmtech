@@ -67,6 +67,10 @@ class DeviceController extends Controller
         $animals = \App\Models\Animal::where('user_id', $reader->user_id)->where('in_herd', true)->where('status', 'active')
             ->orderBy('visual_id')->get(['visual_id', 'eid']);
 
+        if ($request->query('format') === 'info') {
+            return response($this->infoLines($reader->user_id))->header('Content-Type', 'text/plain');
+        }
+
         return match ($request->query('format', 'ids')) {
             'tags' => response($animals->whereNotNull('eid')->map(fn ($a) => $a->eid.'='.$a->visual_id)->implode("\n")."\n")->header('Content-Type', 'text/plain'),
             'json' => response()->json([
@@ -76,6 +80,39 @@ class DeviceController extends Controller
             ]),
             default => response($animals->pluck('visual_id')->implode(',').',')->header('Content-Type', 'text/plain'),
         };
+    }
+
+    /**
+     * Compact animal list the KraalTrac keeps on the device, one line each:
+     *   id|tag|sex|last kg|date of that weight (dd/mm)|short warning
+     * e.g. "250912|982000123456789|F|42.5|12/09|Weight loss". About 45 bytes a line.
+     */
+    private function infoLines(int $userId): string
+    {
+        $animals = \App\Models\Animal::where('user_id', $userId)->where('in_herd', true)->where('status', 'active')
+            ->orderBy('visual_id')->get(['id', 'visual_id', 'eid', 'sex']);
+        $latest = \App\Models\Scan::whereIn('animal_id', $animals->pluck('id'))->whereNotNull('weight_kg')
+            ->whereIn('id', fn ($q) => $q->selectRaw('max(id)')->from('scans')->where('user_id', $userId)->whereNotNull('weight_kg')->groupBy('animal_id'))
+            ->get(['animal_id', 'weight_kg', 'scanned_at'])->keyBy('animal_id');
+        // Short screen labels, most important first (the scanner shows one).
+        $short = ['withdrawal' => 'WITHDRAWAL', 'weight_drop' => 'Weight drop!', 'weight_loss' => 'Losing weight', 'missed_drink' => 'Not drinking',
+            'low_birth_weight' => 'Low birth wt', 'ill_thrift' => 'Poor grower', 'overdue' => 'Overdue', 'duplicate_eid' => 'Tag on 2 IDs'];
+        $order = array_flip(array_keys($short));
+        $warn = app(HerdAlerts::class)->forUser($userId)->filter(fn ($a) => $a['animal'] && isset($short[$a['code']]))
+            ->groupBy(fn ($a) => $a['animal']->id)
+            ->map(fn ($g) => $short[$g->sortBy(fn ($a) => $order[$a['code']])->first()['code']]);
+        $clean = fn ($v) => str_replace(['|', "\n", "\r"], ' ', (string) $v);
+
+        return $animals->map(function ($a) use ($latest, $warn, $clean) {
+            $w = $latest->get($a->id);
+
+            return implode('|', [
+                $clean($a->visual_id), $a->eid ?? '', $a->sex ?? '',
+                $w ? rtrim(rtrim(number_format((float) $w->weight_kg, 1, '.', ''), '0'), '.') : '',
+                $w?->scanned_at ? $w->scanned_at->format('d/m') : '',
+                mb_substr($clean($warn->get($a->id, '')), 0, 14),
+            ]);
+        })->implode("\n")."\n";
     }
 
     /** GET /api/v1/next-id?ym=2510 → "251004" — the next free birthday number for that month (default: this month). */

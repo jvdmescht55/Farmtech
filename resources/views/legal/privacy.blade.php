@@ -32,7 +32,7 @@
 
 <h2>How long we keep it</h2>
 <ul>
-    <li>Account and farm records: while your account is open, then 30 days after closing (so you can change your mind), then deleted.</li>
+    <li>Account and farm records: while your account is open, then 30 days after closing (so you can change your mind), then deleted. If we stop the service altogether, we delete them after the notice period described in our terms of use.</li>
     <li>Order and invoice records: as long as tax law requires (usually 5 years).</li>
     <li>Enquiries: up to 2 years, unless they turn into an order.</li>
     <li>Server logs: up to 90 days.</li>
