@@ -45,6 +45,9 @@
                     <div x-show="step === 'done'" x-cloak class="mt-6 rounded-2xl bg-[#3F7A3A]/10 border border-[#3F7A3A]/30 p-5">
                         <div class="font-headline text-3xl">Lekker. All in.</div>
                         <p class="text-sm mt-1"><span x-text="saved"></span> new records saved<span x-show="dupes">, <span x-text="dupes"></span> were already here</span>. The scale's memory is cleared.</p>
+                        @php($latestFw = json_decode(@file_get_contents(public_path('firmware/kraaltrac-pro/manifest.json')), true)['version'] ?? '')
+                        <p class="text-sm mt-1" x-show="firmware && firmware < @js($latestFw)"><a href="{{ route('firmware.install') }}" class="underline font-medium">Update available (v{{ $latestFw }})</a>: newer scanner software that remembers your animals offline.</p>
+                        <p class="text-sm mt-1" x-show="firmware">Scale software v<span x-text="firmware"></span><template x-if="room !== null"><span>. Before this sync it had room for about <span x-text="room"></span> more records.</span></template></p>
                         <a href="{{ route('rfid.weighings.index') }}" class="btn-dark btn-sm mt-4">See the weigh day →</a>
                     </div>
                     <div x-show="step === 'empty'" x-cloak class="mt-6 rounded-2xl bg-sand-light p-5">

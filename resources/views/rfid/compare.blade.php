@@ -97,7 +97,7 @@
                             <td class="text-right num text-stone">{{ $m->a }}</td>
                             <td class="text-right num">{{ $m->b }}</td>
                             <td class="text-right num {{ $m->change < 0 ? 'down' : 'up' }}">{{ $m->change > 0 ? '+' : '' }}{{ $m->change }} kg</td>
-                            <td class="text-right num {{ $m->adg < 0 ? 'down' : '' }}">{{ $m->adg > 0 ? '+' : '' }}{{ $m->adg }} g/day</td>
+                            <td class="text-right num {{ $m->adg < 0 ? 'down' : '' }}">@if (abs($m->adg) > 700 && ($m->animal->species ?? 'sheep') !== 'cattle')<span class="text-ochre-dark" title="Probably a mis-typed or mis-read weight">check weight</span>@else{{ $m->adg > 0 ? '+' : '' }}{{ $m->adg }} g/day @endif</td>
                         </tr>
                     @endforeach
                     </tbody>

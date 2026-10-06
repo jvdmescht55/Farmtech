@@ -11,6 +11,7 @@
             <div class="aspect-[16/9] bg-sand-deep relative">
                 @if ($src = $l->photoUrl())<img src="{{ $src }}" alt="" class="absolute inset-0 h-full w-full object-cover">@else<div class="absolute inset-0 grid place-items-center text-stone text-sm">No photos yet</div>@endif
                 <span class="absolute top-4 left-4 chip {{ $l->is_published ? 'bg-[#3F7A3A] text-white' : 'bg-char text-sand' }}">{{ $l->is_published ? '● Live on the store' : 'Draft' }}</span>
+                @if (! $l->images)<span class="absolute top-4 right-4 chip bg-ochre text-char">No real photos yet</span>@elseif ($l->price_cents === null)<span class="absolute top-4 right-4 chip bg-ochre text-char">No price</span>@endif
             </div>
             <div class="p-6 flex-1 flex flex-col">
                 <div class="font-headline text-3xl">{{ $l->name }}</div>

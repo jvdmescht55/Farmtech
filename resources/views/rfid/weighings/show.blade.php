@@ -69,7 +69,7 @@
                     <td class="text-right num text-stone">{{ $r->prev_kg ?? '—' }}</td>
                     <td class="text-right num text-stone">{{ $r->days ?? '—' }}</td>
                     <td class="text-right num {{ ($r->change ?? 0) < 0 ? 'down' : 'up' }}">{{ $r->change !== null ? (($r->change > 0 ? '+' : '').$r->change.' kg') : '—' }}</td>
-                    <td class="text-right num {{ ($r->adg ?? 0) < 0 ? 'down' : '' }}">{{ $r->adg !== null ? (($r->adg > 0 ? '+' : '').$r->adg.' g/day') : '—' }}</td>
+                    <td class="text-right num {{ ($r->adg ?? 0) < 0 ? 'down' : '' }}">@if ($r->adg !== null && abs($r->adg) > 700 && ($r->animal->species ?? 'sheep') !== 'cattle')<span class="text-ochre-dark" title="Probably a mis-typed or mis-read weight">check weight</span>@else{{ $r->adg !== null ? (($r->adg > 0 ? '+' : '').$r->adg.' g/day') : '—' }}@endif</td>
                     <td>
                         @php($d = $r->kg - $mean)
                         <div class="relative h-1.5 rounded-full bg-sand-deep">
@@ -83,4 +83,10 @@
         </table>
     </div>
 </div>
+
+<form method="POST" action="{{ route('rfid.weighings.destroy', $session->date) }}" class="mt-10 panel p-5 flex flex-wrap items-center justify-between gap-3" x-data="{ sure: false }" @submit="if (!sure) { $event.preventDefault(); sure = true }">
+    @csrf @method('DELETE')
+    <div class="text-sm"><span class="font-medium">Was this a test, or the wrong day?</span> <span class="text-stone">Delete every weight recorded on {{ \Carbon\Carbon::parse($session->date)->format('j M Y') }}. The animals stay.</span></div>
+    <button class="btn btn-sm rounded-full px-5 bg-[#B0452F] text-white" x-text="sure ? 'Tap again to delete this weigh day' : 'Delete this weigh day'"></button>
+</form>
 @endsection

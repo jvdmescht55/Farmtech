@@ -61,7 +61,7 @@
         <ol class="mt-4 space-y-4 text-sm">
             <li class="flex gap-3"><span class="w-6 h-6 shrink-0 rounded-full bg-char text-sand grid place-items-center text-xs">1</span><span><strong>Switch it on.</strong> Plug in the power bank.</span></li>
             <li class="flex gap-3"><span class="w-6 h-6 shrink-0 rounded-full bg-char text-sand grid place-items-center text-xs">2</span><span><strong>Give it Wi-Fi from your phone.</strong> On your phone, join the Wi-Fi called <em>KraalTrac-…</em>. A page opens: choose your farm Wi-Fi or phone hotspot, type the password, Save. (Later: press <strong>D</strong> then <strong>A</strong> on the device to add another network.)</span></li>
-            <li class="flex gap-3"><span class="w-6 h-6 shrink-0 rounded-full bg-ochre text-char grid place-items-center text-xs">3</span><span><strong>Type the code here.</strong> The screen says <em>Go to farmtech.site/pair</em> with 6 numbers.</span></li>
+            <li class="flex gap-3"><span class="w-6 h-6 shrink-0 rounded-full bg-ochre text-char grid place-items-center text-xs">3</span><span><strong>Type the code here.</strong> The screen says <em>Go to farmtech.site/pair</em> with 6 numbers. (No signal right now? Press <strong>*</strong> on the device to weigh offline and pair later.)</span></li>
             <li class="flex gap-3"><span class="w-6 h-6 shrink-0 rounded-full bg-char text-sand grid place-items-center text-xs">4</span><span><strong>Scan a tag.</strong> It pops up in Live view within seconds.</span></li>
         </ol>
         <div class="mt-6 pt-5 border-t border-hairline text-sm text-stone">

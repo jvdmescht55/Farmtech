@@ -3,17 +3,30 @@
 @section('title', $listing->name.' — '.($listing->tagline ?: 'Farmtech'))
 @section('description', \Illuminate\Support\Str::limit(strip_tags($listing->overview), 155))
 
+@section('og_image', $listing->photoUrl(false) ?? '')
+@push('head')
+<script type="application/ld+json">{!! json_encode(array_filter([
+    '@context' => 'https://schema.org', '@type' => 'Product', 'name' => $listing->name, 'description' => \Illuminate\Support\Str::limit(strip_tags($listing->overview), 300),
+    'image' => $listing->photoUrl(false), 'brand' => ['@type' => 'Brand', 'name' => 'Farmtech'], 'category' => $listing->category,
+    'offers' => $listing->price_cents ? ['@type' => 'Offer', 'priceCurrency' => 'ZAR', 'price' => number_format($listing->price_cents / 100, 2, '.', ''),
+        'availability' => $listing->buyable() ? 'https://schema.org/InStock' : ($listing->stock_status === 'coming_soon' ? 'https://schema.org/PreOrder' : 'https://schema.org/BackOrder'),
+        'url' => route('site.product', $listing)] : null,
+]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+@endpush
+
 @section('content')
 @unless ($listing->is_published)
     <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-full bg-ochre text-char px-5 py-2 text-sm font-medium shadow-lg">Draft preview. Not visible to the public yet</div>
 @endunless
-<section class="pt-28 sm:pt-32 pb-16 wrap">
+<section class="pt-24 sm:pt-28 pb-16 wrap">
+    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-stone"><a href="{{ route('site.store') }}#shop" class="hover:text-char">Store</a> <span class="mx-1.5">›</span> <span class="text-char">{{ $listing->name }}</span></nav>
     <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-        <div x-data="{ i: 0 }">
+        <div x-data="{ i: 0, n: {{ max(1, count($listing->images ?: [])) }}, sx: 0 }" @keydown.left.window="i = (i - 1 + n) % n" @keydown.right.window="i = (i + 1) % n">
             @php($photos = $listing->images ?: [])
-            <div class="relative {{ $photos || $listing->module !== 'rfid' ? 'aspect-[4/3]' : 'h-[480px] sm:h-auto sm:aspect-[5/4]' }} rounded-[28px] overflow-hidden bg-char">
+            <div class="relative {{ $photos || $listing->module !== 'rfid' ? 'aspect-[4/3]' : 'h-[480px] sm:h-auto sm:aspect-[5/4]' }} rounded-[28px] overflow-hidden {{ $photos ? 'bg-white border border-hairline' : 'bg-char' }}"
+                 @touchstart.passive="sx = $event.touches[0].clientX" @touchend.passive="const d = $event.changedTouches[0].clientX - sx; if (Math.abs(d) > 40) i = (i + (d < 0 ? 1 : -1) + n) % n">
                 @forelse ($photos as $n => $p)
-                    <img x-show="i === {{ $n }}" src="{{ asset('storage/'.$p) }}" alt="{{ $listing->name }}" class="absolute inset-0 h-full w-full object-cover" @if($n) x-cloak @endif>
+                    <img x-show="i === {{ $n }}" src="{{ asset('storage/'.$p) }}" alt="{{ $listing->name }}{{ $n ? ' (photo '.($n + 1).')' : '' }}" class="absolute inset-0 h-full w-full object-contain" @if($n) x-cloak @endif>
                 @empty
                     @if ($listing->module === 'rfid')
                         <div class="absolute inset-0 bg-gradient-to-b from-sand-deep to-sand flex items-center justify-center p-6">@include('site._device')</div>
@@ -23,11 +36,15 @@
                         <span class="absolute bottom-5 left-5 chip bg-sand/90 text-char">Product photos coming soon</span>@endif
                     @endif
                 @endforelse
+                @if (count($photos) > 1)
+                    <button type="button" @click="i = (i - 1 + n) % n" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 border border-hairline shadow grid place-items-center" aria-label="Previous photo">←</button>
+                    <button type="button" @click="i = (i + 1) % n" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 border border-hairline shadow grid place-items-center" aria-label="Next photo">→</button>
+                @endif
             </div>
             @if (count($photos) > 1)
                 <div class="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
                     @foreach ($photos as $n => $p)
-                        <button type="button" @click="i = {{ $n }}" class="shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2" :class="i === {{ $n }} ? 'border-char' : 'border-transparent'"><img src="{{ asset('storage/'.$p) }}" alt="" class="h-full w-full object-cover"></button>
+                         <button type="button" @click="i = {{ $n }}" aria-label="Photo {{ $n + 1 }}" class="shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 bg-white" :class="i === {{ $n }} ? 'border-char' : 'border-transparent'"><img src="{{ asset('storage/'.$p) }}" alt="" class="h-full w-full object-cover"></button>
                     @endforeach
                 </div>
             @endif
@@ -53,6 +70,7 @@
                     <p class="mt-1 text-stone">{{ $listing->next_batch ?: 'Reserve one now. You pay only when your unit is ready, and you can cancel before then.' }}</p>
                 @endif
             </div>
+            <p class="mt-4 text-sm text-stone">Courier anywhere in South Africa, or collect. Pay by EFT{{ filled(config('services.payfast.merchant_id')) ? ' or card' : '' }}. Nothing is charged until you confirm.</p>
             <div class="mt-6 flex flex-wrap gap-3">
                 @include('shop._buy', ['l' => $listing, 'qty' => true, 'class' => 'px-8'])
                 <a href="{{ route('site.contact') }}" class="btn-line">Ask us something</a>
@@ -86,9 +104,9 @@
         <h2 class="h-display text-[clamp(2.6rem,5vw,4.2rem)]">How it works</h2>
         <ol class="mt-12 grid md:grid-cols-2 xl:grid-cols-4 gap-5">
             @foreach ([
-                ['Scan', 'Hold the antenna end to the ear tag. The animal\'s number comes up on the screen. New animal? It offers the next birthday number.'],
+                ['Scan', 'Hold the antenna end to the ear tag. The animal\'s number, sex and last weight come up on the screen, even offline. New animal? It offers the next birthday number.'],
                 ['Weigh', 'Press A–D for birth, wean, post-wean or mature weight, type the weight off your scale and press #.'],
-                ['Saved, even offline', 'The record is stored on the scanner straight away (up to 300), so a dead zone in the kraal doesn\'t matter.'],
+                ['Saved, even offline', 'The record is stored on the scanner straight away (room for about 2 000 weighings), so a dead zone in the kraal doesn\'t matter.'],
                 ['Synced to Herd Manager', 'On Wi-Fi or your phone\'s hotspot it sends everything to farmtech.site. Gains, alerts and auction books update by themselves.'],
             ] as $i => [$t, $d])
                 <li class="rounded-[24px] bg-white/5 border border-white/10 p-6">

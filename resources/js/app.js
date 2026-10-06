@@ -317,7 +317,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('scaleSync', (postUrl) => ({
         supported: 'serial' in navigator,
         step: 'idle', // idle | connecting | reading | sending | clearing | done | empty | error
-        message: '', found: 0, saved: 0, dupes: 0, firmware: '',
+        message: '', found: 0, saved: 0, dupes: 0, firmware: '', room: null,
         get busy() { return ['connecting', 'reading', 'sending', 'clearing'].includes(this.step); },
         async run() {
             let port, reader, writer;
@@ -355,6 +355,7 @@ document.addEventListener('alpine:init', () => {
                 }
                 if (!hello) throw new Error("The scale didn't answer. Check the cable (some are charge-only), then try again. Older firmware? Update it from Devices.");
                 this.firmware = hello.split(' ')[2] || '';
+                const rm = hello.match(/ROOM (\d+)/); this.room = rm ? +rm[1] : null;
 
                 this.step = 'reading';
                 await send('DUMP');

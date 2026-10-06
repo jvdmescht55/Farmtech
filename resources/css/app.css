@@ -232,3 +232,11 @@
     .tbl td a, .link-u { padding-block: 2px; }
 }
 @keyframes ft-spin { to { transform: rotate(360deg); } }
+
+/* Print: calculator, prices, auction sums — no menus, no photos, just the numbers. */
+@media print {
+    header, footer, nav, .nav-progress, [aria-label="WhatsApp us"], [data-tour="help"], .kenburns { display: none !important; }
+    body { background: #fff !important; }
+    .sticky { position: static !important; }
+    section { padding-top: 0 !important; }
+}

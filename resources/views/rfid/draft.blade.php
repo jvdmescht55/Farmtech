@@ -42,7 +42,7 @@
                                 {{ $r->days_to_target === 0 ? 'Ready ✓' : ($r->days_to_target === null ? 'not growing' : $r->days_to_target.' days') }}
                             </span>
                         @else
-                            <span class="w-20 text-right text-xs num text-stone">{{ $r->adg !== null ? ($r->adg > 0 ? '+' : '').$r->adg.' g/day' : '' }}</span>
+                            <span class="w-20 text-right text-xs num text-stone">@if ($r->adg !== null && abs($r->adg) > 700 && ($r->animal->species ?? 'sheep') !== 'cattle')<span title="Probably a mis-typed or mis-read weight. Check this animal's weighings." class="text-ochre-dark">check wt</span>@else{{ $r->adg !== null ? ($r->adg > 0 ? '+' : '').$r->adg.' g/day' : '' }}@endif</span>
                         @endif
                     </li>
                 @endforeach

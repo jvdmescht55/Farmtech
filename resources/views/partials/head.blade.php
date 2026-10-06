@@ -20,9 +20,10 @@
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:title" content="{{ $metaTitle }}">
 <meta property="og:description" content="{{ $metaDesc }}">
-<meta property="og:image" content="{{ asset('images/og-farmtech.jpg') }}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+@php($ogImage = trim($__env->yieldContent('og_image')))
+<meta property="og:image" content="{{ $ogImage ?: asset('images/og-farmtech.jpg') }}">
+@unless ($ogImage)<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">@endunless
 <meta name="twitter:card" content="summary_large_image">
 @if (request()->is('app*', 'admin*', 'activate*'))<meta name="robots" content="noindex, nofollow">@endif
 @vite(['resources/css/app.css', 'resources/js/app.js'])

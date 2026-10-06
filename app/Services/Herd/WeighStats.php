@@ -258,8 +258,8 @@ class WeighStats
 
     public const METRICS = [
         'kg' => ['Latest weight', 'kg'],
-        'adg' => ['Recent growth', 'g/dag'],
-        'adg_life' => ['Lifetime growth', 'g/dag'],
+        'adg' => ['Recent growth', 'g/day'],
+        'adg_life' => ['Lifetime growth', 'g/day'],
         'wean_kg' => ['Weaning weight', 'kg'],
         'kg100' => ['100-day weight', 'kg'],
     ];

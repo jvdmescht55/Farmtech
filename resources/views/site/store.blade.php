@@ -8,6 +8,9 @@
 @section('title', 'KraalTrac Pro & Herd Manager — Farmtech')
 @section('description', 'KraalTrac Pro: a handheld EID reader and weigh logger built in South Africa, with Herd Manager included. Scan the tag, punch in the weight — your herd book, gains and auction book do the rest. '.$price.' once-off.')
 @section('hero_dark', '1')
+@push('head')
+<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => 'Farmtech', 'url' => url('/'), 'logo' => asset('icons/icon-512.png'), 'description' => 'KraalTrac EID scanners and Herd Manager software for sheep, goats and cattle, built in South Africa.'], JSON_UNESCAPED_SLASHES) !!}</script>
+@endpush
 @push('head')<link rel="preload" as="image" href="{{ Img::url('windpomp-pink', true) }}" imagesrcset="{{ Img::srcset('windpomp-pink') }}" imagesizes="100vw">@endpush
 
 @section('content')
@@ -29,6 +32,7 @@
             <li>Reads standard ISO ear tags</li>
             <li>Once-off price, Herd Manager included</li>
             <li>6-month warranty</li>
+            <li><a href="{{ route('site.calculator') }}" class="underline hover:text-white">Free auction calculator</a> · <a href="{{ route('site.prices') }}" class="underline hover:text-white">This week's meat prices</a></li>
         </ul>
     </div>
 </section>
@@ -128,7 +132,7 @@
             <dl class="mt-10 divide-y divide-hairline border-y border-hairline">
                 @foreach ([
                     ['Reads the tag for you', 'Hold the wand to the ear. The 134.2 kHz reader picks up standard FDX-B tags, so nobody types 15-digit numbers with cold fingers.'],
-                    ['Keeps going without signal', 'Up to 300 records stay on the device. It sends them by itself when it finds Wi-Fi, or through your phone\'s hotspot.'],
+                    ['Keeps going without signal', 'About 2 000 weighings and your whole animal list stay on the device, so a scan shows last weight even offline. It sends them by itself when it finds Wi-Fi, or through your phone\'s hotspot.'],
                     ['Birth, wean, post-wean, mature', 'Weight type, sex, sire and dam straight from the keypad, for sheep, goats or cattle. New animals get a birthday number like 250912.'],
                     ['Programmed for your farm', 'We set it up the way you work before it ships: your ID system, the questions it asks, extra fields like FAMACHA or camp, your Wi-Fi. Changes later are free.'],
                     ['Made for the crush', 'Tough housing with orange impact caps and a sealed keypad. Survives dust, drops and the odd kick.'],
@@ -293,7 +297,8 @@
                 ['What it costs', 'A notebook and your evenings', 'R25 000 – R50 000+', '<strong>'.$price.'</strong> once-off'],
                 ['Monthly fees', 'None', 'Often a software subscription', 'None. Herd Manager is included'],
                 ['Reads ear tags by itself', 'No', $yes, $yes],
-                ['Works with no signal', 'Paper does', 'Depends on the model', $yes.', 300 records'],
+                ['Works with no signal', 'Paper does', 'Depends on the model', $yes.', ~2 000 weighings'],
+                ['Shows last weight when you scan', 'No', 'Some', $yes.', even offline'],
                 ['Daily gain & sorting', 'Calculator', $yes, $yes.', instantly'],
                 ['Auction book, Logix layout', 'By hand', 'Rarely', $yes.', one click'],
                 ['Warns you about problems', 'No', 'Some', 'Weight loss, lambing, water, withdrawals'],
@@ -376,6 +381,21 @@
     </div>
 </section>
 
+@php($faqs = [
+                ['Will it read my existing tags?', 'If they are standard animal EID tags (134.2 kHz FDX-B, ISO 11784/11785), yes. Those are the usual ones in South Africa.'],
+                ['Does it work for cattle and goats?', 'Yes. Sheep, goats and cattle all live in the same herd book, each with their own birth-weight, calving or lambing dates and alert limits. We set the scanner\'s screens to say cattle, goat or sheep for your farm, and the button tags fit cattle ears too.'],
+                ['What if there\'s no signal in the kraal?', 'The KraalTrac keeps about 2 000 weighings and your animal list on the device and sends them once it finds Wi-Fi. Easiest of all: switch on your phone\'s hotspot while you weigh.'],
+                ['And if there\'s no Wi-Fi at all?', 'Plug it into a laptop, open Herd Manager in Chrome and click Sync the scale. It uploads everything and clears the device only once every record is saved.'],
+                ['What does the scanner remember?', 'Your whole animal list (ID, tag, sex, last weight and any warning such as a withdrawal period) plus about 2 000 weighings that haven\'t synced yet. So a scan in a dead zone still shows what the animal weighed last time. Press D twice on the scanner to see how much room is left.'],
+                ['Does it connect to my scale?', 'For now you type the weight from your scale\'s display. It takes about two seconds a lamb. A direct scale cable is on our list.'],
+                ['Is there a monthly fee?', 'No. Herd Manager comes with the device.'],
+                ['Can I bring my Logix or stud book records?', 'Yes. Upload the Excel or CSV export. We read the IDs, parents and EBVs and work out the SP, C and B tiers.'],
+                ['How long does delivery take?', 'Ear tags in stock ship within a few working days. Every KraalTrac Pro is built, tested and programmed for your farm to order; we confirm the build and delivery time with you before you pay. Courier anywhere in South Africa, or collect.'],
+                ['How does buying work?', 'Add it to your cart and check out. Pay by EFT (or card, where offered) and we courier it to you or you collect. If something is sold out, reserve it: nothing is paid until your batch is ready, and you can cancel before then.'],
+                ['What does "reserve" mean?', 'When a batch sells out, you can hold a unit from the next one. We phone you when it\'s ready, confirm the price and delivery date, and then you pay.'],
+                ['Who owns my data?', 'You do. Export everything any time. We never sell it.'],
+            ])
+@push('head')<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => collect($faqs)->map(fn ($f) => ['@type' => 'Question', 'name' => $f[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f[1]]])->all()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>@endpush
 {{-- FAQ --}}
 <section id="faq" class="bg-sand-deep/60 border-y border-hairline scroll-mt-20">
     <div class="wrap py-24 sm:py-32 grid lg:grid-cols-12 gap-14">
@@ -384,18 +404,7 @@
             <p class="mt-5 text-stone">Something else? <a href="{{ route('site.contact') }}" class="underline">Ask us directly</a>.</p>
         </div>
         <div class="lg:col-span-8 divide-y divide-hairline border-y border-hairline" x-data="{ open: 0 }">
-            @foreach ([
-                ['Will it read my existing tags?', 'If they are standard animal EID tags (134.2 kHz FDX-B, ISO 11784/11785), yes. Those are the usual ones in South Africa.'],
-                ['Does it work for cattle and goats?', 'Yes. Sheep, goats and cattle all live in the same herd book, each with their own birth-weight, calving or lambing dates and alert limits. We set the scanner\'s screens to say cattle, goat or sheep for your farm, and the button tags fit cattle ears too.'],
-                ['What if there\'s no signal in the kraal?', 'The KraalTrac keeps up to 300 records on the device and sends them once it finds Wi-Fi. Easiest of all: switch on your phone\'s hotspot while you weigh.'],
-                ['And if there\'s no Wi-Fi at all?', 'Plug it into a laptop, open Herd Manager in Chrome and click Sync the scale. It uploads everything and clears the device only once every record is saved.'],
-                ['Does it connect to my scale?', 'For now you type the weight from your scale\'s display. It takes about two seconds a lamb. A direct scale cable is on our list.'],
-                ['Is there a monthly fee?', 'No. Herd Manager comes with the device.'],
-                ['Can I bring my Logix or stud book records?', 'Yes. Upload the Excel or CSV export. We read the IDs, parents and EBVs and work out the SP, C and B tiers.'],
-                ['How does buying work?', 'Add it to your cart and check out. Pay by EFT (or card, where offered) and we courier it to you or you collect. If something is sold out, reserve it: nothing is paid until your batch is ready, and you can cancel before then.'],
-                ['What does "reserve" mean?', 'When a batch sells out, you can hold a unit from the next one. We phone you when it\'s ready, confirm the price and delivery date, and then you pay.'],
-                ['Who owns my data?', 'You do. Export everything any time. We never sell it.'],
-            ] as $i => [$q, $a])
+            @foreach ($faqs as $i => [$q, $a])
                 <div>
                     <button type="button" @click="open = open === {{ $i }} ? -1 : {{ $i }}" :aria-expanded="open === {{ $i }}" class="w-full flex items-center justify-between gap-6 py-6 text-left">
                         <span class="text-lg sm:text-xl">{{ $q }}</span>

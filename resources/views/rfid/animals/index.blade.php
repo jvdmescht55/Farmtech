@@ -2,7 +2,7 @@
 @section('title', 'Herd')
 @section('eyebrow'){{ number_format($totals['all']) }} head · your herd book @endsection
 @section('actions')
-    <a href="{{ route('rfid.data') }}" class="btn-secondary">Import / export</a>
+    <a href="{{ route('rfid.data') }}" class="btn-secondary">Import &amp; export</a>
     <a href="{{ route('rfid.animals.create') }}" class="btn-primary">+ Add animal</a>
 @endsection
 @php
@@ -21,14 +21,16 @@
         <select name="species" aria-label="Species" class="field w-auto" onchange="this.form.submit()"><option value="">All species</option>@foreach (config('herd.species') as $k => $s)<option value="{{ $k }}" @selected(request('species') === $k)>{{ $s['plural'] }}</option>@endforeach</select>
         <select name="tier" aria-label="Tier" class="field w-auto" onchange="this.form.submit()"><option value="">All tiers</option>@foreach (array_reverse(config('herd.tiers')) as $t)<option @selected(request('tier') === $t)>{{ $t }}</option>@endforeach<option value="?" @selected(request('tier') === '?')>? incomplete</option></select>
         <select name="status" aria-label="Status" class="field w-auto" onchange="this.form.submit()">@foreach (['active' => 'Active', 'sold' => 'Sold', 'dead' => 'Dead', 'culled' => 'Culled', 'all' => 'Everything'] as $k => $v)<option value="{{ $k }}" @selected(request('status', 'active') === $k)>{{ $v }}</option>@endforeach</select>
-        <select name="sort" aria-label="Sort" class="field w-auto" onchange="this.form.submit()"><option value="visual_id">By ID</option><option value="birth_date" @selected(request('sort') === 'birth_date')>Youngest first</option><option value="last_seen" @selected(request('sort') === 'last_seen')>Last scanned</option></select>
+        <select name="sort" aria-label="Sort" class="field w-auto" onchange="this.form.submit()"><option value="visual_id">By ID</option><option value="birth_date" @selected(request('sort') === 'birth_date')>Youngest first</option><option value="last_seen" @selected(request('sort') === 'last_seen')>Last scanned</option><option value="heaviest" @selected(request('sort') === 'heaviest')>Heaviest first</option><option value="lightest" @selected(request('sort') === 'lightest')>Lightest first</option></select>
         @if (request()->hasAny(['q', 'sex', 'tier', 'status', 'sort', 'species']))<a href="{{ route('rfid.animals.index') }}" class="text-sm text-stone hover:text-char px-2 self-center">Clear</a>@endif
     </div>
 </form>
 
 <div x-data="{ picking: false, ids: [], all: @js($animals->pluck('id')), toggle(id) { this.ids.includes(id) ? this.ids = this.ids.filter(i => i !== id) : this.ids.push(id) } }">
 <div class="flex items-center justify-between gap-3 mb-3 text-sm">
-    <span class="text-stone">{{ $animals->total() }} {{ \Illuminate\Support\Str::plural('animal', $animals->total()) }}{{ request('status', 'active') === 'active' ? ' in the active herd' : '' }}</span>
+    <span class="text-stone">{{ $animals->total() }} {{ \Illuminate\Support\Str::plural('animal', $animals->total()) }}{{ request('status', 'active') === 'active' ? ' in the active herd' : '' }}
+        @if (request('status', 'active') === 'active' && $otherStatuses) · <a href="{{ request()->fullUrlWithQuery(['status' => 'all']) }}" class="underline">show {{ $otherStatuses }} sold, dead &amp; culled</a>@endif
+        · <a href="{{ request()->fullUrlWithQuery(['export' => 1]) }}" class="underline">Export this list</a></span>
     <button type="button" @click="picking = !picking; ids = []" class="btn-line btn-sm" x-text="picking ? 'Done' : 'Select'"></button>
 </div>
 {{-- Phones: one tidy card per animal, the numbers that matter up front --}}
@@ -49,7 +51,11 @@
             <span class="w-16 text-right font-num text-sm">{{ $w ? $w->weight_kg.' kg' : '—' }}</span>
         </a>
     @empty
+        @if (request()->hasAny(['q', 'sex', 'tier', 'species']) || request('status', 'active') !== 'active')
+            <p class="py-16 text-center text-stone">No animals match these filters. <a class="link-u text-char" href="{{ route('rfid.animals.index') }}">Clear filters</a></p>
+        @else
         <p class="py-16 text-center text-stone">Nothing here yet. <a class="link-u text-char" href="{{ route('rfid.data') }}">Bring your herd in</a> or just start scanning.</p>
+        @endif
     @endforelse
 </div>
 
@@ -77,7 +83,7 @@
                     <td class="text-stone whitespace-nowrap text-sm">{{ $a->last_seen_at?->diffForHumans() ?? 'Never' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="py-16 text-center text-stone">Nothing here yet. <a class="link-u text-char" href="{{ route('rfid.data') }}">Bring your herd in</a> or just start scanning.</td></tr>
+                <tr><td colspan="8" class="py-16 text-center text-stone">@if (request()->hasAny(['q', 'sex', 'tier', 'species']) || request('status', 'active') !== 'active')No animals match these filters. <a class="link-u text-char" href="{{ route('rfid.animals.index') }}">Clear filters</a>@else Nothing here yet. <a class="link-u text-char" href="{{ route('rfid.data') }}">Bring your herd in</a> or just start scanning.@endif</td></tr>
             @endforelse
             </tbody>
         </table>

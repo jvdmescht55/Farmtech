@@ -19,9 +19,14 @@
     x-data="{
         kinds: @js($kinds),
         kind: 'lambs', side: 'sell', mode: 'head', vatIncl: false, vat: 15,
-        head: 40, kg: 38, price: 2050, commission: 4, transport: 0, other: 0, minimum: '', costs: false,
+        head: 40, kg: 38, price: 2050, commission: 4, transport: 0, other: 0, minimum: '', costs: false, copied: false,
         init() {
             try { Object.assign(this, JSON.parse(localStorage.getItem('ft-calc') || '{}')); } catch (e) {}
+            // Links like ?kind=cattle&kg=450&price=16000 (from the prices page) win over what was remembered.
+            const q = new URLSearchParams(location.search);
+            if (q.get('kind') && this.kinds[q.get('kind')]) { const d = this.kinds[q.get('kind')]; this.kind = q.get('kind'); this.kg = d[8]; this.price = d[9]; this.mode = 'head'; }
+            ['kg', 'price', 'head'].forEach(f => { if (q.get(f) && !isNaN(+q.get(f))) this[f] = +q.get(f); });
+            if (q.get('mode') === 'kg') this.mode = 'kg';
             ['kind','side','mode','vatIncl','head','kg','price','commission','transport','other','minimum'].forEach(k => this.$watch(k, () => this.save()));
         },
         save() { try { localStorage.setItem('ft-calc', JSON.stringify({ kind: this.kind, side: this.side, mode: this.mode, vatIncl: this.vatIncl, head: this.head, kg: this.kg, price: this.price, commission: this.commission, transport: this.transport, other: this.other, minimum: this.minimum })); } catch (e) {} },
@@ -38,6 +43,8 @@
         get bottomKg() { return this.head && this.kg ? this.bottom / (this.head * this.kg) : 0; },
         get carcass() { return this.kg ? (this.perHead * this.exFactor) / (this.kg * this.k[1] / 100) : 0; },
         pct(a, b) { return b ? Math.round((a - b) / b * 1000) / 10 : null; },
+        reset() { try { localStorage.removeItem('ft-calc'); } catch (e) {} const d = this.kinds[this.kind]; Object.assign(this, { side: 'sell', mode: 'head', vatIncl: false, head: 40, kg: d[8], price: d[9], commission: 4, transport: 0, other: 0, minimum: '' }); },
+        get neededHead() { return this.minimum > 0 ? this.minimum * this.kg * (this.vatIncl ? 1 + this.vat / 100 : 1) : 0; },
         bump(d) { this.price = Math.max(0, Math.round((+this.price + d) * 100) / 100); },
         r(v, d = 0) { return 'R' + (Math.round(v * 10 ** d) / 10 ** d).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/,/g, ' '); },
     }">
@@ -139,6 +146,7 @@
                     <label class="block"><span class="field-label">Transport (R total)</span><input type="number" inputmode="decimal" min="0" x-model.number="transport" class="field font-num"></label>
                     <label class="block"><span class="field-label">Levies (R/head)</span><input type="number" inputmode="decimal" min="0" step="0.01" x-model.number="other" class="field font-num"></label>
                     <label class="block"><span class="field-label">My minimum (R/kg)</span><input type="number" inputmode="decimal" min="0" step="0.1" x-model="minimum" placeholder="optional" class="field font-num"></label>
+                    <p x-show="minimum > 0" class="col-span-2 sm:col-span-4 text-sm">To reach your minimum, the bid needs to be at least <strong x-text="r(neededHead) + ' a head'"></strong> <span class="text-stone" x-text="'(' + (vatIncl ? 'incl.' : 'excl.') + ' VAT, at ' + kg + ' kg)'"></span>.</p>
                     <p class="col-span-2 sm:col-span-4 text-xs text-stone">Commission and levies are worked on the price excl. VAT. VAT is 15%. Set your auctioneer's commission once; your phone remembers it.</p>
                 </div>
             </div>
@@ -149,6 +157,7 @@
             <div class="rounded-[24px] bg-white border border-hairline p-5 text-[15px]">
                 <div class="font-medium">The sums</div>
                 <dl class="mt-3 space-y-1.5">
+                    <div class="flex justify-between gap-3"><dt class="text-stone">Total live weight</dt><dd class="font-num" x-text="Math.round(head * kg).toLocaleString('en-US').replace(/,/g, ' ') + ' kg'"></dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-stone">Lot, excl. VAT</dt><dd class="font-num" x-text="r(gross)"></dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-stone">VAT (15%)</dt><dd class="font-num" x-text="r(grossIncl - gross)"></dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-stone">Lot, incl. VAT</dt><dd class="font-num" x-text="r(grossIncl)"></dd></div>
@@ -174,6 +183,10 @@
                     <p x-show="!k[2] && !k[4]" class="text-stone">No weekly benchmark for goats yet.</p>
                 </div>
                 @if ($m)<p class="mt-4 text-[11px] text-stone-light"><a href="{{ route('site.prices') }}" class="underline">RPO prices</a>, week ending {{ \Carbon\Carbon::parse($m['week'])->format('j M Y') }}.</p>@endif
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" @click="navigator.clipboard?.writeText(location.origin + location.pathname + '?' + new URLSearchParams({ kind, mode, head, kg, price })); copied = true; setTimeout(() => copied = false, 2000)" class="btn-line btn-sm" x-text="copied ? 'Link copied ✓' : 'Copy a link'"></button>
+                <button type="button" @click="reset()" class="btn-line btn-sm">Start again</button>
             </div>
             <p class="text-xs text-stone">A guide, not financial advice. Nothing you type leaves your phone. Tip: add this page to your home screen before the auction.</p>
         </aside>

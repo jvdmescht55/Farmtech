@@ -176,6 +176,7 @@ Route::prefix('app/rfid-v1')->name('rfid.')->middleware(['auth', 'module:rfid'])
 
     Route::get('/weighings', [RfidWeighingController::class, 'index'])->name('weighings.index');
     Route::get('/weighings/{date}', [RfidWeighingController::class, 'show'])->where('date', '\d{4}-\d{2}-\d{2}')->name('weighings.show');
+    Route::delete('/weighings/{date}', [RfidWeighingController::class, 'destroy'])->where('date', '\d{4}-\d{2}-\d{2}')->name('weighings.destroy');
     Route::get('/weighings/{date}/export', [RfidWeighingController::class, 'export'])->where('date', '\d{4}-\d{2}-\d{2}')->name('weighings.export');
     Route::get('/compare', [RfidCompareController::class, 'index'])->name('compare');
     Route::get('/draft', [RfidDraftController::class, 'index'])->name('draft');

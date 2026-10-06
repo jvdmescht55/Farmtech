@@ -97,7 +97,7 @@
 
     {{-- Desktop / tablet tabs. The "More" dropdown sits OUTSIDE the scrolling strip so it never gets clipped. --}}
     @if ($nav)
-        <nav class="hidden lg:block border-t border-white/10">
+        <nav aria-label="Sections" class="hidden lg:block border-t border-white/10">
             <div class="wrap flex items-center gap-7">
                 <div class="flex items-center gap-7 overflow-x-auto scrollbar-none min-w-0" data-tour="tabs">
                     @foreach ($nav as $t)
@@ -154,6 +154,8 @@
     <footer class="mt-16 pt-6 border-t border-hairline flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone">
         <div class="flex flex-wrap gap-x-4 gap-y-1">
             <a href="{{ route('help.index') }}" class="hover:text-char">Help &amp; guides</a>
+            <a href="{{ route('site.prices') }}" class="hover:text-char">Market prices</a>
+            <a href="{{ route('site.calculator') }}" class="hover:text-char">Auction calculator</a>
             <a href="{{ route('site.contact') }}" class="hover:text-char">Contact</a>
             <a href="{{ route('legal.show', 'privacy') }}" class="hover:text-char">Privacy</a>
             <a href="{{ route('legal.show', 'terms') }}" class="hover:text-char">Terms</a>
@@ -165,7 +167,7 @@
 
 {{-- Phone bottom bar: the four main places + Menu (everything else). --}}
 @if ($nav)
-    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-char/95 backdrop-blur-xl text-sand border-t border-white/10" style="padding-bottom: env(safe-area-inset-bottom, 0px)" data-tour="tabs-mobile">
+    <nav aria-label="Main" class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-char/95 backdrop-blur-xl text-sand border-t border-white/10" style="padding-bottom: env(safe-area-inset-bottom, 0px)" data-tour="tabs-mobile">
         <div class="grid grid-cols-5 h-16">
             @foreach ($bar as $t)
                 <a href="{{ $t['href'] }}" class="relative flex flex-col items-center justify-center gap-1 text-[11px] {{ $t['on'] ? 'text-sand' : 'text-sand/55' }}">

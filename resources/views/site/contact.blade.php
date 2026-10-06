@@ -11,6 +11,12 @@
         <p class="eyebrow">Contact</p>
         <h1 class="h-display mt-6 text-[clamp(3rem,6vw,5.5rem)]">Howzit. Let's talk.</h1>
         <p class="mt-6 text-lg text-stone max-w-md">Questions about a device, the software, or getting your stud records in? We usually reply within one working day.</p>
+        @php($wa = preg_replace('/[^0-9]/', '', (string) \App\Models\Setting::get('support_whatsapp', '')))
+        <div class="mt-6 flex flex-wrap gap-2 text-sm">
+            <a href="mailto:{{ config('legal.email') }}" class="btn-line btn-sm">{{ config('legal.email') }}</a>
+            @if (config('legal.phone'))<a href="tel:{{ preg_replace('/\s+/', '', config('legal.phone')) }}" class="btn-line btn-sm">{{ config('legal.phone') }}</a>@endif
+            @if ($wa)<a href="https://wa.me/{{ $wa }}" target="_blank" rel="noopener" class="btn-line btn-sm">WhatsApp</a>@endif
+        </div>
 
         @if (session('lead_ok'))
             <div class="mt-12 rounded-[24px] bg-white border border-hairline p-10">

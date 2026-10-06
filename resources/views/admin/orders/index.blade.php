@@ -38,7 +38,7 @@
                     <th class="px-4 py-3">Customer</th>
                     <th class="px-4 py-3">Items</th>
                     <th class="px-4 py-3">Total</th>
-                    <th class="px-4 py-3">Gateway</th>
+                    <th class="px-4 py-3">Type · payment</th>
                     <th class="px-4 py-3">Status</th>
                     <th class="px-4 py-3">Placed</th>
                     <th class="px-4 py-3"></th>
@@ -54,7 +54,7 @@
                         </td>
                         <td class="px-4 py-3">{{ $order->items_count }}</td>
                         <td class="px-4 py-3 font-mono">R{{ number_format((float) $order->total_zar, 2) }}</td>
-                        <td class="px-4 py-3 capitalize">{{ $order->payment_gateway ?? '—' }}</td>
+                        <td class="px-4 py-3"><div>{{ ['reservation' => 'Reservation', 'mixed' => 'Order + reservation'][$order->kind] ?? 'Order' }}</div><div class="text-xs text-gray-500">{{ $order->payment_method === 'eft' ? 'EFT' : ($order->payment_gateway ?? ($order->payment_method === 'none' ? 'nothing to pay yet' : '—')) }}{{ $order->delivery_method ? ' · '.($order->delivery_method === 'collect' ? 'collects' : 'courier') : '' }}</div></td>
                         <td class="px-4 py-3"><x-badge :color="$order->status->badgeColor()">{{ $order->status->label() }}</x-badge></td>
                         <td class="px-4 py-3 text-gray-500">{{ $order->created_at->format('d M Y') }}</td>
                         <td class="px-4 py-3 text-right">

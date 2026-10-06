@@ -2,6 +2,8 @@
 @section('title', $animal->visual_id)
 @section('eyebrow'){{ collect([$animal->bio('label'), $animal->sexLabel(), $animal->breed, $animal->status !== 'active' ? \App\Models\Animal::STATUSES[$animal->status] : null])->filter(fn ($v) => $v && $v !== '—')->implode(' · ') }} @endsection
 @section('actions')
+    @if ($neighbours[0])<a href="{{ route('rfid.animals.show', $neighbours[0]) }}" class="btn-secondary" title="Previous: {{ $neighbours[0]->visual_id }}" aria-label="Previous animal">←</a>@endif
+    @if ($neighbours[1])<a href="{{ route('rfid.animals.show', $neighbours[1]) }}" class="btn-secondary" title="Next: {{ $neighbours[1]->visual_id }}" aria-label="Next animal">→</a>@endif
     <a href="{{ route('rfid.events.index', ['animal' => $animal->id]) }}" class="btn-secondary">+ Record</a>
     <a href="{{ route('rfid.animals.edit', $animal) }}" class="btn-primary">Edit</a>
 @endsection
@@ -11,6 +13,9 @@
 @endphp
 
 @section('content')
+@if ($animal->status !== 'active')
+    <div class="mb-6 rounded-2xl bg-sand-deep border border-hairline px-5 py-4 text-sm flex flex-wrap items-center justify-between gap-3"><span><strong>{{ \App\Models\Animal::STATUSES[$animal->status] }}</strong>{{ $animal->status_date ? ' on '.$animal->status_date->format('j M Y') : '' }}. Kept for pedigree and history; not in your active herd, alerts or the scanner's list.</span><form method="POST" action="{{ route('rfid.animals.status', $animal) }}">@csrf<button name="status" value="active" class="btn-line btn-sm">Back to active</button></form></div>
+@endif
 @foreach ($alerts as $a)
     <div class="rounded-2xl border {{ $sevCls[$a['severity']] }} p-5 mb-3 flex gap-4">
         <span class="mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full {{ $sevDot[$a['severity']] }}"></span>

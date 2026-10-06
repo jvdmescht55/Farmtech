@@ -12,7 +12,7 @@
         <p class="text-white/70 text-lg">Free · updated every week</p>
         <h1 class="h-display mt-3 text-[clamp(3.4rem,9vw,7.5rem)]">What's meat fetching this week?</h1>
         @if ($m)
-            <p class="mt-6 text-lg text-white/80 max-w-xl">National average prices for the week ending <strong>{{ \Carbon\Carbon::parse($m['week'])->format('j F Y') }}</strong>, in rand per kilogram.</p>
+            <p class="mt-6 text-lg text-white/80 max-w-xl">National average prices for the week ending <strong>{{ \Carbon\Carbon::parse($m['week'])->format('j F Y') }}</strong>, in rand per kilogram.@if ($m['fetched_at']) <span class="text-white/55">Checked {{ \Carbon\Carbon::parse($m['fetched_at'])->diffForHumans() }}.</span>@endif</p>
         @endif
         <div class="mt-8 flex flex-wrap gap-3">
             <a href="{{ route('site.calculator') }}" class="btn-light">Work out an auction price</a>
@@ -49,6 +49,9 @@
                         </div>
                         <svg viewBox="0 0 300 60" class="w-full h-14 mt-4" preserveAspectRatio="none" aria-label="Last 52 weeks"><polyline points="{{ $spark($s['history']) }}" fill="none" stroke="#B8732E" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
                         <div class="flex justify-between text-[11px] text-stone-light"><span>52 weeks ago</span><span>now</span></div>
+                        @php($calcKind = ['lamb_a' => 'lambs', 'feeder_lamb' => 'lambs', 'mutton_b' => 'sheep', 'mutton_c' => 'sheep', 'beef_a' => 'cattle', 'beef_b' => 'cattle', 'beef_c' => 'cattle', 'weaner' => 'weaners'][$key] ?? null)
+                        @if ($calcKind)<a href="{{ route('site.calculator', ['kind' => $calcKind]) }}" class="mt-3 inline-block text-xs underline text-stone hover:text-char">Work out an auction price →</a>@endif
+                        @if ($s['history'])<div class="mt-2 text-xs text-stone">52-week low R{{ number_format(min($s['history']), 2) }} · high R{{ number_format(max($s['history']), 2) }}</div>@endif
                     </div>
                 @endforeach
             </div>
@@ -57,7 +60,10 @@
 
     <section id="table" class="bg-sand-deep/60 border-y border-hairline scroll-mt-20">
         <div class="wrap py-16 sm:py-20">
-            <h2 class="h-display text-[clamp(2.2rem,4.5vw,3.4rem)]">The last 12 weeks</h2>
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <h2 class="h-display text-[clamp(2.2rem,4.5vw,3.4rem)]">The last 12 weeks</h2>
+                <a href="{{ route('site.prices', ['download' => 'csv']) }}" class="btn-line btn-sm">Download all weeks (CSV, opens in Excel)</a>
+            </div>
             <div class="mt-8 overflow-x-auto rounded-[24px] bg-white border border-hairline">
                 <table class="tbl min-w-[760px]">
                     <thead><tr><th>Week ending</th>@foreach ($m['series'] as $s)<th class="text-right">{{ $s['label'] }}</th>@endforeach</tr></thead>

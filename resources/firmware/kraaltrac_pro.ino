@@ -34,7 +34,7 @@
  *  full 300-record queue fits; records upload in batches of 40; pairing can
  *  be skipped with * (weigh offline, pair later via D → #).
  *
- *  KEPT: offline queue (300 records), auto Wi-Fi from knownNetworks[],
+ *  KEPT: offline queue (now ~2 000 records), auto Wi-Fi from knownNetworks[],
  *  background sync, 8 s re-scan cooldown, B = dump queue over USB,
  *  A = clear queue with PIN, tag → sheep map on the device.
  *
@@ -80,13 +80,14 @@ WiFiMulti wifiMulti;
 
 const char* SERVER    = "https://farmtech.site";
 const char* MODEL     = "KraalTrac Pro";
-const char* FIRMWARE  = "3.4.0";
+const char* FIRMWARE  = "3.4.1";
 // Optional: paste a device key from Herd Manager → Devices → "Add a device by
 // hand" here to skip pairing. Leave empty to pair with a 6-digit code.
 const char* DEVICE_KEY = "";
 
 const char* CLEAR_PIN = "1379";   // PIN to clear the queue / re-pair on the keypad
-const char* ANIMAL    = "Sheep";  // word on the screens: "Sheep", "Cattle", "Goat" or "Animal"
+const char* ANIMAL_FIXED = "";    // leave empty: the screens follow your Farm settings (Sheep / Cattle / Goat). Or force e.g. "Animal".
+String ANIMAL = "Sheep";            // updated from the website on start-up
 
 // --- LIMITS / TIMING ---
 const int MAX_ID_LEN            = 10;     // existing numbers can be 4–10 digits (2415, 21270, 197013…)
@@ -506,6 +507,10 @@ void syncClock() {
     settimeofday(&tv, nullptr);
     setenv("TZ", "SAST-2", 1); tzset();
   }
+  if (code == 200 && strlen(ANIMAL_FIXED) == 0 && r["animal"].is<const char*>()) {
+    ANIMAL = r["animal"].as<String>();
+    prefs.putString("animal", ANIMAL);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -555,6 +560,7 @@ void setup() {
   refSeq = prefs.getUInt("refseq", 0);
   serialNo = "KT-" + String((uint32_t) ESP.getEfuseMac(), HEX);
   deviceKey = prefs.getString("devkey", "");
+  ANIMAL = strlen(ANIMAL_FIXED) ? String(ANIMAL_FIXED) : prefs.getString("animal", "Sheep");
   if (deviceKey.length() == 0 && strlen(DEVICE_KEY) > 0) deviceKey = DEVICE_KEY;
 
   if (queueCount() > 0) {

@@ -1,6 +1,6 @@
 @extends('layouts.rfid')
 @section('title', 'Import & export')
-@section('eyebrow')Throw in any CSV. We sort out where it goes @endsection
+@section('eyebrow')Bring records in from Excel or CSV, or take everything out. We work out what each file is. @endsection
 @section('actions')<a href="{{ route('rfid.data.backup') }}" class="btn-primary">Full backup (.zip)</a>@endsection
 
 @section('content')

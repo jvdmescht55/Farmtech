@@ -112,6 +112,7 @@
             <div class="border-t border-hairline px-6 py-5 space-y-3">
                 @php($dueNow = $shopCart->dueNow($cartLines))
                 @if ($dueNow)<div class="flex justify-between"><span>To pay now</span><span class="font-headline text-2xl">{{ \App\Models\StoreListing::rand($dueNow) }}</span></div>@endif
+                @if (config('shop.free_courier_over_cents') && $dueNow && $dueNow < config('shop.free_courier_over_cents'))<p class="text-sm text-stone">Add {{ \App\Models\StoreListing::rand(config('shop.free_courier_over_cents') - $dueNow) }} more for free courier.</p>@endif
                 @if ($cartLines->where('reserve', true)->isNotEmpty())<p class="text-sm text-stone">Reserved items are paid only when your batch is ready. You can cancel any time before.</p>@endif
                 <a href="{{ route('shop.checkout') }}" class="btn-dark w-full">{{ $dueNow ? 'Checkout' : 'Confirm my reservation' }}</a>
                 <a href="{{ route('shop.cart') }}" class="block text-center text-sm underline text-stone">View full cart</a>
@@ -165,11 +166,17 @@
             </div>
         </div>
         <div class="mt-20 pt-6 border-t border-sand/10 flex flex-col md:flex-row md:items-center justify-between gap-4 text-[13px] text-sand/40">
-            <span>© {{ date('Y') }} {{ config('legal.legal_name') ?: 'Farmtech' }} · South Africa · Lekker boer.</span>
+            <span>© {{ date('Y') }} {{ config('legal.legal_name') ?: 'Farmtech' }} · South Africa · <a href="mailto:{{ config('legal.email') }}" class="hover:text-sand">{{ config('legal.email') }}</a>@if (config('legal.phone')) · <a href="tel:{{ preg_replace('/\s+/', '', config('legal.phone')) }}" class="hover:text-sand">{{ config('legal.phone') }}</a>@endif</span>
             @hasSection('credits')<div class="max-w-3xl md:text-right">@yield('credits')</div>@endif
         </div>
     </div>
 </footer>
+@php($wa = preg_replace('/[^0-9]/', '', (string) \App\Models\Setting::get('support_whatsapp', '')))
+@if ($wa)
+    <a href="https://wa.me/{{ $wa }}?text={{ rawurlencode('Hi Farmtech, I have a question about ') }}" target="_blank" rel="noopener" class="fixed z-30 right-5 bottom-5 w-14 h-14 rounded-full bg-[#25D366] text-white shadow-[0_14px_40px_-10px_rgba(0,0,0,.45)] grid place-items-center hover:scale-105 transition" style="margin-bottom: env(safe-area-inset-bottom, 0px)" aria-label="WhatsApp us">
+        <svg viewBox="0 0 24 24" class="w-7 h-7" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.3-.4.7-1.3a.5.5 0 000-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.8 11.9 11.9 0 004.6 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 001.8-1.2 2.2 2.2 0 00.1-1.2c0-.1-.2-.2-.4-.3z"/></svg>
+    </a>
+@endif
 @stack('scripts')
 </body>
 </html>

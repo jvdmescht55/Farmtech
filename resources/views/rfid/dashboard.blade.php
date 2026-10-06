@@ -25,6 +25,17 @@
     <div class="absolute inset-0 bg-gradient-to-r from-char via-char/80 to-char/20"></div>
     <div class="relative p-7 sm:p-10">
         <p class="text-lg sm:text-2xl max-w-2xl leading-snug font-headline">{{ $summary }}</p>
+        <p class="mt-2 text-sm text-sand/60 inline-flex items-center gap-2">
+            @if ($scanner)
+                <span class="w-2 h-2 rounded-full {{ $scanner->last_synced_at && $scanner->last_synced_at->gt(now()->subHour()) ? 'bg-[#7FB069]' : 'bg-sand/40' }}"></span>
+                Scanner {{ $scanner->last_synced_at ? 'last synced '.$scanner->last_synced_at->diffForHumans() : 'paired, not synced yet' }}
+                @if ($scanner->firmware && $latestFw && str_contains(strtolower((string) $scanner->model), 'kraaltrac pro') && version_compare($scanner->firmware, $latestFw, '<'))
+                    · <a href="{{ route('firmware.install') }}" class="underline text-ochre-light">update to v{{ $latestFw }}</a>
+                @endif
+            @else
+                <span class="w-2 h-2 rounded-full bg-ochre"></span><a href="{{ route('pair') }}" class="underline">No scanner paired yet. Pair it in 6 digits</a>
+            @endif
+        </p>
         <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3">
             @foreach ($tiles as [$href, $icon, $title, $sub, $tour])
                 <a href="{{ $href }}" @if ($tour) data-tour="{{ $tour }}" @endif class="group rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur p-4 sm:p-5 transition">
@@ -49,12 +60,12 @@
     </div>
 @else
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <div class="panel p-6">
+        <a href="{{ route('rfid.animals.index') }}" class="panel p-6 block hover:border-char hover:-translate-y-0.5 transition">
             <div class="kpi-label">Head in the herd</div>
             <div class="kpi-num mt-3" x-data x-countup>{{ $herdCount }}</div>
             <div class="text-sm text-stone mt-2">{{ $ewes }} female · {{ $rams }} male</div>
-        </div>
-        <div class="panel p-6">
+        </a>
+        <a href="{{ route('rfid.weighings.index') }}" class="panel p-6 block hover:border-char hover:-translate-y-0.5 transition">
             <div class="kpi-label">Average weight</div>
             <div class="kpi-num mt-3"><span x-data x-countup>{{ $avgKg['mean'] ?? '—' }}</span><span class="text-lg text-stone font-ui ml-1">kg</span></div>
             @php
@@ -63,13 +74,13 @@
                 $sPts = $spark->map(fn ($v, $i) => round($i * 100 / max(1, $spark->count() - 1), 1).','.round(28 - ($v - $sMin) / $sRange * 24, 1))->implode(' ');
             @endphp
             @if ($spark->count() > 1)<svg viewBox="0 0 100 30" class="mt-2 w-full h-7" preserveAspectRatio="none"><polyline points="{{ $sPts }}" fill="none" stroke="#B8732E" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>@else<div class="text-sm text-stone mt-2">{{ $avgKg['n'] }} weighed lately</div>@endif
-        </div>
-        <div class="panel p-6">
+        </a>
+        <a href="{{ route('rfid.compare') }}" class="panel p-6 block hover:border-char hover:-translate-y-0.5 transition">
             <div class="kpi-label">Daily gain</div>
             <div class="kpi-num mt-3 {{ ($avgAdg['mean'] ?? 0) < 0 ? 'down' : '' }}"><span x-data x-countup>{{ $avgAdg['mean'] !== null ? ($avgAdg['mean'] > 0 ? '+' : '').round($avgAdg['mean']) : '—' }}</span><span class="text-lg text-stone font-ui ml-1">g</span></div>
             <div class="text-sm text-stone mt-2">per animal, per day</div>
-        </div>
-        <div class="panel p-6">
+        </a>
+        <a href="{{ $latestSession ? route('rfid.weighings.show', $latestSession->date) : route('rfid.data.scale') }}" class="panel p-6 block hover:border-char hover:-translate-y-0.5 transition">
             <div class="kpi-label">Last weigh day</div>
             @if ($latestSession)
                 <div class="kpi-num mt-3">{{ \Carbon\Carbon::parse($latestSession->date)->format('j M') }}</div>
@@ -77,7 +88,7 @@
             @else
                 <div class="kpi-num mt-3 text-stone-light">—</div><div class="text-sm text-stone mt-2">nothing yet</div>
             @endif
-        </div>
+        </a>
     </div>
 
     <div class="grid lg:grid-cols-5 gap-6 mt-6">

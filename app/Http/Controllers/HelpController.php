@@ -15,6 +15,7 @@ class HelpController extends Controller
         'weighing' => ['A weigh day, start to finish', 'Scan, weigh, and read the results.', 'scale'],
         'auction' => ['Make an auction book', 'Pick, number, print — Logix layout.', 'book'],
         'ids' => ['Birthday numbers (YYMMNN)', 'How 250912 tells you when a lamb was born.', 'tag'],
+        'remove' => ['Sold, dead or test animals', 'Take animals out of the herd without breaking pedigrees.', 'herd'],
         'alerts' => ['What the alerts mean', 'And what to do about each one.', 'bell'],
         'watch' => ['Set up KraalTrac Watch', 'Count who comes to drink.', 'drop'],
         'custom' => ['Connect your own device', 'Tank gauges, rain meters, anything.', 'plug'],

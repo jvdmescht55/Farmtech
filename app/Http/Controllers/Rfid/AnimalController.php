@@ -46,11 +46,29 @@ class AnimalController extends Controller
         }
 
         $sort = $request->input('sort', 'visual_id');
+        $allLatest = in_array($sort, ['heaviest', 'lightest'], true) || $request->boolean('export')
+            ? Scan::where('user_id', $request->user()->id)->whereNotNull('weight_kg')->orderByDesc('scanned_at')->get(['animal_id', 'weight_kg', 'scanned_at'])->unique('animal_id')->keyBy('animal_id')
+            : collect();
         $animals = (match ($sort) {
+            'heaviest' => $animals->sortByDesc(fn ($a) => (float) ($allLatest->get($a->id)?->weight_kg ?? -1)),
+            'lightest' => $animals->sortBy(fn ($a) => (float) ($allLatest->get($a->id)?->weight_kg ?? 99999)),
             'birth_date' => $animals->sortByDesc(fn ($a) => $a->birth_date?->timestamp ?? 0),
             'last_seen' => $animals->sortByDesc(fn ($a) => $a->last_seen_at?->timestamp ?? 0),
             default => $animals->sortBy('visual_id', SORT_NATURAL),
         })->values();
+
+        // "Export this list": the filtered list as CSV (opens in Excel).
+        if ($request->boolean('export')) {
+            return response()->streamDownload(function () use ($animals, $allLatest) {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['visual_id', 'eid', 'sex', 'species', 'birth_date', 'status', 'tier', 'last_weight_kg', 'last_weighed']);
+                foreach ($animals as $a) {
+                    $w = $allLatest->get($a->id);
+                    fputcsv($out, [$a->visual_id, $a->eid, $a->sex, $a->species, $a->birth_date?->toDateString(), $a->status, $a->computed_tier, $w?->weight_kg, $w?->scanned_at?->toDateString()]);
+                }
+                fclose($out);
+            }, 'herd-list-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
+        }
 
         $perPage = 50;
         $page = LengthAwarePaginator::resolveCurrentPage();
@@ -70,7 +88,9 @@ class AnimalController extends Controller
             ->filter(fn ($a) => $a['animal'])->groupBy(fn ($a) => $a['animal']->id)
             ->map(fn ($g) => $g->sortBy(fn ($a) => ['critical' => 0, 'warning' => 1, 'info' => 2][$a['severity']])->first());
 
-        return view('rfid.animals.index', ['animals' => $paginator, 'latestWeights' => $latestWeights, 'graph' => $graph, 'alertMap' => $alertMap,
+        $otherStatuses = $graph->where('in_herd', true)->where('status', '!=', 'active')->count();
+
+        return view('rfid.animals.index', ['animals' => $paginator, 'otherStatuses' => $otherStatuses, 'latestWeights' => $latestWeights, 'graph' => $graph, 'alertMap' => $alertMap,
             'totals' => ['all' => $graph->where('in_herd', true)->where('status', 'active')->count()]]);
     }
 
@@ -118,6 +138,12 @@ class AnimalController extends Controller
             'lifeAdg' => $weights->count() > 1 ? (int) round(($last->weight_kg - $weights->first()->weight_kg) * 1000 / max(1, $weights->first()->scanned_at->diffInDays($last->scanned_at))) : null,
             'kg100' => \App\Services\Herd\WeighStats::weightAtAge($weights->map(fn ($w) => (object) ['date' => $w->scanned_at->toDateString(), 'kg' => (float) $w->weight_kg]), $animal->birth_date, 100),
             'tier' => $tiers->resolve($animal),
+            'neighbours' => (function () use ($graph, $animal) {
+                $ids = $graph->where('in_herd', true)->where('status', $animal->status)->sortBy('visual_id', SORT_NATURAL)->values();
+                $i = $ids->search(fn ($a) => $a->id === $animal->id);
+
+                return [$i > 0 ? $ids[$i - 1] : null, $i !== false && $i < $ids->count() - 1 ? $ids[$i + 1] : null];
+            })(),
             'computed' => $tiers->computed($animal),
             'weights' => $weights,
             'gains' => $gains,

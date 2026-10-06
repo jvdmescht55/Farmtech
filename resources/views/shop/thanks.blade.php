@@ -42,6 +42,8 @@
         <div class="flex flex-wrap gap-3">
             <a href="{{ route('site.store') }}" class="btn-line">Back to the store</a>
             <a href="{{ route('landing') }}" class="btn-dark">Set up Herd Manager</a>
+            @php($wa = preg_replace('/[^0-9]/', '', (string) \App\Models\Setting::get('support_whatsapp', '')))
+            @if ($wa)<a href="https://wa.me/{{ $wa }}?text={{ rawurlencode('Hi Farmtech, about my order '.$order->order_number) }}" target="_blank" rel="noopener" class="btn-line">WhatsApp us about it</a>@endif
         </div>
     </div>
     <aside class="rounded-[28px] bg-white border border-hairline p-7">

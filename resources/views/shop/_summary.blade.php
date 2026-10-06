@@ -6,6 +6,7 @@
             <div class="flex justify-between"><dt class="text-sand/70">Items</dt><dd>{{ \App\Models\StoreListing::rand($due) }}</dd></div>
             <div class="flex justify-between"><dt class="text-sand/70">Courier</dt><dd>{{ $courier === null ? 'Confirmed with your order' : ($courier ? \App\Models\StoreListing::rand($courier) : 'Free') }}</dd></div>
             <div class="flex justify-between border-t border-white/10 pt-3"><dt>To pay now</dt><dd class="font-headline text-3xl">{{ \App\Models\StoreListing::rand($due + ($courier ?? 0)) }}</dd></div>
+            <div class="flex justify-between text-sm text-sand/60"><dt>Includes VAT (15%)</dt><dd>{{ \App\Models\StoreListing::rand((int) round(($due + ($courier ?? 0)) * 15 / 115)) }}</dd></div>
         @endif
         @if ($lines->where('reserve', true)->isNotEmpty())
             <div class="rounded-xl bg-white/10 border border-white/10 p-4 text-sm">

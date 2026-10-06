@@ -8,7 +8,7 @@
     <div {{ $attributes->merge(['class' => 'rounded-[24px] border '.($dark ? 'bg-white/5 border-white/10 text-sand' : 'bg-white border-hairline')]) }}>
         <div class="flex flex-wrap items-center justify-between gap-2 px-5 sm:px-6 pt-4">
             <div class="text-sm font-medium inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#3F7A3A] animate-pulse"></span>Market prices · week ending {{ \Carbon\Carbon::parse($m['week'])->format('j M') }}</div>
-            <a href="{{ route('site.prices') }}" class="text-sm underline {{ $dark ? 'text-sand/70' : 'text-stone' }}">All prices →</a>
+            <span class="text-sm {{ $dark ? 'text-sand/70' : 'text-stone' }}"><a href="{{ route('site.calculator') }}" class="underline">Auction calculator</a> · <a href="{{ route('site.prices') }}" class="underline">All prices →</a></span>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4">
             @foreach ($keys as $k)

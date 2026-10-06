@@ -14,7 +14,7 @@ class LiveController extends Controller
 {
     public function index(Request $request)
     {
-        return view('rfid.live', ['readers' => $request->user()->readers()->orderByDesc('last_synced_at')->get()]);
+        return view('rfid.live', ['readers' => $request->user()->readers()->where(fn ($q) => $q->whereNull('kind')->orWhere('kind', 'handheld'))->orderByDesc('last_synced_at')->get()]);
     }
 
     public function feed(Request $request, HerdAlerts $alerts)

@@ -54,7 +54,7 @@
                             <span class="text-xs text-stone">{{ $r->last_synced_at?->diffForHumans(short: true) ?? 'never' }}{{ $r->battery_pct !== null ? ' · '.$r->battery_pct.'%' : '' }}</span>
                         </li>
                     @empty
-                        <li class="text-stone">No devices yet. <a href="{{ route('rfid.readers.index') }}" class="link-u text-char">Pair one</a>.</li>
+                        <li class="text-stone">No scanner paired yet. <a href="{{ route('pair') }}" class="link-u text-char">Pair one</a>.</li>
                     @endforelse
                 </ul>
                 <p class="mt-5 text-xs text-stone">This page checks for new reads every 2 seconds.</p>

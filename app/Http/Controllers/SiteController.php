@@ -27,8 +27,21 @@ class SiteController extends Controller
     }
 
     /** Weekly red meat prices (RPO). */
-    public function prices(\App\Services\MarketPrices $prices)
+    public function prices(\Illuminate\Http\Request $request, \App\Services\MarketPrices $prices)
     {
+        if ($request->query('download') === 'csv') {
+            $rows = $prices->all()['rows'];
+
+            return response()->streamDownload(function () use ($rows) {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, array_merge(['week_ending'], array_map(fn ($s) => $s[0].' (R/kg)', \App\Services\MarketPrices::SERIES)));
+                foreach ($rows as $r) {
+                    fputcsv($out, array_merge([$r['week']], array_map(fn ($k) => $r[$k], array_keys(\App\Services\MarketPrices::SERIES))));
+                }
+                fclose($out);
+            }, 'red-meat-prices-rpo.csv', ['Content-Type' => 'text/csv']);
+        }
+
         return view('site.prices', ['m' => $prices->summary()]);
     }
 

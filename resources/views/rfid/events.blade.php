@@ -59,7 +59,7 @@
                 <div class="max-h-52 overflow-y-auto rounded-xl border border-hairline divide-y divide-hairline">
                     @foreach ($animals as $a)
                         <label class="flex items-center gap-3 px-3 py-2 text-sm hover:bg-sand-light cursor-pointer" x-show="!q || '{{ strtolower($a->visual_id) }}'.includes(q.toLowerCase())">
-                            <input type="checkbox" name="animal_ids[]" value="{{ $a->id }}" class="rounded border-hairline text-char" @checked(in_array($a->id, old('animal_ids', [request('animal')])))>
+                            <input type="checkbox" name="animal_ids[]" value="{{ $a->id }}" class="rounded border-hairline text-char" @checked((int) request('animal') === $a->id || in_array($a->id, old('animal_ids', [request('animal')])))>
                             <span class="font-num">{{ $a->visual_id }}</span><span class="text-xs text-stone">{{ $a->sexLabel() }}</span>
                         </label>
                     @endforeach

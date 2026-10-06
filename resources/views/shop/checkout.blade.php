@@ -38,12 +38,13 @@
                         <div class="text-sm text-stone mt-1">{{ config('shop.collect_from') ?: 'We arrange a time and place with you' }}</div>
                     </label>
                 </div>
+                @unless ($buying)<p class="mt-4 text-sm text-stone">Nothing ships yet. We'll confirm your address when your batch is ready, so it's optional for now.</p>@endunless
                 <div x-show="delivery === 'courier'" class="mt-5 grid sm:grid-cols-2 gap-4">
-                    <div class="sm:col-span-2"><label class="field-label">Street address or farm name &amp; road *</label><input name="address_line1" value="{{ old('address_line1') }}" autocomplete="address-line1" class="field @error('address_line1') !border-[#B0452F] @enderror"></div>
+                    <div class="sm:col-span-2"><label class="field-label">Street address or farm name &amp; road{{ $buying ? ' *' : '' }}</label><input name="address_line1" value="{{ old('address_line1') }}" autocomplete="address-line1" class="field @error('address_line1') !border-[#B0452F] @enderror"></div>
                     <div class="sm:col-span-2"><label class="field-label">More directions (optional)</label><input name="address_line2" value="{{ old('address_line2') }}" placeholder="e.g. 12 km on the R27, second gate" autocomplete="address-line2" class="field"></div>
-                    <div><label class="field-label">Town *</label><input name="city" value="{{ old('city') }}" autocomplete="address-level2" class="field @error('city') !border-[#B0452F] @enderror"></div>
-                    <div><label class="field-label">Postal code *</label><input name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" maxlength="4" autocomplete="postal-code" class="field @error('postal_code') !border-[#B0452F] @enderror"></div>
-                    <div class="sm:col-span-2"><label class="field-label">Province *</label>
+                    <div><label class="field-label">Town{{ $buying ? ' *' : '' }}</label><input name="city" value="{{ old('city') }}" autocomplete="address-level2" class="field @error('city') !border-[#B0452F] @enderror"></div>
+                    <div><label class="field-label">Postal code{{ $buying ? ' *' : '' }}</label><input name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" maxlength="4" autocomplete="postal-code" class="field @error('postal_code') !border-[#B0452F] @enderror"></div>
+                    <div class="sm:col-span-2"><label class="field-label">Province{{ $buying ? ' *' : '' }}</label>
                         <select name="province" class="field @error('province') !border-[#B0452F] @enderror"><option value="">Choose…</option>@foreach ($provinces as $p)<option @selected(old('province') === $p)>{{ $p }}</option>@endforeach</select></div>
                 </div>
             </fieldset>

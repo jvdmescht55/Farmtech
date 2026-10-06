@@ -34,6 +34,7 @@
 
 <main class="wrap py-14 sm:py-20" style="padding-bottom: max(5rem, env(safe-area-inset-bottom, 0px))">
     @include('partials.toast')
+    <x-market-strip class="mb-12" />
     <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
         <div>
             <h2 class="h-display mt-3 text-5xl">Your devices</h2>

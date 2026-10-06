@@ -33,7 +33,7 @@
             <div><label class="app-label">Born as</label>
                 <select name="birth_type" class="app-input"><option value="">—</option>@foreach (config('herd.birth_types') as $k => $l)<option value="{{ $k }}" @selected($v('birth_type', $animal->birth_type)===$k)>{{ $k }} · {{ $l }}</option>@endforeach</select></div>
             <div><label class="app-label">Status</label>
-                <select name="status" class="app-input">@foreach (\App\Models\Animal::STATUSES as $k => $l)<option value="{{ $k }}" @selected($v('status', $animal->status)===$k)>{{ $l }}</option>@endforeach</select></div>
+                <select name="status" class="app-input">@foreach (\App\Models\Animal::STATUSES as $k => $l)<option value="{{ $k }}" @selected($v('status', $animal->status)===$k)>{{ $l }}</option>@endforeach</select>@if ($animal->exists)<p class="text-xs text-stone mt-1">Sold, dead and culled animals stay for pedigree. To delete a test animal, use the bottom of its page.</p>@endif</div>
         </div>
     </div>
 

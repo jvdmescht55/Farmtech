@@ -1,9 +1,10 @@
 @extends('layouts.rfid')
 @section('title', 'Devices')
-@section('eyebrow')Your KraalTrac readers @endsection
+@section('eyebrow')Scanners paired with your farm, their software and when they last synced @endsection
 @section('actions')<a href="{{ route('rfid.live') }}" class="btn-primary">Open live view</a>@endsection
 
 @section('content')
+@php($latestFw = json_decode(@file_get_contents(public_path('firmware/kraaltrac-pro/manifest.json')), true)['version'] ?? null)
 <div class="grid xl:grid-cols-5 gap-6">
     <div class="xl:col-span-2 space-y-6">
         <div class="rounded-[24px] bg-char text-sand p-7 sm:p-8">
@@ -54,6 +55,9 @@
                         <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full {{ $r->isOnline() ? 'bg-[#3F7A3A]' : 'bg-stone-light/50' }}"></span><span class="text-xs uppercase tracking-[0.14em] {{ $r->isOnline() ? 'text-[#3F7A3A]' : 'text-stone' }}">{{ $r->isOnline() ? 'Online' : 'Offline' }}</span></div>
                         <div class="font-headline text-3xl mt-2">{{ $r->name }}</div>
                         <div class="text-sm text-stone mt-1 font-num">{{ collect([$r->model, $r->serial ? 'SN '.$r->serial : null, $r->firmware ? 'fw '.$r->firmware : null])->filter()->implode(' · ') }}</div>
+                        @if ($r->firmware && $latestFw && str_contains(strtolower((string) $r->model), 'kraaltrac pro') && version_compare($r->firmware, $latestFw, '<'))
+                            <a href="{{ route('firmware.install') }}" class="mt-2 inline-flex items-center gap-2 chip bg-ochre/15 text-ochre-dark">Update available: v{{ $latestFw }} →</a>
+                        @endif
                     </div>
                     <dl class="grid grid-cols-3 gap-6 text-sm">
                         <div><dt class="kpi-label">Last heard</dt><dd class="mt-1">{{ $r->last_synced_at?->diffForHumans() ?? 'Never' }}</dd></div>

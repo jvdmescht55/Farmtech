@@ -54,6 +54,15 @@ class WeighingController extends Controller
         ]);
     }
 
+    /** Delete a whole weigh day (e.g. a test session). The animals stay; only that day's weights go. */
+    public function destroy(Request $request, string $date)
+    {
+        $n = \App\Models\Scan::where('user_id', $request->user()->id)->whereDate('scanned_at', $date)->delete();
+        \Illuminate\Support\Facades\Cache::forget("alert-count:{$request->user()->id}");
+
+        return redirect()->route('rfid.weighings.index')->with('status', "Deleted $n weighing".($n === 1 ? '' : 's').' from '.\Carbon\Carbon::parse($date)->format('j M Y').'.');
+    }
+
     public function export(Request $request, string $date, WeighStats $stats)
     {
         $session = $stats->sessions($request->user()->id)->get($date) ?? abort(404);

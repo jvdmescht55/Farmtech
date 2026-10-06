@@ -32,11 +32,16 @@ class DashboardController extends Controller
             $tierCounts[$t] = ($tierCounts[$t] ?? 0) + 1;
         }
 
-        $withAdg = $latest->filter(fn ($l) => $l->adg !== null && Carbon::parse($l->date)->gte(now()->subDays(60)));
+        // Leave out impossible gains (a mis-typed or mis-read weight), so one typo doesn't top the list or skew the average.
+        $maxAdg = fn ($a) => in_array($a?->species, ['cattle'], true) ? 2500 : 700;   // g/day
+        $withAdg = $latest->filter(fn ($l) => $l->adg !== null && Carbon::parse($l->date)->gte(now()->subDays(60))
+            && abs($l->adg) <= $maxAdg($graph->get($l->animal_id)));
         $stale = $herd->filter(fn ($a) => ! $latest->has($a->id) || Carbon::parse($latest[$a->id]->date)->lt(now()->subDays(60)));
 
         return view('rfid.dashboard', [
             'user' => $user,
+            'latestFw' => json_decode((string) @file_get_contents(public_path('firmware/kraaltrac-pro/manifest.json')), true)['version'] ?? null,
+            'scanner' => \App\Models\Reader::where('user_id', $user->id)->where('kind', 'handheld')->orderByDesc('last_synced_at')->first(),
             'herdCount' => $herd->count(),
             'ewes' => $herd->where('sex', 'F')->count(),
             'rams' => $herd->where('sex', 'M')->count(),

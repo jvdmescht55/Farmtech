@@ -47,6 +47,8 @@ class DeviceController extends Controller
             'farm' => $reader->user->farm_name ?: $reader->user->name,
             'server_time' => now()->toIso8601String(),
             'epoch' => now()->timestamp,
+            // Word for the scanner's screens, from the farm's main species (Farm settings).
+            'animal' => config('herd.species.'.($reader->user->species ?: 'sheep').'.label', 'Sheep'),
         ]);
     }
 
