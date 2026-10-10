@@ -39,6 +39,7 @@ class InsightsController extends Controller
         $actions = array_values(array_filter([
             ($n = Lead::whereNull('handled_at')->count()) ? ['high', "$n lead".($n > 1 ? 's' : '').' and enquiries waiting for a reply.', route('admin.leads.index'), 'Leads'] : null,
             ($n = Order::where('status', OrderStatus::PendingPayment)->count()) ? ['high', "$n order".($n > 1 ? 's are' : ' is').' waiting for payment'.($pendingOld ? " ($pendingOld older than 3 days: follow up)" : '').'.', route('admin.orders.index', ['status' => 'pending_payment']), 'Orders'] : null,
+            ($n = \App\Models\SubscriptionPayment::where('status', 'pending')->count()) ? ['high', "$n Herd Manager invoice".($n > 1 ? 's' : '').' waiting. Check the bank for SUB- references, then mark paid.', route('admin.subscriptions.index'), 'Subscriptions'] : null,
             ($n = Order::where('status', OrderStatus::Reserved)->count()) ? ['medium', "$n reservation".($n > 1 ? 's' : '').' for the next batch. Phone them when stock lands.', route('admin.orders.index', ['status' => 'reserved']), 'Reservations'] : null,
             ($n = Suggestion::where('status', 'new')->count()) ? ['medium', "$n new suggestion".($n > 1 ? 's' : '').' from farmers.', route('admin.suggestions.index'), 'Suggestions'] : null,
             ($l = StoreListing::whereNull('price_cents')->where('stock_status', '!=', 'coming_soon')->first()) ? ['medium', "{$l->name} has no price yet, so it can't be published.", route('admin.listings.edit', $l), 'Set price'] : null,

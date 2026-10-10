@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->licenses()->where('module', $module)->whereNull('revoked_at')->exists();
     }
 
+    public function subscription(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
     public function licenses(): HasMany
     {
         return $this->hasMany(License::class);

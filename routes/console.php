@@ -14,3 +14,4 @@ Artisan::command('inspire', function () {
 // standing supervisor program in this environment.
 // Weekly red meat prices from RPO (they publish once a week; twice a day keeps us current without hammering them).
 Schedule::command('market:prices')->twiceDaily(7, 15)->withoutOverlapping();
+Schedule::command('billing:remind')->dailyAt('08:00')->withoutOverlapping();

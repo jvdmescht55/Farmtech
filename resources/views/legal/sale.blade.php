@@ -18,7 +18,7 @@
 <p>See <a href="{{ route('legal.show', 'shipping') }}">Delivery</a> and <a href="{{ route('legal.show', 'returns') }}">Returns, cooling-off & warranty</a> — including your right to cancel within 7 days of receiving a device ordered online.</p>
 
 <h2>Software that comes with a device</h2>
-<p>Each device includes an activation code for the matching Herd Manager section, governed by our <a href="{{ route('legal.show', 'terms') }}">terms of use</a>. The software is included free of charge and may be changed or stopped as set out there (with notice where we reasonably can). The device itself keeps storing reads offline and can be read over USB.</p>
+<p>Each device includes an activation code for the matching Herd Manager section, governed by our <a href="{{ route('legal.show', 'terms') }}">terms of use</a>. Herd Manager is free for the first {{ config('billing.trial_days') }} days, then a monthly or yearly subscription per farm (see the terms for prices and what happens if you stop). The device price is once-off. The device itself keeps storing reads offline and can be read over USB with or without a subscription.</p>
 
 <h2>Reservations</h2>
 <ul>

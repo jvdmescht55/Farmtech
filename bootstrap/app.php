@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTermsAccepted::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureSubscription::class);
 
         // Staff land on the admin login; device customers on the public one.
         $middleware->redirectGuestsTo(fn ($request) => $request->is('admin', 'admin/*') ? '/admin/login' : '/login');

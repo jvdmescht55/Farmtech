@@ -13,10 +13,19 @@
 <h2>The software</h2>
 <ul>
     <li>We give you a non-exclusive, non-transferable right to use Herd Manager for your own farming operation for as long as your account is active.</li>
-    <li>The software that comes with a Farmtech device has no monthly fee. If we ever introduce paid extras, we'll tell you first, and you won't lose what you already have while the service runs.</li>
+    <li>We may change prices with at least 30 days' notice by email. A period you've already paid for keeps its price.</li>
     <li>We keep improving things and may change features. We'll try hard not to take away something you rely on, and will give notice before any major change.</li>
     <li>We aim for the site to be available all the time, but we don't promise it will never be down: maintenance, internet outages and things outside our control happen. Devices store reads and sync later, so a short outage shouldn't lose data.</li>
     <li>Herd Manager, the free tools (such as the auction calculator and market prices) and the device connection service are provided <strong>“as is” and “as available”</strong>, to the extent the law allows.</li>
+</ul>
+
+<h2>Subscription and payment</h2>
+<ul>
+    <li>Herd Manager is a subscription per farm: currently <strong>{{ \App\Services\Billing::rand(\App\Services\Billing::price('monthly')) }} a month</strong> or <strong>{{ \App\Services\Billing::rand(\App\Services\Billing::price('yearly')) }} a year</strong>, covering every device and section on the account. Prices include VAT if we are VAT-registered.</li>
+    <li>The first <strong>{{ config('billing.trial_days') }} days are free</strong>, counted from when your first device is activated. We don't ask for card details for the free period.</li>
+    <li>You pay in advance for a month or a year, by EFT or card. There is <strong>no contract and no debit order</strong>: nothing renews or is charged without you choosing to pay. Paying before your current period ends adds the new period on, so you lose no days.</li>
+    <li>If a period ends unpaid you keep full access for {{ config('billing.grace_days') }} more days. After that your account becomes <strong>read-only</strong>: you can still see, search, print and export everything, and your devices keep storing and syncing reads. Nothing is deleted because you stopped paying. Paying again restores full access straight away.</li>
+    <li>Stopping is simply not paying for the next period. Because there's no automatic renewal, there's nothing to cancel. If you paid for a year and want to stop early, ask us and we'll refund the whole months you haven't used.</li>
 </ul>
 
 <h2>Changing, pausing or ending the service</h2>
@@ -25,7 +34,7 @@
     <li>Where we reasonably can, we'll give account holders at least <strong>30 days' notice</strong> by email and on the site, so you have time to export your records. If we have to act sooner (for example for legal, security or financial reasons outside our control), we'll give as much notice as we reasonably can.</li>
     <li>When the service ends, your account and the data in it will be deleted after the notice period (except what the law makes us keep). <strong>Export your data</strong> before then: Herd Manager → Import &amp; export gives you everything as CSV or a ZIP backup.</li>
     <li>Your devices keep working on their own: a KraalTrac keeps storing reads on the device, and you can still copy them off over USB. Online features (syncing, the herd book, alerts, pairing and updates) stop when the service stops.</li>
-    <li>Herd Manager comes free with a device, so stopping it is not a refund event in itself. If you've paid us in advance for a service we stop, we'll refund the part you haven't used. This doesn't limit your rights under the Consumer Protection Act on the device itself (including the warranty).</li>
+    <li>If we stop Herd Manager while you have a paid period running, we'll refund the part you haven't used. This doesn't limit your rights under the Consumer Protection Act on the device itself (including the warranty).</li>
     <li>We're not obliged to keep releasing updates, new features or support for a device, but we'll tell you if we stop.</li>
 </ul>
 

@@ -4,6 +4,8 @@
 
     <ul class="mt-6 space-y-3 text-[15px]">
         @foreach ([
+            'New: Herd Manager is free for the first '.config('billing.trial_days').' days from your first device, then '.\App\Services\Billing::rand(\App\Services\Billing::price('monthly')).' a month or '.\App\Services\Billing::rand(\App\Services\Billing::price('yearly')).' a year for the whole farm. No contract, no debit order.',
+            'If you stop paying, nothing is deleted. After '.config('billing.grace_days').' days it turns read-only: you can still see and download everything.',
             'We may change, pause or stop farmtech.site, Herd Manager or any part of it. Where we reasonably can, we give at least 30 days\' notice so you can export your records.',
             'If the service stops, your devices keep storing reads offline and you can still copy them off over USB.',
             'Your records stay yours. Export everything any time under Import & export.',

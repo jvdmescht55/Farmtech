@@ -87,6 +87,7 @@
                     <div class="px-3 py-2.5 border-b border-hairline mb-1"><div class="text-sm font-medium truncate">{{ $u->name }}</div><div class="text-xs text-stone truncate">{{ $u->email }}</div></div>
                     <a href="{{ route('rfid.settings.edit') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Farm settings</a>
                     <a href="{{ route('account.activate') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Activate a device</a>
+                    @if ($u->isCustomer())<a href="{{ route('billing.show') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Plan &amp; billing</a>@endif
                     <a href="{{ route('herd.suggest') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Suggestions</a>
                     @if ($u->canAccessAdminPanel())<a href="{{ url('/admin') }}" class="block rounded-lg px-3 py-2 text-sm text-ochre-dark hover:bg-sand-light">Admin</a>@endif
                     <form method="POST" action="{{ route('logout') }}" class="border-t border-hairline mt-1 pt-1">@csrf<button class="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-sand-light">Sign out</button></form>
@@ -125,6 +126,14 @@
 </header>
 
 <main id="main" class="wrap pt-6 sm:pt-10 {{ $nav ? 'pb-28 lg:pb-14' : 'pb-14' }}">
+    @php($bill = $billing ?? null)
+    @if ($bill && ! request()->routeIs('billing.*') && ($bill['read_only'] || $bill['state'] === 'grace' || ($bill['state'] === 'trial' && $bill['days_left'] !== null && $bill['days_left'] <= 14)))
+        <a href="{{ route('billing.show') }}" class="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-5 py-3 text-sm {{ $bill['read_only'] ? 'bg-[#B0452F] text-white' : 'bg-ochre/15 text-char' }}">
+            <span class="font-medium">{{ $bill['read_only'] ? 'Read-only: your free months are over.' : ($bill['state'] === 'grace' ? 'Payment due.' : 'Free months end in '.$bill['days_left'].' day'.($bill['days_left'] === 1 ? '' : 's').'.') }}</span>
+            <span class="{{ $bill['read_only'] ? 'text-white/80' : 'text-stone' }}">{{ $bill['read_only'] ? 'Everything is safe and you can still download it.' : 'Then '.\App\Services\Billing::rand(\App\Services\Billing::price('monthly')).' a month for the whole farm.' }}</span>
+            <span class="ml-auto underline">Plan &amp; billing →</span>
+        </a>
+    @endif
     @if ($photo)
         {{-- Photo header --}}
         <div class="relative overflow-hidden rounded-[28px] bg-char text-white mb-8 min-h-[190px] sm:min-h-[240px] flex items-end">
@@ -236,7 +245,10 @@
             <a href="{{ route('herd.suggest') }}" class="rounded-2xl bg-white border border-hairline p-4 flex items-center gap-2">@include('partials.icon', ['name' => 'bulb'])Suggest</a>
             <a href="{{ route('site.contact') }}" class="rounded-2xl bg-white border border-hairline p-4 flex items-center gap-2">@include('partials.icon', ['name' => 'help'])Talk to a person</a>
         </div>
-        <form method="POST" action="{{ route('logout') }}" class="mt-6 text-center">@csrf<button class="text-sm text-stone underline">Sign out</button></form>
+        <div class="mt-6 flex justify-center gap-6 text-sm text-stone">
+            @if ($u->isCustomer())<a href="{{ route('billing.show') }}" class="underline">Plan &amp; billing</a>@endif
+            <form method="POST" action="{{ route('logout') }}">@csrf<button class="underline">Sign out</button></form>
+        </div>
     </div>
 </div>
 

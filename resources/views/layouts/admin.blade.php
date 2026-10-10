@@ -14,6 +14,7 @@
         'Customers' => [
             $item('admin.leads.index', 'Leads & orders', 'admin.leads.*', null, $openLeads ?: null),
             $item('admin.licenses.index', 'Activation codes & customers', 'admin.licenses.*', 'manage-users'),
+            $item('admin.subscriptions.index', 'Subscriptions', 'admin.subscriptions.*', 'manage-users', ($pendingSubs = \App\Models\SubscriptionPayment::where('status', 'pending')->count()) ?: null),
             $item('admin.suggestions.index', 'Suggestions', 'admin.suggestions.*', null, $newSuggestions ?: null),
         ],
         'Store' => [

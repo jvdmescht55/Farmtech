@@ -51,7 +51,7 @@
         <div class="rounded-[28px] bg-white border border-hairline p-8 sm:p-10 flex flex-col">
             <div class="text-ochre-dark font-medium">For tinkerers</div>
             <h3 class="mt-3 font-headline text-4xl sm:text-5xl">You built your own</h3>
-            <p class="mt-4 text-stone leading-relaxed">Got an ESP32 or Arduino on the windmill already? Add it under <strong>Custom devices</strong> in Herd Manager, give it a name and limits, and point it at the link it gives you. Free with every account.</p>
+            <p class="mt-4 text-stone leading-relaxed">Got an ESP32 or Arduino on the windmill already? Add it under <strong>Custom devices</strong> in Herd Manager, give it a name and limits, and point it at the link it gives you. Part of every Herd Manager account, at no extra cost.</p>
             <pre class="mt-8 rounded-2xl bg-char text-sand/90 p-5 text-[12.5px] leading-relaxed overflow-x-auto font-num"><span class="text-sand/45">// Send one reading. That's all it takes</span>
 POST https://farmtech.site/api/v1/readings
 Authorization: Bearer <span class="text-ochre-light">your-device-key</span>
@@ -105,7 +105,7 @@ level=68&amp;battery=12.6</pre>
         @foreach ([
             ['What does a custom build cost?', 'It depends on the sensor, power and signal. You get a fixed quote before we build anything, and you can say no.'],
             ['There\'s no Wi-Fi at the trough.', 'Most builds run on a small solar panel and battery. Where there\'s no Wi-Fi we use a SIM card or a long-range farm radio back to the house.'],
-            ['Do I need a KraalTrac Pro?', 'No. Custom devices is a free section of every Herd Manager account.'],
+            ['Do I need a KraalTrac Pro?', 'No. Custom devices is part of every Herd Manager account, at no extra cost.'],
             ['Who owns the device and the data?', 'You do. It\'s your device, and you can export every reading any time.'],
             ['What if it breaks?', 'Our builds carry the same 6-month warranty as the KraalTrac Pro. We\'ll help you fix or replace it.'],
         ] as $i => [$q, $a])

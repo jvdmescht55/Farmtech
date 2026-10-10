@@ -47,6 +47,36 @@ class PayFastGateway implements PaymentGatewayInterface
         ];
     }
 
+    /** Once-off card payment for a Herd Manager month or year (reference SUB-…). */
+    public function initiateSubscription(\App\Models\SubscriptionPayment $payment): array
+    {
+        $merchantId = config('services.payfast.merchant_id');
+        $merchantKey = config('services.payfast.merchant_key');
+        if (! $merchantId || ! $merchantKey) {
+            throw new \RuntimeException('PayFast is not configured.');
+        }
+
+        $fields = [
+            'merchant_id' => $merchantId,
+            'merchant_key' => $merchantKey,
+            'return_url' => route('billing.show', ['paid' => $payment->reference]),
+            'cancel_url' => route('billing.show'),
+            'notify_url' => route('checkout.webhook.payfast'),
+            'name_first' => $payment->user->name,
+            'email_address' => $payment->user->email,
+            'm_payment_id' => $payment->reference,
+            'amount' => number_format($payment->amount_cents / 100, 2, '.', ''),
+            'item_name' => 'Farmtech Herd Manager, '.($payment->plan === 'yearly' ? '1 year' : '1 month'),
+        ];
+        $fields['signature'] = $this->signature($fields);
+
+        return [
+            'method' => 'POST',
+            'action_url' => config('services.payfast.sandbox') ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process',
+            'fields' => $fields,
+        ];
+    }
+
     public function verifyNotification(array $payload, array $headers = []): bool
     {
         $signature = $payload['signature'] ?? null;

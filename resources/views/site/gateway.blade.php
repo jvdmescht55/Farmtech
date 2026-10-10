@@ -21,7 +21,7 @@
         <h1 class="sr-only">Farmtech: KraalTrac devices and Herd Manager herd software</h1>
         @foreach ([
             [route('site.store'), 'windpomp-pink', '01', 'Store', 'KraalTrac scanners and ear tags for sheep, goats and cattle, plus free market prices and an auction calculator.', 'Go to the store'],
-            [auth()->check() ? route('herd.hub') : route('landing'), 'windpomp-storm', '02', 'Herd Manager', 'Your herd book online, free with your scanner. Weights, growth, water, alerts and auction books.', auth()->check() ? 'Open my herd' : 'Sign in'],
+            [auth()->check() ? route('herd.hub') : route('landing'), 'windpomp-storm', '02', 'Herd Manager', 'Your herd book online. Weights, growth, water, alerts and auction books. 3 months free with your scanner.', auth()->check() ? 'Open my herd' : 'Sign in'],
         ] as $i => [$href, $img, $n, $title, $body, $cta])
             <a href="{{ $href }}" class="group relative flex-1 min-h-[50svh] lg:min-h-[100svh] overflow-hidden lg:transition-[flex-grow] lg:duration-700 lg:ease-[cubic-bezier(.2,.7,.2,1)] lg:hover:grow-[1.35] {{ $i ? 'lg:border-l border-white/10' : '' }}">
                 <img src="{{ Img::url($img, true) }}" srcset="{{ Img::srcset($img) }}" sizes="(min-width: 1024px) 60vw, 100vw" alt="{{ Img::alt($img) }}"

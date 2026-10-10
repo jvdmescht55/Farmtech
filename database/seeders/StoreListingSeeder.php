@@ -22,7 +22,7 @@ class StoreListingSeeder extends Seeder
             'features' => [
                 ['title' => 'Instant EID scanning', 'body' => 'Built-in 134.2 kHz FDX-B antenna wand reads standard animal ear tags on contact. No more typing numbers with cold fingers.'],
                 ['title' => 'Offline-first — no signal, no stress', 'body' => 'Onboard flash memory keeps hundreds of records when the Wi-Fi doesn\'t reach the kraal, and syncs the moment you\'re back in range.'],
-                ['title' => 'Herd Manager included', 'body' => 'Pairs with your Herd Manager account using a 6-digit code. Weigh sessions, daily gain, comparisons, sorting, alerts and sale catalogues — no monthly subscription.'],
+                ['title' => 'Herd Manager: 3 months free', 'body' => 'Pairs with your Herd Manager account using a 6-digit code. Weigh sessions, daily gain, comparisons, sorting, alerts and sale catalogues — no monthly subscription.'],
                 ['title' => 'Your data stays yours', 'body' => 'Export everything to CSV or a full backup any time. We never sell or share your farm data.'],
                 ['title' => 'Built farm-tough', 'body' => 'High-strength PETG with 3.5 mm walls, internal reinforcing spines and gussets — made to survive drops, dust, manure and the crush.'],
                 ['title' => 'Full pedigree & weight suite', 'body' => 'Log birth, wean, post-wean and mature weights with sex, sire and dam — straight from the keypad.'],
@@ -36,7 +36,7 @@ class StoreListingSeeder extends Seeder
                 ['label' => 'Antenna wand', 'value' => '40 cm reach, internal wire management & reinforcing spine'],
                 ['label' => 'Enclosure', 'value' => '2-piece PETG clamshell, M3/M4 machine hardware'],
                 ['label' => 'Power', 'value' => 'External power bank on a rear strap bracket'],
-                ['label' => 'Software', 'value' => 'Herd Manager on farmtech.site — Wi-Fi sync over HTTPS, included'],
+                ['label' => 'Software', 'value' => 'Herd Manager on farmtech.site: 3 months free, then R249 a month per farm'],
             ],
             'in_box' => [
                 '1× KraalTrac Pro handheld terminal & wand, assembled and tested',
@@ -66,7 +66,7 @@ class StoreListingSeeder extends Seeder
             'specs' => [
                 ['label' => 'Reads', 'value' => '134.2 kHz FDX-B ear tags'],
                 ['label' => 'Controller', 'value' => 'ESP32 with Wi-Fi'],
-                ['label' => 'Software', 'value' => 'Herd Manager — KraalTrac Watch section, included'],
+                ['label' => 'Software', 'value' => 'Herd Manager, Watch section (same subscription as your scanner)'],
             ],
             'in_box' => [],
             'why' => null,

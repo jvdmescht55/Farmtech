@@ -17,7 +17,7 @@ return [
     'information_officer' => env('LEGAL_INFO_OFFICER'), // POPIA Information Officer (usually the owner/director)
     'icasa_approval' => env('LEGAL_ICASA_APPROVAL'),    // ICASA type-approval number(s) for the devices
     'hosting' => 'DigitalOcean (Frankfurt, Germany) with Cloudflare in front',
-    'updated' => '6 October 2026',
+    'updated' => '10 October 2026',
     // Bump when the terms change materially: signed-in users are asked to accept again.
-    'terms_version' => '2026-10-06',
+    'terms_version' => '2026-10-10',
 ];

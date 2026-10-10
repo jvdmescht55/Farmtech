@@ -77,7 +77,7 @@
             </div>
             <ul class="mt-8 space-y-2 text-sm text-stone">
                 @foreach ($listing->module
-                    ? ['Herd Manager included, no monthly subscription', 'Programmed and tested in South Africa before it ships', '7 days to change your mind · 6-month warranty', 'Help from the people who built it']
+                    ? ['Herd Manager free for 3 months, then '.\App\Services\Billing::rand(\App\Services\Billing::price('monthly')).' a month per farm', 'Programmed and tested in South Africa before it ships', '7 days to change your mind · 6-month warranty', 'Help from the people who built it']
                     : ['Reads on the KraalTrac Pro and shows up in Herd Manager', 'Couriered with your order, or collect', '7 days to change your mind (unused packs)'] as $t)
                     <li class="flex gap-3"><span class="mt-2 w-1.5 h-1.5 rounded-full bg-ochre shrink-0"></span>{{ $t }}</li>
                 @endforeach

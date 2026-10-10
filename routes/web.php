@@ -102,6 +102,9 @@ Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout'
 
 Route::middleware('auth')->group(function () {
     Route::get('/activate', [CustomerAuthController::class, 'showActivate'])->name('account.activate');
+    Route::get('/account/billing', [\App\Http\Controllers\BillingController::class, 'show'])->name('billing.show');
+    Route::post('/account/billing', [\App\Http\Controllers\BillingController::class, 'pay'])->name('billing.pay')->middleware('throttle:10,1');
+    Route::get('/account/billing/{payment:reference}', [\App\Http\Controllers\BillingController::class, 'invoice'])->name('billing.invoice');
     Route::post('/activate', [CustomerAuthController::class, 'activate'])->middleware('throttle:10,1');
 });
 
@@ -271,6 +274,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/licenses/{license}/revoke', [AdminLicenseController::class, 'revoke'])->name('licenses.revoke');
             Route::post('/customers/{user}/reset-link', [AdminLicenseController::class, 'resetLink'])->name('customers.reset-link');
             Route::post('/licenses/{license}/restore', [AdminLicenseController::class, 'restore'])->name('licenses.restore');
+
+            Route::get('/subscriptions', [\App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
+            Route::post('/subscriptions/{payment}/paid', [\App\Http\Controllers\Admin\SubscriptionController::class, 'markPaid'])->name('subscriptions.paid');
+            Route::post('/subscriptions/{payment}/cancel', [\App\Http\Controllers\Admin\SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+            Route::post('/subscriptions/give/{user}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'give'])->name('subscriptions.give');
 
             Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
             Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
