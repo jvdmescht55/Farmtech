@@ -87,7 +87,7 @@ class HerdImporter
                 if ($v = CsvReader::pick($row, ['notes', 'comment', 'opmerking'])) {
                     $attrs['notes'] = $v;
                 }
-                $attrs['breed'] = $animal->breed ?? $user->breed;
+                $attrs['breed'] = CsvReader::pick($row, ['breed', 'ras']) ?? $animal->breed ?? $user->breed;
                 if (empty($attrs['birth_date']) && ! $animal->birth_date && ($bd = \App\Support\BirthdayId::birthDate($vid))) {
                     $attrs['birth_date'] = $bd;
                 }

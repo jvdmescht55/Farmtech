@@ -10,8 +10,18 @@ namespace App\Services\Herd;
  */
 class XlsxReader
 {
-    /** @return array<int, array<int, string>> */
+    /** @return array<int, array<int, string>> First worksheet only. */
     public static function rows(string $path): array
+    {
+        return array_values(self::sheets($path))[0] ?? [];
+    }
+
+    /**
+     * Every worksheet, in workbook order: [sheet name => rows].
+     *
+     * @return array<string, array<int, array<int, string>>>
+     */
+    public static function sheets(string $path): array
     {
         $zip = new \ZipArchive;
         if ($zip->open($path) !== true) {
@@ -30,28 +40,37 @@ class XlsxReader
             }
         }
 
-        // First sheet in workbook order.
-        $sheetPath = 'xl/worksheets/sheet1.xml';
+        $paths = [];
         if (($wb = $zip->getFromName('xl/workbook.xml')) !== false && ($rels = $zip->getFromName('xl/_rels/workbook.xml.rels')) !== false) {
             $wbx = simplexml_load_string($wb);
             $relx = simplexml_load_string($rels);
-            $first = $wbx->sheets->sheet[0] ?? null;
-            if ($first) {
-                $rid = (string) $first->attributes('r', true)->id;
-                foreach ($relx->Relationship as $r) {
-                    if ((string) $r['Id'] === $rid) {
-                        $sheetPath = 'xl/'.ltrim(str_replace('/xl/', '', (string) $r['Target']), '/');
-                    }
+            $targets = [];
+            foreach ($relx->Relationship as $r) {
+                $targets[(string) $r['Id']] = 'xl/'.ltrim(str_replace('/xl/', '', (string) $r['Target']), '/');
+            }
+            foreach ($wbx->sheets->sheet as $sheet) {
+                $rid = (string) $sheet->attributes('r', true)->id;
+                if (isset($targets[$rid]) && (string) $sheet['state'] !== 'hidden') {
+                    $paths[(string) $sheet['name'] ?: 'Sheet'.(count($paths) + 1)] = $targets[$rid];
                 }
             }
         }
+        $paths = $paths ?: ['Sheet1' => 'xl/worksheets/sheet1.xml'];
 
-        $sheet = $zip->getFromName($sheetPath);
-        $zip->close();
-        if ($sheet === false) {
-            return [];
+        $out = [];
+        foreach (array_slice($paths, 0, 20, true) as $name => $sheetPath) {
+            $sheet = $zip->getFromName($sheetPath);
+            if ($sheet !== false) {
+                $out[$name] = self::parseSheet($sheet, $shared);
+            }
         }
+        $zip->close();
 
+        return $out;
+    }
+
+    private static function parseSheet(string $sheet, array $shared): array
+    {
         $rows = [];
         $x = simplexml_load_string($sheet);
         foreach ($x->sheetData->row as $row) {

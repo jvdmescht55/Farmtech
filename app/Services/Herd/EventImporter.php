@@ -71,9 +71,11 @@ class EventImporter
 
     private function synonym(string $t): ?string
     {
+        $t = Str::ascii($t);
+
         return match (true) {
             Str::contains($t, ['dose', 'dosing', 'drench', 'doseer']) => 'dosing',
-            Str::contains($t, ['vacc', 'inent']) => 'vaccination',
+            Str::contains($t, ['vacc', 'inent', 'geent', 'enting', 'entstof', 'jab']) => 'vaccination',
             Str::contains($t, ['treat', 'behandel', 'injection', 'inspuit']) => 'treatment',
             Str::contains($t, ['mat', 'paar', 'dek', 'join', 'tup']) => 'mating',
             Str::contains($t, ['scan', 'dragtig', 'preg']) => 'pregnancy_scan',

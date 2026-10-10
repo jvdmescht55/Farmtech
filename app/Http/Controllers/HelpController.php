@@ -9,7 +9,7 @@ class HelpController extends Controller
 {
     public const GUIDES = [
         'getting-started' => ['Your first 10 minutes', 'From unboxing to your first weigh day.', 'start'],
-        'excel' => ['Bring your records in from Excel', 'Herd book, weights or treatments — straight from a spreadsheet.', 'table'],
+        'excel' => ['Bring your records in from Excel', 'Drop in any spreadsheet. No template: we sort it into animals, weights and records.', 'table'],
         'esp32' => ['Connect your scale (ESP32)', 'Wi-Fi, pairing, and what to do when there\'s no signal.', 'chip'],
         'pair' => ['Pair a KraalTrac', 'Six digits and you\'re connected.', 'link'],
         'weighing' => ['A weigh day, start to finish', 'Scan, weigh, and read the results.', 'scale'],

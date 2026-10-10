@@ -3,27 +3,19 @@
 namespace App\Http\Controllers\Rfid;
 
 use App\Http\Controllers\Controller;
-use App\Services\Herd\CsvReader;
 use App\Services\Herd\DataExporter;
-use App\Services\Herd\EventImporter;
-use App\Services\Herd\HerdImporter;
 use App\Services\Herd\ScanImporter;
+use App\Services\Herd\SmartImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 /**
- * One place to get data in and out. Uploads are sniffed — herd register,
- * weights/scans or logbook — shown as a preview, then routed to the right
- * importer. Every export is a CSV; "backup" zips them all.
+ * One place to get data in and out. Any spreadsheet is read by SmartImport,
+ * shown as a plain-words preview, then split into the herd book, weighings
+ * and records in one go. Every export is a CSV; "backup" zips them all.
  */
 class DataController extends Controller
 {
-    public const KINDS = [
-        'herd' => ['Herd book / stud register', 'Animals are added or updated (same ID = update, never a duplicate). Parents and grandparents get linked.'],
-        'scans' => ['Weights / scans', 'Each row becomes a scan, with its weight if there is one. Unknown tags become new animals.'],
-        'events' => ['Records', 'Treatments, matings, births, sales and deaths — matched to animals by ID or EID.'],
-    ];
-
     public function index(Request $request, DataExporter $exporter)
     {
         if ($type = $request->query('export')) {
@@ -37,67 +29,61 @@ class DataController extends Controller
             $preview = null;
         }
 
-        return view('rfid.data', ['preview' => $preview, 'exports' => DataExporter::TYPES, 'kinds' => self::KINDS]);
+        return view('rfid.data', ['preview' => $preview, 'exports' => DataExporter::TYPES, 'fields' => SmartImport::FIELDS]);
     }
 
-    public function preview(Request $request)
+    public function preview(Request $request, SmartImport $smart)
     {
-        $request->validate(['file' => ['required', 'file', 'max:20480', 'mimes:csv,txt,tsv,xlsx']]);
+        $request->validate(['file' => ['required', 'file', 'max:20480', 'mimes:csv,txt,tsv,xlsx,xlsm']]);
 
         $token = Str::random(32);
         $dir = dirname($this->path($token));
         is_dir($dir) || mkdir($dir, 0775, true);
         $request->file('file')->move($dir, basename($this->path($token)));
 
-        $parsed = CsvReader::read($this->path($token));
-        if (! $parsed['rows']) {
-            @unlink($this->path($token));
-
-            return back()->withErrors(['file' => 'That file is empty or couldn\'t be read.']);
-        }
-
-        $kind = $this->sniff($parsed['headers']);
-
-        return redirect()->route('rfid.data')->with('preview', [
-            'token' => $token,
-            'name' => $request->file('file')->getClientOriginalName(),
-            'kind' => $kind,
-            'headers' => $parsed['headers'],
-            'recognised' => $this->recognised($parsed['headers']),
-            'rows' => array_slice($parsed['rows'], 0, 8),
-            'count' => count($parsed['rows']),
-        ]);
+        return $this->showPreview($smart, $token, $request->file('file')->getClientOriginalName());
     }
 
-    public function import(Request $request, HerdImporter $herd, ScanImporter $scans, EventImporter $events)
+    private function showPreview(SmartImport $smart, string $token, string $name)
     {
-        $data = $request->validate(['token' => ['required', 'alpha_num', 'size:32'], 'kind' => ['required', 'in:'.implode(',', array_keys(self::KINDS))]]);
+        $sheets = $smart->analyse($this->path($token), $name);
+        if (! $sheets) {
+            @unlink($this->path($token));
+
+            return redirect()->route('rfid.data')->withErrors(['file' => 'We couldn\'t find any rows in that file. Is it the right one?']);
+        }
+
+        return redirect()->route('rfid.data')->with('preview', ['token' => $token, 'name' => $name, 'sheets' => $sheets]);
+    }
+
+    public function import(Request $request, SmartImport $smart)
+    {
+        $data = $request->validate([
+            'token' => ['required', 'alpha_num', 'size:32'],
+            'name' => ['nullable', 'string', 'max:200'],
+            'map' => ['array'], 'map.*' => ['array'], 'map.*.*' => ['string', 'max:40'],
+            'include' => ['array'], 'include.*' => ['boolean'],
+        ]);
         $path = $this->path($data['token']);
-        abort_unless(is_file($path), 410, 'That upload expired — please upload it again.');
+        abort_unless(is_file($path), 410, 'That upload expired. Please upload it again.');
 
-        $rows = CsvReader::read($path)['rows'];
-        $user = $request->user();
-
-        $message = match ($data['kind']) {
-            'herd' => (function () use ($herd, $user, $rows) {
-                $r = $herd->import($user, $rows);
-
-                return "Herd book: {$r['created']} added, {$r['updated']} updated, {$r['skipped']} skipped.";
-            })(),
-            'scans' => (function () use ($scans, $user, $rows, $request) {
-                $s = $scans->import($user, null, 'csv', $rows, $request->input('name'));
-
-                return "Scans: {$s->scan_count} saved — {$s->matched_count} known animals, {$s->new_count} new.";
-            })(),
-            'events' => (function () use ($events, $user, $rows) {
-                $r = $events->import($user, $rows);
-
-                return "Records: {$r['created']} entries added, {$r['skipped']} skipped".($r['unknown'] ? ' (animals we don\'t know: '.implode(', ', array_slice($r['unknown'], 0, 5)).')' : '').'.';
-            })(),
-        };
+        $include = array_map('boolval', $data['include'] ?? []);
+        $r = $smart->run($request->user(), $path, $data['name'] ?: 'Upload', $data['map'] ?? [], $include);
         @unlink($path);
 
-        return redirect()->route('rfid.data')->with('status', $message);
+        $parts = array_filter([
+            $r['created'] ? number_format($r['created']).' new animal'.($r['created'] === 1 ? '' : 's') : null,
+            $r['updated'] ? number_format($r['updated']).' updated' : null,
+            $r['weights'] ? number_format($r['weights']).' weighing'.($r['weights'] === 1 ? '' : 's') : null,
+            $r['records'] ? number_format($r['records']).' record'.($r['records'] === 1 ? '' : 's') : null,
+            $r['kept'] ? number_format($r['kept']).' extra detail'.($r['kept'] === 1 ? '' : 's').' kept in notes' : null,
+        ]);
+        $message = $parts ? 'Done: '.implode(', ', $parts).'.' : 'Nothing new in that file. It was all here already.';
+        if ($r['skipped']) {
+            $message .= ' '.$r['skipped'].' row'.($r['skipped'] === 1 ? ' was' : 's were').' left out (no animal ID or no date).';
+        }
+
+        return redirect()->route('rfid.data')->with('status', $message)->with('confetti', (bool) $parts);
     }
 
     /**
@@ -105,12 +91,22 @@ class DataController extends Controller
      * press B (ref|id|tag|type|gender|sire|dam|weight|ts, or the older
      * id|type|gender|sire|dam|weight). The BEGIN/END lines can be included.
      */
-    public function paste(Request $request, ScanImporter $scans)
+    public function paste(Request $request, ScanImporter $scans, SmartImport $smart)
     {
-        $text = (string) $request->validate(['lines' => ['required', 'string', 'max:500000']])['lines'];
+        $text = (string) $request->validate(['lines' => ['required', 'string', 'max:2000000']])['lines'];
         $rows = $this->scaleRows(preg_split('/\R/', $text));
         if (! $rows) {
-            return back()->withErrors(['lines' => 'We couldn\'t find any scale records in that. Copy the lines between ----BEGIN QUEUE---- and ----END QUEUE----.'])->withInput();
+            // Not scale lines: rows copied straight out of Excel. Treat it like an uploaded sheet.
+            if (count(preg_split('/\R/', trim($text))) >= 1 && preg_match('/[\t,;]/', $text)) {
+                $token = Str::random(32);
+                $dir = dirname($this->path($token));
+                is_dir($dir) || mkdir($dir, 0775, true);
+                file_put_contents($this->path($token), $text);
+
+                return $this->showPreview($smart, $token, 'Pasted rows');
+            }
+
+            return back()->withErrors(['lines' => 'We couldn\'t make sense of that. Paste rows copied from Excel (with the heading row), or the lines the scale prints.'])->withInput();
         }
 
         $sync = $scans->import($request->user(), null, 'paste', $rows, 'Pasted from the scale');
@@ -200,30 +196,6 @@ class DataController extends Controller
             }
             fclose($out);
         }, "farmtech-template-{$kind}.csv", ['Content-Type' => 'text/csv']);
-    }
-
-    /** Decide what a file is from its columns. */
-    private function sniff(array $headers): string
-    {
-        $h = array_flip($headers);
-        $has = fn (array $keys) => (bool) array_intersect_key($h, array_flip($keys));
-
-        if ($has(EventImporter::TYPE) && $has(['date', 'datum'])) {
-            return 'events';
-        }
-        if ($has(['sire', 'dam', 'vaar', 'moer', 'sire_sire', 'birth_date', 'dob', 'registered', 'tier', 'sex', 'geslag']) && ! $has(ScanImporter::WEIGHT)) {
-            return 'herd';
-        }
-
-        return 'scans';
-    }
-
-    private function recognised(array $headers): array
-    {
-        $known = array_merge(HerdImporter::templateHeaders(), ScanImporter::EID, ScanImporter::VID, ScanImporter::WEIGHT, ScanImporter::DATE, ScanImporter::TYPE,
-            EventImporter::TYPE, ['species', 'product', 'produk', 'dose', 'dosis', 'withdrawal_days', 'withdrawal_until', 'mate', 'count', 'result', 'uitslag', 'notes', 'notas', 'datum', 'gewig']);
-
-        return array_values(array_intersect($headers, $known));
     }
 
     private function path(string $token): string

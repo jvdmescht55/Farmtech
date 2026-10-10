@@ -80,7 +80,8 @@ class ScanImporter
 
                 $scannedAt = $this->parseDate(CsvReader::pick($row, self::DATE));
                 // A device whose clock was never set reports 1970/2000 or the far future.
-                if ($scannedAt->year < 2015 || $scannedAt->gt(now()->addHours(2))) {
+                // Old weights from a spreadsheet are real history, so only devices get the 2015 floor.
+                if ($scannedAt->year < ($source === 'csv' ? 1950 : 2015) || $scannedAt->gt(now()->addHours(2))) {
                     $scannedAt = now();
                 }
                 $isNew = ! $animal;

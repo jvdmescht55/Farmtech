@@ -34,6 +34,45 @@ class CsvReader
         return self::fromRows(array_values($rows));
     }
 
+    /**
+     * The raw grid of every sheet: [sheet name => rows of cells]. A CSV is one
+     * sheet; an Excel workbook gives every visible worksheet.
+     *
+     * @return array<string, array<int, array<int, string>>>
+     */
+    public static function sheets(string $path, string $csvName = 'Sheet1'): array
+    {
+        $head = (string) @file_get_contents($path, false, null, 0, 4);
+        if (str_starts_with($head, "PK\x03\x04")) {
+            return array_map(fn ($rows) => array_values(array_filter($rows, fn ($r) => implode('', $r) !== '')), XlsxReader::sheets($path));
+        }
+
+        $contents = preg_replace('/^\xEF\xBB\xBF/', '', (string) file_get_contents($path));
+        if (! mb_check_encoding($contents, 'UTF-8')) {
+            $contents = mb_convert_encoding($contents, 'UTF-8', 'Windows-1252');
+        }
+        $lines = array_values(array_filter(preg_split('/\r\n|\r|\n/', trim($contents)), fn ($l) => trim($l, " \t,;") !== ''));
+        if (! $lines) {
+            return [$csvName => []];
+        }
+        $sample = implode("\n", array_slice($lines, 0, 20));
+        $delimiter = collect([',', ';', "\t", '|'])->sortByDesc(fn ($d) => substr_count($sample, $d))->first();
+
+        // fgetcsv keeps quoted cells that run over several lines together.
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, implode("\n", $lines));
+        rewind($stream);
+        $rows = [];
+        while (($r = fgetcsv($stream, null, $delimiter, '"', '')) !== false) {
+            if (implode('', $r) !== '') {
+                $rows[] = array_map(fn ($c) => trim((string) $c), $r);
+            }
+        }
+        fclose($stream);
+
+        return [$csvName => $rows];
+    }
+
     /** Shared by CSV and Excel: header detection and keyed rows. */
     private static function fromRows(array $rows): array
     {

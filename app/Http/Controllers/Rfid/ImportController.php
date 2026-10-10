@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Rfid;
 
 use App\Http\Controllers\Controller;
-use App\Services\Herd\CsvReader;
 use App\Services\Herd\HerdImporter;
+use App\Services\Herd\SmartImport;
 use Illuminate\Http\Request;
 
 class ImportController extends Controller
@@ -14,19 +14,15 @@ class ImportController extends Controller
         return redirect()->route('rfid.data');
     }
 
-    public function store(Request $request, HerdImporter $importer)
+    /** Old upload form: same smart import as Import & export. */
+    public function store(Request $request, SmartImport $smart)
     {
-        $request->validate(['file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,tsv']]);
-        $parsed = CsvReader::read($request->file('file')->getRealPath());
-
-        if (! in_array('visual_id', $parsed['headers'], true) && ! array_intersect($parsed['headers'], ['vid', 'animal_id', 'dier_id', 'id'])) {
-            return back()->withErrors(['file' => 'The file needs a "visual_id" (or "Animal ID") column. Download the template to see the layout.']);
-        }
-
-        $result = $importer->import($request->user(), $parsed['rows']);
+        $request->validate(['file' => ['required', 'file', 'max:20480', 'mimes:csv,txt,tsv,xlsx,xlsm']]);
+        $file = $request->file('file');
+        $r = $smart->run($request->user(), $file->getRealPath(), $file->getClientOriginalName());
 
         return redirect()->route('rfid.animals.index')
-            ->with('status', "Herd import: {$result['created']} added, {$result['updated']} updated, {$result['skipped']} skipped (no ID).");
+            ->with('status', "Import: {$r['created']} added, {$r['updated']} updated, {$r['weights']} weighings, {$r['records']} records.");
     }
 
     public function template()

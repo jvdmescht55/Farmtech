@@ -9,7 +9,7 @@ use App\Models\User;
 class DataExporter
 {
     public const TYPES = [
-        'herd' => ['Herd book', 'Every animal with pedigree, EBVs and lambing record — same columns as the import template.'],
+        'herd' => ['Herd book', 'Every animal with pedigree, EBVs and lambing record. Edit it in Excel and bring it back in.'],
         'weighings' => ['All weighings', 'Every weight with the previous one, the change and daily gain.'],
         'sessions' => ['Weigh-session summary', 'One row per weigh day: count, average, median, spread, gain.'],
         'events' => ['Records', 'Treatments, matings, births, sales and deaths.'],
