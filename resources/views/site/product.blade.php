@@ -157,11 +157,12 @@
 </section>
 @endif
 
-@if ($listing->features)
+@php($features = collect($listing->features ?: [])->reject(fn ($f) => $listing->module === 'rfid' && str_starts_with($f['title'], 'Programmed'))->values())
+@if ($features->isNotEmpty())
 <section class="wrap py-20 sm:py-28">
-    <p class="eyebrow">Why farmers want it</p>
+    <h2 class="h-display text-[clamp(2.4rem,4.5vw,3.6rem)]">Why farmers want it</h2>
     <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-14">
-        @foreach ($listing->features as $i => $f)
+        @foreach ($features as $i => $f)
             <div>
                 <div class="font-num text-sm text-stone-light">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
                 <div class="mt-5 h-px bg-hairline"></div>

@@ -7,7 +7,7 @@
 
 @section('content')
 @php
-    $urgent = $alerts->whereIn('severity', ['critical', 'warning'])->count();
+    $urgent = $urgentCount;
     $summary = $herdCount === 0
         ? 'Nothing in the herd book yet. Start with one of the tiles below.'
         : ($urgent ? $urgent.' '.\Illuminate\Support\Str::plural('thing', $urgent).' need you today.' : 'Nothing urgent today. Lekker.')
@@ -61,9 +61,9 @@
 @else
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
         <a href="{{ route('rfid.animals.index') }}" class="panel p-6 block hover:border-char hover:-translate-y-0.5 transition">
-            <div class="kpi-label">Head in the herd</div>
+            <div class="kpi-label">{{ $herdLabel }}</div>
             <div class="kpi-num mt-3" x-data x-countup>{{ $herdCount }}</div>
-            <div class="text-sm text-stone mt-2">{{ $ewes }} female · {{ $rams }} male</div>
+            <div class="text-sm text-stone mt-2">{{ $ewes }} female · {{ $rams }} male @if ($herdCount - $ewes - $rams > 0)· {{ $herdCount - $ewes - $rams }} not set @endif</div>
         </a>
         <a href="{{ route('rfid.weighings.index') }}" class="panel p-6 block hover:border-char hover:-translate-y-0.5 transition">
             <div class="kpi-label">Average weight</div>
@@ -84,7 +84,7 @@
             <div class="kpi-label">Last weigh day</div>
             @if ($latestSession)
                 <div class="kpi-num mt-3">{{ \Carbon\Carbon::parse($latestSession->date)->format('j M') }}</div>
-                <div class="text-sm text-stone mt-2">{{ $latestSession->kg['n'] }} weighed @if ($latestSession->mean_change !== null)· <span class="{{ $latestSession->mean_change >= 0 ? 'up' : 'down' }}">{{ $latestSession->mean_change >= 0 ? '+' : '' }}{{ $latestSession->mean_change }} kg</span>@endif</div>
+                <div class="text-sm text-stone mt-2">{{ $latestSession->kg['n'] }} weighed @if ($latestSession->mean_change !== null)· <span class="{{ $latestSession->mean_change >= 0 ? 'up' : 'down' }}">{{ $latestSession->mean_change >= 0 ? '+' : '' }}{{ $latestSession->mean_change }} kg each</span> since the time before @endif</div>
             @else
                 <div class="kpi-num mt-3 text-stone-light">—</div><div class="text-sm text-stone mt-2">nothing yet</div>
             @endif

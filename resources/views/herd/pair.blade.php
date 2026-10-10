@@ -1,6 +1,6 @@
 @extends('layouts.herd')
 @section('title', 'Pair your device')
-@section('eyebrow')Type the 6 numbers on the device's screen. That's it. @endsection
+@section('eyebrow')Type the 6 numbers on the device's screen. (Not the code on the card in the box: that one goes under Activate a device.) @endsection
 @section('photo', 'tagged-ewe')
 
 @section('content')

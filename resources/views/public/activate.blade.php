@@ -1,6 +1,7 @@
 <x-public-shell title="Activate a device · Herd Manager" image="tafelberg" headline="Another device?<br>Lekker.">
     <h1 class="h-display text-6xl">Activate a device</h1>
     <p class="text-stone mt-3">Signed in as {{ auth()->user()->email }}. Type the code from the card in your device's box.</p>
+    <p class="text-sm text-stone mt-2 rounded-xl bg-sand-light px-4 py-3">Two codes, two jobs: <strong class="text-char">this card code</strong> adds the device to your account (once). The <strong class="text-char">6 numbers on the scanner's screen</strong> link the scanner itself, on the <a href="{{ route('pair') }}" class="underline">Pair</a> page next.</p>
 
     <div class="mt-10">@include('partials.flash')</div>
 

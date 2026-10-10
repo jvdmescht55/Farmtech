@@ -67,10 +67,15 @@
                         </label>
                     @endforeach
                 </div>
-                <div class="mt-5 flex flex-wrap gap-2 text-sm">
-                    <label class="chip cursor-pointer" :class="method === 'eft' ? 'bg-char text-sand' : 'bg-sand-deep'"><input type="radio" name="method" value="eft" x-model="method" class="sr-only">EFT</label>
-                    @if ($cardEnabled)<label class="chip cursor-pointer" :class="method === 'card' ? 'bg-char text-sand' : 'bg-sand-deep'"><input type="radio" name="method" value="card" x-model="method" class="sr-only">Card</label>@endif
-                </div>
+                @if ($cardEnabled)
+                    <div class="mt-5 flex flex-wrap gap-2 text-sm">
+                        <label class="chip cursor-pointer" :class="method === 'eft' ? 'bg-char text-sand' : 'bg-sand-deep'"><input type="radio" name="method" value="eft" x-model="method" class="sr-only">EFT</label>
+                        <label class="chip cursor-pointer" :class="method === 'card' ? 'bg-char text-sand' : 'bg-sand-deep'"><input type="radio" name="method" value="card" x-model="method" class="sr-only">Card</label>
+                    </div>
+                @else
+                    <input type="hidden" name="method" value="eft">
+                    <p class="mt-5 text-sm text-stone">You pay by EFT. The invoice shows the reference to use.</p>
+                @endif
                 <button class="btn-dark mt-6" x-text="method === 'card' ? 'Pay by card' : 'Get the invoice'">Get the invoice</button>
                 <p class="text-xs text-stone mt-3">No contract and no debit order. Pay when you want; stop when you want.</p>
             </form>
