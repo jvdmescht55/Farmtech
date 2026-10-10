@@ -8,7 +8,8 @@
     $overHero = trim($__env->yieldContent('hero_dark')) !== '';
     $nav = [
         [route('site.store').'#shop', 'Shop'],
-        [route('site.store').'#software', 'Herd Manager'],
+        [route('site.store').'#see', 'See it work'],
+        [route('site.store').'#pricing', 'Pricing'],
         [route('site.custom'), 'Custom builds'],
         [route('site.prices'), 'Market prices'],
         [route('site.calculator'), 'Auction calculator'],

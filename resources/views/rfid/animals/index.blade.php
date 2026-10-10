@@ -10,18 +10,18 @@
 @endphp
 
 @section('content')
-<form method="GET" class="flex flex-wrap items-center gap-2 mb-6" x-data="{ more: {{ request()->hasAny(['species', 'tier', 'status', 'sort']) ? 'true' : 'false' }} }">
+<form method="GET" class="flex flex-wrap items-center gap-2 mb-6" x-data="{ more: {{ request()->hasAny(['species', 'tier', 'status']) ? 'true' : 'false' }} }">
     <div class="relative flex-1 min-w-[14rem]">
         <input name="q" aria-label="Search the herd" value="{{ request('q') }}" placeholder="Search tag, ID or name…" class="field pl-11">
         <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     </div>
     <select name="sex" aria-label="Sex" class="field w-auto" onchange="this.form.submit()"><option value="">Male &amp; female</option><option value="F" @selected(request('sex') === 'F')>Female</option><option value="M" @selected(request('sex') === 'M')>Male</option></select>
+        <select name="sort" aria-label="Sort" class="field w-auto" onchange="this.form.submit()"><option value="visual_id">By ID</option><option value="birth_date" @selected(request('sort') === 'birth_date')>Youngest first</option><option value="last_seen" @selected(request('sort') === 'last_seen')>Last scanned</option><option value="heaviest" @selected(request('sort') === 'heaviest')>Heaviest first</option><option value="lightest" @selected(request('sort') === 'lightest')>Lightest first</option></select>
     <button type="button" @click="more = !more" class="btn-line btn-sm h-11" x-text="more ? 'Fewer filters' : 'More filters'"></button>
     <div x-show="more" x-cloak class="w-full flex flex-wrap gap-2">
         <select name="species" aria-label="Species" class="field w-auto" onchange="this.form.submit()"><option value="">All species</option>@foreach (config('herd.species') as $k => $s)<option value="{{ $k }}" @selected(request('species') === $k)>{{ $s['plural'] }}</option>@endforeach</select>
         <select name="tier" aria-label="Tier" class="field w-auto" onchange="this.form.submit()"><option value="">All tiers</option>@foreach (array_reverse(config('herd.tiers')) as $t)<option @selected(request('tier') === $t)>{{ $t }}</option>@endforeach<option value="?" @selected(request('tier') === '?')>? incomplete</option></select>
         <select name="status" aria-label="Status" class="field w-auto" onchange="this.form.submit()">@foreach (['active' => 'Active', 'sold' => 'Sold', 'dead' => 'Dead', 'culled' => 'Culled', 'all' => 'Everything'] as $k => $v)<option value="{{ $k }}" @selected(request('status', 'active') === $k)>{{ $v }}</option>@endforeach</select>
-        <select name="sort" aria-label="Sort" class="field w-auto" onchange="this.form.submit()"><option value="visual_id">By ID</option><option value="birth_date" @selected(request('sort') === 'birth_date')>Youngest first</option><option value="last_seen" @selected(request('sort') === 'last_seen')>Last scanned</option><option value="heaviest" @selected(request('sort') === 'heaviest')>Heaviest first</option><option value="lightest" @selected(request('sort') === 'lightest')>Lightest first</option></select>
         @if (request()->hasAny(['q', 'sex', 'tier', 'status', 'sort', 'species']))<a href="{{ route('rfid.animals.index') }}" class="text-sm text-stone hover:text-char px-2 self-center">Clear</a>@endif
     </div>
 </form>

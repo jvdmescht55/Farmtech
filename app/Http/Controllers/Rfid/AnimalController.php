@@ -117,12 +117,13 @@ class AnimalController extends Controller
         $graph = PedigreeTier::graph($request->user()->id);
         $animal = $graph->get($animal->id);
 
-        $weights = $animal->scans()->whereNotNull('weight_kg')->orderBy('scanned_at')->get();
+        $weights = $animal->scans()->whereNotNull('weight_kg')->reorder('scanned_at')->get();
         $gains = [];
         foreach ($weights->values() as $i => $w) {
-            $prev = $weights->values()[$i - 1] ?? null;
-            $days = $prev ? max(1, $prev->scanned_at->diffInDays($w->scanned_at)) : null;
-            $gains[$w->id] = $prev ? round((($w->weight_kg - $prev->weight_kg) * 1000) / $days) : null;
+            // Gain is against the last weighing on an earlier day: a re-weigh a minute later isn't a day's growth.
+            $prev = $weights->values()->slice(0, $i)->last(fn ($p) => $p->scanned_at->lt($w->scanned_at->copy()->startOfDay()));
+            $days = $prev ? max(1, (int) $prev->scanned_at->copy()->startOfDay()->diffInDays($w->scanned_at->copy()->startOfDay())) : null;
+            $gains[$w->id] = $prev ? (int) round((($w->weight_kg - $prev->weight_kg) * 1000) / $days) : null;
         }
 
         $target = (float) $request->input('target', 0) ?: null;
